@@ -19,3 +19,5 @@ if (process.env.NODE_ENV !== 'production') {
 
 export * from '@prisma/client'
 export * from './lib/auth'
+export * from './lib/redis'
+export * from './lib/cache'

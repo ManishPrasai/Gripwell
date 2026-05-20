@@ -50,6 +50,209 @@ async function main() {
     console.log(`Store created: ${store.name}`)
   }
 
+  // Create TyreSizes
+  const tyreSizes = [
+    { width: 205, profile: 55, rimDiameter: 16, loadIndex: 91, speedRating: 'V', construction: 'R' },
+    { width: 225, profile: 45, rimDiameter: 17, loadIndex: 94, speedRating: 'W', construction: 'R' },
+    { width: 235, profile: 65, rimDiameter: 17, loadIndex: 108, speedRating: 'H', construction: 'R' },
+    { width: 265, profile: 70, rimDiameter: 16, loadIndex: 112, speedRating: 'H', construction: 'R' },
+    { width: 195, profile: 65, rimDiameter: 15, loadIndex: 91, speedRating: 'H', construction: 'R' },
+    { width: 245, profile: 40, rimDiameter: 18, loadIndex: 97, speedRating: 'Y', construction: 'R' },
+    { width: 275, profile: 55, rimDiameter: 20, loadIndex: 117, speedRating: 'H', construction: 'R' },
+    { width: 215, profile: 60, rimDiameter: 16, loadIndex: 95, speedRating: 'H', construction: 'R' },
+  ]
+
+  const createdSizes = []
+  for (const size of tyreSizes) {
+    const created = await prisma.tyreSize.upsert({
+      where: {
+        width_profile_rimDiameter: {
+          width: size.width,
+          profile: size.profile,
+          rimDiameter: size.rimDiameter
+        }
+      },
+      update: {},
+      create: size
+    })
+    createdSizes.push(created)
+    console.log(`TyreSize created: ${size.width}/${size.profile}R${size.rimDiameter}`)
+  }
+
+  // Create Tyres
+  const tyres = [
+    {
+      brand: 'Bridgestone',
+      model: 'Ecopia EP150',
+      tyreSizeId: createdSizes[0].id,
+      type: 'PASSENGER' as const,
+      price: 149.00,
+      compareAtPrice: 189.00,
+      stockQuantity: 50,
+      isBestSeller: true,
+      isFeatured: true,
+      fuelEfficiencyRating: 'A',
+      wetGripRating: 'B',
+      noiseLevelDb: 68,
+      slug: 'bridgestone-ecopia-ep150-205-55r16',
+      isActive: true
+    },
+    {
+      brand: 'Michelin',
+      model: 'Energy XM2',
+      tyreSizeId: createdSizes[0].id,
+      type: 'PASSENGER' as const,
+      price: 179.00,
+      compareAtPrice: 219.00,
+      stockQuantity: 35,
+      isBestSeller: true,
+      isFeatured: false,
+      fuelEfficiencyRating: 'A',
+      wetGripRating: 'A',
+      noiseLevelDb: 69,
+      slug: 'michelin-energy-xm2-205-55r16',
+      isActive: true
+    },
+    {
+      brand: 'Pirelli',
+      model: 'P Zero SUV',
+      tyreSizeId: createdSizes[1].id,
+      type: 'SUV' as const,
+      price: 289.00,
+      compareAtPrice: 349.00,
+      stockQuantity: 20,
+      isBestSeller: true,
+      isFeatured: true,
+      fuelEfficiencyRating: 'B',
+      wetGripRating: 'A',
+      noiseLevelDb: 71,
+      slug: 'pirelli-p-zero-suv-225-45r17',
+      isActive: true
+    },
+    {
+      brand: 'Continental',
+      model: 'ContiCrossContact',
+      tyreSizeId: createdSizes[2].id,
+      type: 'SUV' as const,
+      price: 249.00,
+      compareAtPrice: 299.00,
+      stockQuantity: 30,
+      isBestSeller: false,
+      isFeatured: true,
+      fuelEfficiencyRating: 'B',
+      wetGripRating: 'B',
+      noiseLevelDb: 72,
+      slug: 'continental-conticrosscontact-235-65r17',
+      isActive: true
+    },
+    {
+      brand: 'Hankook',
+      model: 'Kinergy Eco',
+      tyreSizeId: createdSizes[4].id,
+      type: 'PASSENGER' as const,
+      price: 119.00,
+      compareAtPrice: 149.00,
+      stockQuantity: 60,
+      isBestSeller: false,
+      isFeatured: false,
+      fuelEfficiencyRating: 'B',
+      wetGripRating: 'B',
+      noiseLevelDb: 67,
+      slug: 'hankook-kinergy-eco-195-65r15',
+      isActive: true
+    },
+    {
+      brand: 'Dunlop',
+      model: 'SP Sport Maxx',
+      tyreSizeId: createdSizes[5].id,
+      type: 'PASSENGER' as const,
+      price: 219.00,
+      compareAtPrice: 269.00,
+      stockQuantity: 25,
+      isBestSeller: false,
+      isFeatured: false,
+      fuelEfficiencyRating: 'A',
+      wetGripRating: 'A',
+      noiseLevelDb: 70,
+      slug: 'dunlop-sp-sport-maxx-245-40r18',
+      isActive: true
+    },
+    {
+      brand: 'Yokohama',
+      model: 'Geolandar AT',
+      tyreSizeId: createdSizes[3].id,
+      type: 'MUD_TERRAIN' as const,
+      price: 199.00,
+      compareAtPrice: 249.00,
+      stockQuantity: 40,
+      isBestSeller: true,
+      isFeatured: true,
+      fuelEfficiencyRating: 'C',
+      wetGripRating: 'C',
+      noiseLevelDb: 74,
+      slug: 'yokohama-geolandar-at-265-70r16',
+      isActive: true
+    },
+    {
+      brand: 'BF Goodrich',
+      model: 'All Terrain TA',
+      tyreSizeId: createdSizes[6].id,
+      type: 'MUD_TERRAIN' as const,
+      price: 329.00,
+      compareAtPrice: 399.00,
+      stockQuantity: 15,
+      isBestSeller: false,
+      isFeatured: true,
+      fuelEfficiencyRating: 'D',
+      wetGripRating: 'C',
+      noiseLevelDb: 76,
+      slug: 'bf-goodrich-all-terrain-ta-275-55r20',
+      isActive: true
+    },
+    {
+      brand: 'Toyo',
+      model: 'Open Country MT',
+      tyreSizeId: createdSizes[3].id,
+      type: 'MUD_TERRAIN' as const,
+      price: 259.00,
+      compareAtPrice: 319.00,
+      stockQuantity: 22,
+      isBestSeller: false,
+      isFeatured: false,
+      fuelEfficiencyRating: 'D',
+      wetGripRating: 'D',
+      noiseLevelDb: 77,
+      slug: 'toyo-open-country-mt-265-70r16',
+      isActive: true
+    },
+    {
+      brand: 'Michelin',
+      model: 'LTX AT2',
+      tyreSizeId: createdSizes[2].id,
+      type: 'SUV' as const,
+      price: 299.00,
+      compareAtPrice: 359.00,
+      stockQuantity: 18,
+      isBestSeller: false,
+      isFeatured: false,
+      fuelEfficiencyRating: 'C',
+      wetGripRating: 'B',
+      noiseLevelDb: 73,
+      slug: 'michelin-ltx-at2-235-65r17',
+      isActive: true
+    },
+  ]
+
+  for (const tyre of tyres) {
+    await prisma.tyre.upsert({
+      where: { slug: tyre.slug },
+      update: {},
+      create: tyre
+    })
+    console.log(`Tyre created: ${tyre.brand} ${tyre.model}`)
+  }
+
+  
   console.log('Seeding complete.')
 }
 
