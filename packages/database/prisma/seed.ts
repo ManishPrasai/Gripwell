@@ -252,7 +252,68 @@ async function main() {
     console.log(`Tyre created: ${tyre.brand} ${tyre.model}`)
   }
 
-  
+  // Create Wheels
+  const wheels = [
+    {
+      brand: 'King Wheels',
+      model: 'D-Hole Black',
+      diameter: 16,
+      width: 8.0,
+      pcd: '5x114.3',
+      offset: 0,
+      bore: 84.1,
+      material: 'steel',
+      finish: 'black',
+      price: 89.00,
+      compareAtPrice: 119.00,
+      stockQuantity: 30,
+      slug: 'king-wheels-d-hole-black-16',
+      isActive: true
+    },
+    {
+      brand: 'King Wheels',
+      model: 'Terra Black',
+      diameter: 16,
+      width: 8.0,
+      pcd: '6x139.7',
+      offset: 0,
+      bore: 108.0,
+      material: 'steel',
+      finish: 'black',
+      price: 95.00,
+      compareAtPrice: 129.00,
+      stockQuantity: 25,
+      slug: 'king-wheels-terra-black-16',
+      isActive: true
+    },
+    {
+      brand: 'Simmons',
+      model: 'OM-1 Matte Black',
+      diameter: 17,
+      width: 9.0,
+      pcd: '5x127',
+      offset: 0,
+      bore: 78.1,
+      material: 'alloy',
+      finish: 'matte black',
+      price: 349.00,
+      compareAtPrice: 429.00,
+      stockQuantity: 12,
+      slug: 'simmons-om1-matte-black-17',
+      isActive: true
+    },
+  ]
+
+  for (const wheel of wheels) {
+    await prisma.wheel.upsert({
+      where: { slug: wheel.slug },
+      update: {},
+      create: wheel
+    })
+    console.log(`Wheel created: ${wheel.brand} ${wheel.model}`)
+  }
+
+
   console.log('Seeding complete.')
 }
 
