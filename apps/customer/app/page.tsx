@@ -1,14 +1,27 @@
-export default function Home() {
+import HeroSection       from './components/home/HeroSection'
+import BestDeals         from './components/home/BestDeals'
+import BrowseByCategory  from './components/home/BrowseByCategory'
+import BookingSection    from './components/home/BookingSection'
+import WhyNovaTyres      from './components/home/WhyNovaTyres'
+import BrandsStrip       from './components/home/BrandsStrip'
+import CustomerReviews   from './components/home/CustomerReviews'
+import StoreLocator      from './components/home/StoreLocator'
+import NewsletterSection from './components/home/NewsletterSection'
+import SocialGrid        from './components/home/SocialGrid'
+
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#FAF9F5] flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-[#1C3A2B]">
-          Nova Tyres
-        </h1>
-        <p className="text-[#DC5A2E] mt-2">
-          Australia&apos;s best tyre deals
-        </p>
-      </div>
-    </div>
+    <main>
+      <HeroSection />
+      <BestDeals />
+      <BrowseByCategory />
+      <BookingSection />
+      <WhyNovaTyres />
+      <BrandsStrip />
+      <CustomerReviews />
+      <StoreLocator />
+      <NewsletterSection />
+      <SocialGrid />
+    </main>
   )
 }

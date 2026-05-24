@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@nova/database'
+export const runtime = 'edge'
 
-// Routes that require authentication
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyAccessToken } from './lib/auth-edge'
+
 const protectedRoutes = [
   '/dashboard',
   '/orders',
@@ -9,7 +10,6 @@ const protectedRoutes = [
   '/profile'
 ]
 
-// Routes only for non-authenticated users
 const authRoutes = [
   '/login',
   '/register'
@@ -23,14 +23,12 @@ export function middleware(req: NextRequest) {
 
   const isAuthenticated = token ? !!verifyAccessToken(token) : false
 
-  // Redirect authenticated users away from auth pages
   if (authRoutes.some(route => pathname.startsWith(route))) {
     if (isAuthenticated) {
       return NextResponse.redirect(new URL('/dashboard', req.url))
     }
   }
 
-  // Redirect unauthenticated users away from protected pages
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/login', req.url))
@@ -41,7 +39,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)'
-  ]
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
 }

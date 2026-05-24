@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # 1. Your Nova Tyres Application Web Server
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nova_tyres_web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      # Update the database URL below depending on if you use Prisma/Mongoose
+      - DATABASE_URL=postgresql://nova_admin:tyres_secure_pass@postgres_db:5432/nova_tyres_db
+      - REDIS_URL=redis://redis_cache:6379
+    depends_on:
+      - postgres_db
+      - redis_cache
+
+  # 2. Local Isolated PostgreSQL Database (Matches your pgAdmin shortcut!)
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: nova_tyres_db
+    restart: always
+    environment:
+      POSTGRES_USER: nova_admin
+      POSTGRES_PASSWORD: tyres_secure_pass
+      POSTGRES_DB: nova_tyres_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 3. Redis Caching Engine (Matches Phase 1 of your project tracker!)
+  redis_cache:
+    image: redis:7-alpine
+    container_name: nova_tyres_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
