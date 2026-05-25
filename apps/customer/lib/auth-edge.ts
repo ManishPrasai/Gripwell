@@ -1,8 +1,13 @@
-import jwt from 'jsonwebtoken'
+import { jwtVerify } from 'jose'
 
-export const verifyAccessToken = (token: string) => {
+const secret = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || 'fallback-secret'
+)
+
+export const verifyAccessToken = async (token: string) => {
   try {
-    return jwt.verify(token, process.env.NEXTAUTH_SECRET!) as {
+    const { payload } = await jwtVerify(token, secret)
+    return payload as {
       id: string
       email: string
       type: 'customer' | 'admin'

@@ -1,5 +1,3 @@
-
-
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAccessToken } from './lib/auth-edge'
 
@@ -15,13 +13,14 @@ const authRoutes = [
   '/register'
 ]
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
 
-  const isAuthenticated = token ? !!verifyAccessToken(token) : false
+  const payload = token ? await verifyAccessToken(token) : null
+  const isAuthenticated = !!payload
 
   if (authRoutes.some(route => pathname.startsWith(route))) {
     if (isAuthenticated) {
