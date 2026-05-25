@@ -1,42 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from './lib/auth-edge'
+import { NextResponse } from 'next/server'
 
-const protectedRoutes = [
-  '/dashboard',
-  '/orders',
-  '/appointments',
-  '/profile'
-]
-
-const authRoutes = [
-  '/login',
-  '/register'
-]
-
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
-
-  const authHeader = req.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-
-  const payload = token ? await verifyAccessToken(token) : null
-  const isAuthenticated = !!payload
-
-  if (authRoutes.some(route => pathname.startsWith(route))) {
-    if (isAuthenticated) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-  }
-
-  if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-  }
-
+export function middleware() {
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: []
 }
