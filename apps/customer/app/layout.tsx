@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
-import TrustBar from './components/home/TrustBar'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: 'Nova Tyres — Australia\'s Best Tyre Deals',
@@ -20,7 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;0,900;1,700&family=Inter:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
         <link
@@ -28,7 +28,7 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
   <div style={{
     position: 'fixed',
     top: 0,
@@ -36,11 +36,12 @@ export default function RootLayout({
     right: 0,
     zIndex: 60
   }}>
-    <TrustBar />
+ 
     <Navbar />
   </div>
   {children}
   <Footer />
+  <Analytics />
 </body>
     </html>
   )

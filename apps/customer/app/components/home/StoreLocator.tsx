@@ -35,8 +35,25 @@ export default function StoreLocator() {
   )
 
   return (
-    <section className="py-16 px-4" style={{ background: '#1C3A2B' }}>
-      <div className="max-w-7xl mx-auto">
+    <section className="relative py-16 px-4 overflow-hidden" style={{ background: '#1a3022' }}>
+      {/* Background image — zoomed in 50%, centered */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url(/images/store-bg.jpg)',
+          backgroundSize: '150%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          opacity: 0.55,
+          filter: 'blur(4px)',
+          transform: 'scale(1.06)',
+        }}
+      />
+      {/* Hint of green scrim */}
+      <div className="absolute inset-0" style={{ background: 'rgba(22, 65, 32, 0.15)' }} />
+
+      <div className="relative z-10 max-w-7xl mx-auto">
 
         <div className="mb-8">
           <div

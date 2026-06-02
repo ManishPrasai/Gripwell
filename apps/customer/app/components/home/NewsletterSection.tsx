@@ -14,15 +14,20 @@ export default function NewsletterSection() {
 
   return (
     <section
-      className="relative py-16 px-4 overflow-hidden"
-      style={{ background: '#0F1F15' }}
+      className="relative py-32 px-4 overflow-hidden"
+      style={{ background: '#0a0a0a' }}
     >
+      {/* Background image with bokeh blur */}
       <div
-        className="absolute inset-0 opacity-15"
         style={{
-          backgroundImage: 'url(/images/tyres-bg.jpg)',
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundImage: 'url(/images/newsletter-bg.jpg)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundPosition: 'center',
+          opacity: 0.22,
+          filter: 'blur(2px)',
+          transform: 'scale(1.06)',
         }}
       />
 
