@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
+
+/* ── Data ────────────────────────────────────────────────────────────────── */
 
 const quickLinks = [
   { label: 'Home',        href: '/' },
@@ -7,6 +10,22 @@ const quickLinks = [
   { label: 'Service',     href: '/service' },
   { label: 'Locations',   href: '/locations' },
   { label: 'Warranty',    href: '/warranty' },
+]
+
+const tyreSizes = [
+  { label: 'Home',        href: '/' },
+  { label: 'Find Tyres',  href: '/tyres' },
+  { label: 'Find Wheels', href: '/wheels' },
+  { label: 'Service',     href: '/service' },
+  { label: 'Locations',   href: '/locations' },
+]
+
+const topTyreModels = [
+  { label: 'Home',        href: '/' },
+  { label: 'Find Tyres',  href: '/tyres' },
+  { label: 'Find Wheels', href: '/wheels' },
+  { label: 'Service',     href: '/service' },
+  { label: 'Locations',   href: '/locations' },
 ]
 
 const stores = [
@@ -29,167 +48,234 @@ const services = [
   'Ultimate Service',
 ]
 
-const socialLinks = [
-  { icon: 'ti-brand-facebook',  href: '#' },
-  { icon: 'ti-brand-instagram', href: '#' },
-  { icon: 'ti-brand-linkedin',  href: '#' },
+const payments = [
+  { name: 'Stripe',      src: '/images/footer/payment-stripe.png' },
+  { name: 'VISA',        src: '/images/footer/payment-visa.png' },
+  { name: 'Mastercard',  src: '/images/footer/payment-mastercard.png' },
+  { name: 'Apple Pay',   src: '/images/footer/payment-applepay.png' },
+  { name: 'Afterpay',    src: '/images/footer/payment-afterpay.png' },
+  { name: 'Klarna',      src: '/images/footer/payment-klarna.png' },
 ]
 
-const payments = ['Visa', 'MC', 'Amex', 'Zip']
+const socialConnect = [
+  { name: 'Product Review', src: '/images/footer/social-productreview.png', href: '#', wide: true },
+  { name: 'LinkedIn',       src: '/images/footer/social-linkedin.png',      href: '#', wide: false },
+  { name: 'Yelp',           src: '/images/footer/social-yelp.png',          href: '#', wide: false },
+  { name: 'Facebook',       src: '/images/footer/social-facebook.png',      href: '#', wide: false },
+  { name: 'Instagram',      src: '/images/footer/social-instagram.png',     href: '#', wide: false },
+]
 
+const legalLinks = ['Warranty & Returns', 'Privacy & Policy', 'Terms of Service']
+
+/* ── Shared link style ───────────────────────────────────────────────────── */
+const linkStyle: React.CSSProperties = {
+  color: 'rgba(255,255,255,0.52)',
+  fontSize: '14px',
+  fontWeight: 400,
+  textDecoration: 'none',
+  display: 'block',
+  lineHeight: 1,
+}
+
+/* ── Section heading styles ─────────────────────────────────────────────── */
+const capsHeading: React.CSSProperties = {
+  color: '#ffffff',
+  fontSize: '12px',
+  fontWeight: 600,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  marginBottom: '16px',
+}
+
+const largeHeading: React.CSSProperties = {
+  color: '#ffffff',
+  fontSize: '19px',
+  fontWeight: 600,
+  marginBottom: '16px',
+  lineHeight: 1.2,
+}
+
+/* ── Component ───────────────────────────────────────────────────────────── */
 export default function Footer() {
   return (
     <footer style={{ background: '#1C3A2B' }}>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      {/* ── Main 4-column grid ── */}
+      <div className="max-w-7xl mx-auto px-6 py-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
-          {/* Brand */}
+          {/* ── Col 1: Brand + Tyre Sizes ── */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className="w-10 h-10 rounded-full border-2 flex items-center justify-center"
-                style={{ borderColor: '#E8572A' }}
-              >
-                <span className="text-white font-bold text-xs">NT</span>
-              </div>
-              <div>
-                <p className="text-white uppercase" style={{ fontSize: '18px', fontWeight: 500, letterSpacing: '0.1em' }}>
-                  Nova Tyres
-                </p>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 500 }}>
-                  Best Deals on Tyres &amp; Wheels
-                </p>
-              </div>
+            {/* Logo */}
+            <div style={{ marginBottom: '14px' }}>
+              <Image
+                src="/images/footer/logo.png"
+                alt="Nova Tyres Logo"
+                width={110}
+                height={110}
+                style={{ objectFit: 'contain' }}
+              />
             </div>
-            <p
-              className="leading-relaxed mt-4"
-              style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '240px', fontSize: '15px', fontWeight: 400 }}
-            >
-              Nova Tyres is an Australian tyre and wheel retailer offering
-              affordable products, professional fitting, balancing, alignments,
-              and automotive services.
+            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
+              Nova Tyres
             </p>
-          </div>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px', marginBottom: '36px' }}>
+              Best Deals on Tyres &amp; Wheels
+            </p>
 
-          {/* Quick Links */}
-          <div>
-            <p
-              className="text-white uppercase tracking-widest mb-4"
-              style={{ letterSpacing: '0.12em', fontSize: '12px', fontWeight: 500 }}
-            >
-              Quick Links
-            </p>
-            <ul className="space-y-2">
-              {quickLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="transition-colors hover:text-white"
-                    style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', fontWeight: 400 }}
-                  >
-                    {link.label}
+            {/* Tyre Sizes */}
+            <p style={largeHeading}>Tyre Sizes</p>
+            <ul className="space-y-2.5">
+              {tyreSizes.map(l => (
+                <li key={l.label}>
+                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Stores */}
+          {/* ── Col 2: Quick Links + Top Tyre Models ── */}
           <div>
-            <p
-              className="text-white uppercase tracking-widest mb-4"
-              style={{ letterSpacing: '0.12em', fontSize: '12px', fontWeight: 500 }}
-            >
-              Our Stores
-            </p>
-            <ul className="space-y-2">
-              {stores.map((store) => (
-                <li key={store}>
-                  <Link
-                    href="/locations"
-                    className="transition-colors hover:text-white"
-                    style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', fontWeight: 400 }}
-                  >
-                    {store}
+            <p style={capsHeading}>Quick Links</p>
+            <ul className="space-y-2.5 mb-10">
+              {quickLinks.map(l => (
+                <li key={l.href}>
+                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <p style={largeHeading}>Top Tyre Models</p>
+            <ul className="space-y-2.5">
+              {topTyreModels.map(l => (
+                <li key={l.label + 'model'}>
+                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                    {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Services + Payments */}
+          {/* ── Col 3: Our Stores + Service ── */}
           <div>
-            <p
-              className="text-white uppercase tracking-widest mb-4"
-              style={{ letterSpacing: '0.12em', fontSize: '12px', fontWeight: 500 }}
-            >
-              Service
-            </p>
-            <ul className="space-y-2 mb-6">
-              {services.map((s) => (
+            <p style={capsHeading}>Our Stores</p>
+            <ul className="space-y-2.5 mb-10">
+              {stores.map(s => (
                 <li key={s}>
-                  <Link
-                    href="/service"
-                    className="transition-colors hover:text-white"
-                    style={{ color: 'rgba(255,255,255,0.55)', fontSize: '15px', fontWeight: 400 }}
-                  >
+                  <Link href="/locations" style={linkStyle} className="hover:text-white transition-colors">
                     {s}
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <p
-              className="text-white uppercase tracking-widest mb-3"
-              style={{ letterSpacing: '0.12em', fontSize: '12px', fontWeight: 500 }}
-            >
-              Payments
+            <p style={largeHeading}>Service</p>
+            <ul className="space-y-2.5">
+              {services.map(s => (
+                <li key={s}>
+                  <Link href="/service" style={linkStyle} className="hover:text-white transition-colors">
+                    {s}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Col 4: About + Payments ── */}
+          <div>
+            <p style={{ ...largeHeading, fontSize: '22px' }}>About Nova Tyres</p>
+            <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '14px', lineHeight: 1.75, marginBottom: '32px' }}>
+              <Link href="/" style={{ color: '#E8572A', textDecoration: 'underline' }}>Nova Tyres</Link>
+              {' '}is an Australian tyre and wheel retailer offering affordable
+              products, professional fitting, balancing, alignments, and
+              automotive services for passenger, SUV, 4WD, and commercial
+              vehicles across multiple locations nationwide.
             </p>
-            <div className="flex gap-2 flex-wrap">
-              {payments.map((p) => (
+
+            <p style={capsHeading}>Payments</p>
+            <div className="flex flex-wrap gap-2">
+              {payments.map(p => (
                 <div
-                  key={p}
-                  className="px-2 py-1 rounded"
+                  key={p.name}
                   style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'rgba(255,255,255,0.7)',
-                    fontSize: '11px',
-                    fontWeight: 500
+                    background: '#ffffff',
+                    borderRadius: '6px',
+                    padding: '5px 10px',
+                    height: '34px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  {p}
+                  <Image
+                    src={p.src}
+                    alt={p.name}
+                    width={52}
+                    height={22}
+                    style={{ objectFit: 'contain', height: '20px', width: 'auto' }}
+                  />
                 </div>
               ))}
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div
-        className="border-t px-4 py-5"
-        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-      >
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', fontWeight: 500 }}>
-            © 2026 Nova Tyres. All rights reserved.
+      {/* ── Connect With Us ── */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}>
+        <div className="max-w-7xl mx-auto px-6 py-10 text-center">
+          <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 500, marginBottom: '24px' }}>
+            Connect With Us
           </p>
-
-          <div className="flex items-center gap-4">
-            {socialLinks.map((s) => (
+          <div className="flex items-center justify-center gap-5 flex-wrap">
+            {socialConnect.map(s => (
               <a
-                key={s.icon}
+                key={s.name}
                 href={s.href}
-                className="transition-opacity hover:opacity-100"
-                style={{ color: 'rgba(255,255,255,0.4)' }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-opacity hover:opacity-80"
               >
-                <i className={`ti ${s.icon}`} style={{ fontSize: '20px' }} aria-hidden="true" />
+                <Image
+                  src={s.src}
+                  alt={s.name}
+                  width={s.wide ? 140 : 62}
+                  height={62}
+                  style={{ objectFit: 'contain', height: '60px', width: 'auto' }}
+                />
               </a>
             ))}
           </div>
         </div>
       </div>
+
+      {/* ── Bottom bar ── */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '13px' }}>
+            @ 2026 Nova Tyres All rights reserved
+          </p>
+          <div className="flex items-center gap-6 flex-wrap">
+            {legalLinks.map(label => (
+              <Link
+                key={label}
+                href="#"
+                style={{ color: 'rgba(255,255,255,0.38)', fontSize: '13px', textDecoration: 'none' }}
+                className="hover:text-white transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
     </footer>
   )
 }
