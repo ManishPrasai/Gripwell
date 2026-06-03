@@ -1,0 +1,1004 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────
+// VEHICLE & FITMENT
+// ─────────────────────────────────────
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  make      String
+  model     String
+  year      Int
+  variant   String
+  bodyType  String?
+  driveType String?
+  engine    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fitments         VehicleFitment[]
+  customerVehicles CustomerVehicle[]
+  regoCache        RegoLookupCache[]
+
+  @@unique([make, model, year, variant])
+  @@index([make, model, year])
+}
+
+model TyreSize {
+  id           String   @id @default(uuid())
+  width        Int
+  profile      Int
+  rimDiameter  Int
+  loadIndex    Int?
+  speedRating  String?
+  construction String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fitments VehicleFitment[]
+  tyres    Tyre[]
+
+  @@unique([width, profile, rimDiameter])
+  @@index([width, profile, rimDiameter])
+}
+
+model VehicleFitment {
+  id            String   @id @default(uuid())
+  vehicleId     String
+  tyreSizeId    String
+  axlePosition  String   @default("all")
+  isFactorySpec Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
+  tyreSize TyreSize @relation(fields: [tyreSizeId], references: [id])
+
+  @@unique([vehicleId, tyreSizeId, axlePosition])
+  @@index([vehicleId])
+  @@index([tyreSizeId])
+}
+
+// ─────────────────────────────────────
+// PRODUCTS
+// ─────────────────────────────────────
+
+model Tyre {
+  id                   String    @id @default(uuid())
+  brand                String
+  model                String
+  description          String?
+  tyreSizeId           String
+  type                 TyreType
+  price                Decimal   @db.Decimal(10, 2)
+  compareAtPrice       Decimal?  @db.Decimal(10, 2)
+  stockQuantity        Int       @default(0)
+  isBestSeller         Boolean   @default(false)
+  isFeatured           Boolean   @default(false)
+  fuelEfficiencyRating String?
+  wetGripRating        String?
+  noiseLevelDb         Int?
+  slug                 String    @unique
+  isActive             Boolean   @default(true)
+  deletedAt            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  tyreSize       TyreSize         @relation(fields: [tyreSizeId], references: [id])
+  images         TyreImage[]
+  orderItems     OrderItem[]
+  guestCartItems GuestCart[]
+  storeInventory StoreInventory[]
+  reviews        Review[]
+  packages       Package[]
+
+  @@index([brand])
+  @@index([tyreSizeId])
+  @@index([type])
+  @@index([isBestSeller])
+  @@index([isActive])
+  @@index([slug])
+  @@index([price])
+}
+
+model TyreImage {
+  id        String   @id @default(uuid())
+  tyreId    String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tyre Tyre @relation(fields: [tyreId], references: [id])
+
+  @@index([tyreId])
+}
+
+model Wheel {
+  id             String    @id @default(uuid())
+  brand          String
+  model          String
+  description    String?
+  diameter       Int
+  width          Decimal   @db.Decimal(4, 1)
+  pcd            String
+  offset         Int?
+  bore           Decimal?  @db.Decimal(5, 1)
+  material       String
+  finish         String?
+  price          Decimal   @db.Decimal(10, 2)
+  compareAtPrice Decimal?  @db.Decimal(10, 2)
+  stockQuantity  Int       @default(0)
+  slug           String    @unique
+  isActive       Boolean   @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  images         WheelImage[]
+  orderItems     OrderItem[]
+  guestCartItems GuestCart[]
+  storeInventory StoreInventory[]
+  packages       Package[]
+
+  @@index([brand])
+  @@index([isActive])
+  @@index([slug])
+}
+
+model WheelImage {
+  id        String   @id @default(uuid())
+  wheelId   String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  wheel Wheel @relation(fields: [wheelId], references: [id])
+
+  @@index([wheelId])
+}
+
+model Package {
+  id             String    @id @default(uuid())
+  name           String
+  tyreId         String
+  wheelId        String
+  packagePrice   Decimal   @db.Decimal(10, 2)
+  discountAmount Decimal   @default(0) @db.Decimal(10, 2)
+  isInStoreOnly  Boolean   @default(true)
+  storeId        String?
+  isActive       Boolean   @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tyre       Tyre        @relation(fields: [tyreId], references: [id])
+  wheel      Wheel       @relation(fields: [wheelId], references: [id])
+  store      Store?      @relation(fields: [storeId], references: [id])
+  orderItems OrderItem[]
+  guestCarts GuestCart[]
+
+  @@index([tyreId])
+  @@index([wheelId])
+  @@index([storeId])
+}
+
+// ─────────────────────────────────────
+// STORES & SERVICES
+// ─────────────────────────────────────
+
+model Store {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  address   String
+  suburb    String
+  state     String
+  postcode  String
+  latitude  Decimal   @db.Decimal(10, 8)
+  longitude Decimal   @db.Decimal(11, 8)
+  phone     String
+  email     String
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  hours             StoreHours[]
+  storeServices     StoreService[]
+  slots             AppointmentSlot[]
+  orders            Order[]
+  appointments      Appointment[]
+  enquiries         Enquiry[]
+  adminUsers        AdminUser[]
+  packages          Package[]
+  storeInventory    StoreInventory[]
+  guestAppointments GuestAppointment[]
+  chatConversations ChatConversation[]
+  chatAgents        ChatAgent[]
+  chatHours         ChatOperatingHours[]
+  reviews           Review[]
+
+  @@index([slug])
+  @@index([suburb])
+  @@index([state])
+}
+
+model StoreHours {
+  id        String   @id @default(uuid())
+  storeId   String
+  dayOfWeek String
+  openTime  String
+  closeTime String
+  isClosed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, dayOfWeek])
+  @@index([storeId])
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  priceFrom       Decimal  @db.Decimal(10, 2)
+  durationMinutes Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  storeServices     StoreService[]
+  orderItems        OrderItem[]
+  appointments      Appointment[]
+  guestAppointments GuestAppointment[]
+}
+
+model StoreService {
+  id          String   @id @default(uuid())
+  storeId     String
+  serviceId   String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  store   Store   @relation(fields: [storeId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([storeId, serviceId])
+  @@index([storeId])
+}
+
+model AppointmentSlot {
+  id              String   @id @default(uuid())
+  storeId         String
+  date            DateTime @db.Date
+  time            String
+  isAvailable     Boolean  @default(true)
+  maxBookings     Int      @default(1)
+  currentBookings Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store             Store              @relation(fields: [storeId], references: [id])
+  appointments      Appointment[]
+  guestAppointments GuestAppointment[]
+
+  @@unique([storeId, date, time])
+  @@index([storeId, date])
+}
+
+// ─────────────────────────────────────
+// CUSTOMERS
+// ─────────────────────────────────────
+
+model Customer {
+  id           String    @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions          CustomerSession[]
+  vehicles          CustomerVehicle[]
+  addresses         CustomerAddress[]
+  orders            Order[]
+  appointments      Appointment[]
+  enquiries         Enquiry[]
+  discountUsages    DiscountUsage[]
+  reviews           Review[]
+  notifications     Notification[]
+  chatConversations ChatConversation[]
+
+  @@index([email])
+  @@index([isActive])
+}
+
+model CustomerSession {
+  id               String    @id @default(uuid())
+  customerId       String
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  deviceType       String?
+  isActive         Boolean   @default(true)
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([isActive])
+}
+
+model CustomerVehicle {
+  id         String   @id @default(uuid())
+  customerId String
+  vehicleId  String
+  regoPlate  String?
+  regoState  String?
+  nickname   String?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  vehicle      Vehicle       @relation(fields: [vehicleId], references: [id])
+  appointments Appointment[]
+
+  @@index([customerId])
+  @@index([vehicleId])
+}
+
+model CustomerAddress {
+  id         String   @id @default(uuid())
+  customerId String
+  label      String?
+  street     String
+  suburb     String
+  state      String
+  postcode   String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+}
+
+model LoginAttempt {
+  id          String   @id @default(uuid())
+  email       String
+  ipAddress   String
+  success     Boolean
+  failReason  String?
+  attemptedAt DateTime @default(now())
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([attemptedAt])
+}
+
+// ─────────────────────────────────────
+// GUEST
+// ─────────────────────────────────────
+
+model GuestSession {
+  id         String   @id @default(uuid())
+  sessionId  String   @unique
+  ipAddress  String?
+  deviceInfo String?
+  regoPlate  String?
+  regoState  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  cartItems    GuestCart[]
+  appointments GuestAppointment[]
+
+  @@index([sessionId])
+  @@index([expiresAt])
+}
+
+model GuestCart {
+  id             String   @id @default(uuid())
+  guestSessionId String
+  tyreId         String?
+  wheelId        String?
+  packageId      String?
+  quantity       Int      @default(1)
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  guestSession GuestSession @relation(fields: [guestSessionId], references: [id])
+  tyre         Tyre?        @relation(fields: [tyreId], references: [id])
+  wheel        Wheel?       @relation(fields: [wheelId], references: [id])
+  package      Package?     @relation(fields: [packageId], references: [id])
+
+  @@index([guestSessionId])
+}
+
+model GuestAppointment {
+  id                String   @id @default(uuid())
+  guestSessionId    String
+  storeId           String
+  appointmentSlotId String
+  serviceId         String
+  name              String
+  phone             String
+  email             String
+  regoOrVehicle     String?
+  status            String   @default("pending")
+  notes             String?
+  reminderSent      Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  guestSession    GuestSession    @relation(fields: [guestSessionId], references: [id])
+  store           Store           @relation(fields: [storeId], references: [id])
+  appointmentSlot AppointmentSlot @relation(fields: [appointmentSlotId], references: [id])
+  service         Service         @relation(fields: [serviceId], references: [id])
+
+  @@index([guestSessionId])
+  @@index([storeId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────
+
+model Order {
+  id                    String        @id @default(uuid())
+  customerId            String
+  storeId               String
+  status                OrderStatus   @default(PENDING)
+  subtotal              Decimal       @db.Decimal(10, 2)
+  discountAmount        Decimal       @default(0) @db.Decimal(10, 2)
+  total                 Decimal       @db.Decimal(10, 2)
+  paymentStatus         PaymentStatus @default(UNPAID)
+  paymentMethod         String?
+  stripePaymentIntentId String?
+  zipOrderId            String?
+  notes                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  customer       Customer             @relation(fields: [customerId], references: [id])
+  store          Store                @relation(fields: [storeId], references: [id])
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  payments       Payment[]
+  discountUsages DiscountUsage[]
+  appointments   Appointment[]
+  reviews        Review[]
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  itemType   String
+  tyreId     String?
+  wheelId    String?
+  packageId  String?
+  serviceId  String?
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  totalPrice Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  tyre    Tyre?    @relation(fields: [tyreId], references: [id])
+  wheel   Wheel?   @relation(fields: [wheelId], references: [id])
+  package Package? @relation(fields: [packageId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+
+  @@index([orderId])
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(uuid())
+  orderId   String
+  status    String
+  changedBy String
+  note      String?
+  createdAt DateTime @default(now())
+
+  order     Order     @relation(fields: [orderId], references: [id])
+  adminUser AdminUser @relation(fields: [changedBy], references: [id])
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────
+// APPOINTMENTS
+// ─────────────────────────────────────
+
+model Appointment {
+  id                String            @id @default(uuid())
+  customerId        String
+  storeId           String
+  orderId           String?
+  appointmentSlotId String
+  serviceId         String
+  customerVehicleId String?
+  date              DateTime          @db.Date
+  timeSlot          String
+  status            AppointmentStatus @default(PENDING)
+  notes             String?
+  reminderSent      Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  store           Store            @relation(fields: [storeId], references: [id])
+  order           Order?           @relation(fields: [orderId], references: [id])
+  appointmentSlot AppointmentSlot  @relation(fields: [appointmentSlotId], references: [id])
+  service         Service          @relation(fields: [serviceId], references: [id])
+  customerVehicle CustomerVehicle? @relation(fields: [customerVehicleId], references: [id])
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+  @@index([date])
+}
+
+// ─────────────────────────────────────
+// ENQUIRIES
+// ─────────────────────────────────────
+
+model Enquiry {
+  id            String        @id @default(uuid())
+  customerId    String?
+  name          String
+  phone         String
+  email         String
+  regoOrVehicle String?
+  message       String
+  type          String        @default("general")
+  status        EnquiryStatus @default(NEW)
+  assignedTo    String?
+  source        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  assignedAdmin AdminUser?    @relation("EnquiryAssignee", fields: [assignedTo], references: [id])
+  store         Store?        @relation(fields: [source], references: [id])
+  notes         EnquiryNote[]
+
+  @@index([status])
+  @@index([assignedTo])
+  @@index([createdAt])
+}
+
+model EnquiryNote {
+  id        String   @id @default(uuid())
+  enquiryId String
+  adminId   String
+  note      String
+  createdAt DateTime @default(now())
+
+  enquiry   Enquiry   @relation(fields: [enquiryId], references: [id])
+  adminUser AdminUser @relation(fields: [adminId], references: [id])
+
+  @@index([enquiryId])
+}
+
+// ─────────────────────────────────────
+// PAYMENTS & DISCOUNTS
+// ─────────────────────────────────────
+
+model Payment {
+  id              String   @id @default(uuid())
+  orderId         String
+  method          String
+  amount          Decimal  @db.Decimal(10, 2)
+  status          String
+  transactionId   String?
+  gatewayResponse String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Discount {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  type           String
+  value          Decimal   @db.Decimal(10, 2)
+  minOrderAmount Decimal?  @db.Decimal(10, 2)
+  maxUses        Int?
+  currentUses    Int       @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  usages DiscountUsage[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model DiscountUsage {
+  id         String   @id @default(uuid())
+  discountId String
+  customerId String
+  orderId    String
+  usedAt     DateTime @default(now())
+
+  discount Discount @relation(fields: [discountId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id])
+
+  @@index([discountId])
+  @@index([customerId])
+}
+
+// ─────────────────────────────────────
+// REVIEWS
+// ─────────────────────────────────────
+
+model Review {
+  id                 String   @id @default(uuid())
+  customerId         String
+  tyreId             String?
+  storeId            String?
+  orderId            String?
+  rating             Int
+  title              String?
+  body               String?
+  isVerifiedPurchase Boolean  @default(false)
+  isApproved         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  tyre     Tyre?    @relation(fields: [tyreId], references: [id])
+  store    Store?   @relation(fields: [storeId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+  @@index([tyreId])
+  @@index([storeId])
+  @@index([isApproved])
+}
+
+// ─────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────
+
+model Notification {
+  id         String    @id @default(uuid())
+  customerId String
+  type       String
+  channel    String
+  subject    String?
+  body       String
+  sentAt     DateTime?
+  status     String    @default("pending")
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────
+// SEO
+// ─────────────────────────────────────
+
+model PageSEO {
+  id           String   @id @default(uuid())
+  entityType   String
+  entityId     String?
+  metaTitle    String
+  metaDesc     String?
+  ogImage      String?
+  canonicalUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([entityType, entityId])
+  @@index([entityType])
+}
+
+// ─────────────────────────────────────
+// REGO LOOKUP CACHE
+// ─────────────────────────────────────
+
+model RegoLookupCache {
+  id                String   @id @default(uuid())
+  regoPlate         String
+  regoState         String
+  vehicleId         String
+  rawNevdisResponse String?
+  cachedAt          DateTime @default(now())
+  expiresAt         DateTime
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@unique([regoPlate, regoState])
+  @@index([regoPlate, regoState])
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  storeId      String?
+  firstName    String
+  lastName     String
+  email        String    @unique
+  passwordHash String
+  role         AdminRole
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  store              Store?               @relation(fields: [storeId], references: [id])
+  sessions           AdminSession[]
+  actionLogs         AdminActionLog[]
+  orderStatusHistory OrderStatusHistory[]
+  enquiryNotes       EnquiryNote[]
+  assignedEnquiries  Enquiry[]            @relation("EnquiryAssignee")
+  chatAgents         ChatAgent[]
+  chatConversations  ChatConversation[]
+
+  @@index([email])
+  @@index([role])
+  @@index([storeId])
+}
+
+model AdminSession {
+  id               String    @id @default(uuid())
+  adminId          String
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  deviceType       String?
+  isActive         Boolean   @default(true)
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([isActive])
+}
+
+model AdminActionLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String
+  entityType  String
+  entityId    String?
+  beforeState String?
+  afterState  String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────
+// INVENTORY
+// ─────────────────────────────────────
+
+model StoreInventory {
+  id          String   @id @default(uuid())
+  storeId     String
+  tyreId      String?
+  wheelId     String?
+  quantity    Int      @default(0)
+  reservedQty Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store Store  @relation(fields: [storeId], references: [id])
+  tyre  Tyre?  @relation(fields: [tyreId], references: [id])
+  wheel Wheel? @relation(fields: [wheelId], references: [id])
+
+  @@unique([storeId, tyreId])
+  @@unique([storeId, wheelId])
+  @@index([storeId])
+}
+
+// ─────────────────────────────────────
+// JOBS & WEBHOOKS
+// ─────────────────────────────────────
+
+model Job {
+  id          String    @id @default(uuid())
+  type        String
+  payload     String
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  lastError   String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id          String    @id @default(uuid())
+  source      String
+  eventType   String
+  payload     String
+  status      String    @default("pending")
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([source])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────
+// CHAT
+// ─────────────────────────────────────
+
+model ChatConversation {
+  id              String    @id @default(uuid())
+  customerId      String?
+  guestSessionId  String?
+  storeId         String
+  assignedTo      String?
+  status          String    @default("active")
+  firstResponseAt DateTime?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  store         Store         @relation(fields: [storeId], references: [id])
+  assignedAdmin AdminUser?    @relation(fields: [assignedTo], references: [id])
+  messages      ChatMessage[]
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+}
+
+model ChatMessage {
+  id             String    @id @default(uuid())
+  conversationId String
+  senderType     String
+  senderId       String
+  body           String
+  isRead         Boolean   @default(false)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model ChatAgent {
+  id          String    @id @default(uuid())
+  adminUserId String
+  storeId     String
+  isOnline    Boolean   @default(false)
+  lastSeenAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id])
+  store     Store     @relation(fields: [storeId], references: [id])
+
+  @@unique([adminUserId, storeId])
+  @@index([storeId])
+}
+
+model ChatOperatingHours {
+  id        String   @id @default(uuid())
+  storeId   String
+  dayOfWeek String
+  startTime String
+  endTime   String
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, dayOfWeek])
+  @@index([storeId])
+}
+
+// ─────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────
+
+enum TyreType {
+  PASSENGER
+  SUV
+  COMMERCIAL
+  MUD_TERRAIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  FITTED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  STORE_MANAGER
+}
