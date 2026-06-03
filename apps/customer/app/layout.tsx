@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Navbar from './components/layout/Navbar'
-import Footer from './components/layout/Footer'
+import Navbar  from './components/layout/Navbar'
+import Footer  from './components/layout/Footer'
+import Providers from './providers'
 import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
@@ -29,20 +30,15 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-  <div style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 60
-  }}>
- 
-    <Navbar />
-  </div>
-  {children}
-  <Footer />
-  <Analytics />
-</body>
+        <Providers>
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 60 }}>
+            <Navbar />
+          </div>
+          {children}
+          <Footer />
+        </Providers>
+        <Analytics />
+      </body>
     </html>
   )
 }
