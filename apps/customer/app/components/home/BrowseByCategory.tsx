@@ -8,28 +8,28 @@ const categories = [
   {
     title: 'All Terrain Tyre',
     subtitle: 'Versatile performance. On and off the road.',
-    href: '/tyres?type=MUD_TERRAIN',
+    href: '/tyres/results?type=MUD_TERRAIN',
     bgImage: '/images/categories/all-terrain.jpg.png',
     color: '#2D4A35',
   },
   {
     title: '4×4 Tyre',
     subtitle: 'Built for power. Ready for anything.',
-    href: '/tyres?type=SUV',
+    href: '/tyres/results?type=SUV',
     bgImage: '/images/categories/4x4.jpg.png',
     color: '#1C3A2B',
   },
   {
     title: 'Passenger Tyre',
     subtitle: 'Smooth, quiet and reliable for everyday driving.',
-    href: '/tyres?type=PASSENGER',
+    href: '/tyres/results?type=PASSENGER',
     bgImage: '/images/categories/passenger.jpg.png',
     color: '#2A3F35',
   },
   {
     title: 'Mud Terrain Tyre',
     subtitle: 'Maximum traction. Conquer the mud.',
-    href: '/tyres?type=MUD_TERRAIN',
+    href: '/tyres/results?type=MUD_TERRAIN',
     bgImage: '/images/categories/mud-terrain.jpg.png',
     color: '#1A2E22',
   },
@@ -40,7 +40,7 @@ export default function BrowseByCategory() {
 
   return (
     <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80%', margin: '0 auto' }}>
 
         {/* ── Header row ── */}
         <div className="flex items-start justify-between mb-10 flex-wrap gap-6">

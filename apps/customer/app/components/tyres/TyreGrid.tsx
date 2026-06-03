@@ -3,10 +3,12 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useCart } from '../../context/CartContext'
 
 /* ── Product data ─────────────────────────────────────────────────────────── */
 interface TyreProduct {
   id:        string
+  slug:      string
   brand:     string
   brandLogo: string
   model:     string
@@ -14,22 +16,27 @@ interface TyreProduct {
   spec:      string
   price:     number
   isSale:    boolean
+  type:      string   // PASSENGER | SUV | ALL_TERRAIN | MUD_TERRAIN | COMMERCIAL
   image:     string
 }
 
 const ALL_PRODUCTS: TyreProduct[] = [
-  { id: '1',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',   size: '245/70R16', spec: '118/115S', price: 91.50,  isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '2',  brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: false, image: '/images/tyres/Tyre 1.png' },
-  { id: '3',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',   size: '245/70R16', spec: '118/115S', price: 91.50,  isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '4',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'UltraContact UX7',  size: '215/65R16', spec: '98H',      price: 91.50,  isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '5',  brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '6',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',   size: '245/70R16', spec: '118/115S', price: 91.50,  isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '7',  brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: false, image: '/images/tyres/Tyre 1.png' },
-  { id: '8',  brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: false, image: '/images/tyres/Tyre 1.png' },
-  { id: '9',  brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'P Zero Sport',      size: '245/45R18', spec: '100Y',     price: 185.00, isSale: false, image: '/images/tyres/Tyre 1.png' },
-  { id: '10', brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Victra Sport 5',    size: '225/40R18', spec: '92Y',      price: 145.00, isSale: true,  image: '/images/tyres/Tyre 1.png' },
-  { id: '11', brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Kinergy Eco 2',     size: '205/55R16', spec: '91V',      price: 98.00,  isSale: false, image: '/images/tyres/Tyre 1.png' },
-  { id: '12', brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'Cinturato P7',      size: '225/50R17', spec: '98W',      price: 160.00, isSale: false, image: '/images/tyres/Tyre 1.png' },
+  { id: '1',  slug: 'continental-crosscontact-at-245-70r16',       brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',   size: '245/70R16', spec: '118/115S', price: 91.50,  isSale: true,  type: 'ALL_TERRAIN', image: '/images/tyres/Tyre 1.png' },
+  { id: '2',  slug: 'hankook-ventus-s1-evo3-215-65r16',            brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: false, type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '3',  slug: 'continental-crosscontact-at-245-70r16-b',     brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',   size: '245/70R16', spec: '118/115S', price: 91.50,  isSale: true,  type: 'SUV',         image: '/images/tyres/Tyre 1.png' },
+  { id: '4',  slug: 'continental-ultracontact-ux7-215-65r16',      brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'UltraContact UX7',  size: '215/65R16', spec: '98H',      price: 91.50,  isSale: true,  type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '5',  slug: 'hankook-ventus-s1-evo3-215-65r16-b',          brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',    size: '215/65R16', spec: '98H',      price: 120.50, isSale: true,  type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '6',  slug: 'maxxis-at771-245-70r16',                      brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'AT771 Bravo',       size: '245/70R16', spec: '113/110S', price: 105.00, isSale: false, type: 'ALL_TERRAIN', image: '/images/tyres/Tyre 1.png' },
+  { id: '7',  slug: 'hankook-dynapro-at2-265-65r17',               brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Dynapro AT2',       size: '265/65R17', spec: '120S',     price: 135.00, isSale: false, type: 'SUV',         image: '/images/tyres/Tyre 1.png' },
+  { id: '8',  slug: 'maxxis-razr-mt-265-75r16',                    brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Razr MT',           size: '265/75R16', spec: '119Q',     price: 165.00, isSale: true,  type: 'MUD_TERRAIN', image: '/images/tyres/Tyre 1.png' },
+  { id: '9',  slug: 'pirelli-p-zero-sport-245-45r18',              brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'P Zero Sport',      size: '245/45R18', spec: '100Y',     price: 185.00, isSale: false, type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '10', slug: 'maxxis-victra-sport-5-225-40r18',             brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Victra Sport 5',    size: '225/40R18', spec: '92Y',      price: 145.00, isSale: true,  type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '11', slug: 'hankook-kinergy-eco2-205-55r16',              brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Kinergy Eco 2',     size: '205/55R16', spec: '91V',      price: 98.00,  isSale: false, type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '12', slug: 'pirelli-cinturato-p7-225-50r17',              brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'Cinturato P7',      size: '225/50R17', spec: '98W',      price: 160.00, isSale: false, type: 'PASSENGER',   image: '/images/tyres/Tyre 1.png' },
+  { id: '13', slug: 'yokohama-geolandar-at-265-70r16',             brand: 'Yokohama',    brandLogo: '/images/brands/yokohama.svg',    model: 'Geolandar A/T',     size: '265/70R16', spec: '112H',     price: 148.00, isSale: false, type: 'ALL_TERRAIN', image: '/images/tyres/Tyre 1.png' },
+  { id: '14', slug: 'continental-crosscontact-suv-235-65r17',      brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact SUV',  size: '235/65R17', spec: '108H',     price: 115.00, isSale: true,  type: 'SUV',         image: '/images/tyres/Tyre 1.png' },
+  { id: '15', slug: 'maxxis-bravo-mt-762-31x105r15',               brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Bravo MT-762',      size: '31×10.5R15',spec: '109Q',     price: 172.00, isSale: false, type: 'MUD_TERRAIN', image: '/images/tyres/Tyre 1.png' },
+  { id: '16', slug: 'hankook-dynapro-mt2-265-70r17',               brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Dynapro MT2',       size: '265/70R17', spec: '121Q',     price: 178.00, isSale: true,  type: 'MUD_TERRAIN', image: '/images/tyres/Tyre 1.png' },
 ]
 
 const BRANDS      = ['All Brands', ...Array.from(new Set(ALL_PRODUCTS.map(p => p.brand)))]
@@ -50,12 +57,17 @@ function BrandLogoImg({ src, brand }: { src: string; brand: string }) {
 }
 
 /* ── Single product card ──────────────────────────────────────────────────── */
-function TyreCard({ product, onAddToCart, justAdded }: {
-  product:    TyreProduct
-  onAddToCart: (id: string) => void
-  justAdded:  boolean
-}) {
-  const [hovered, setHovered] = useState(false)
+function TyreCard({ product }: { product: TyreProduct }) {
+  const [hovered,   setHovered]   = useState(false)
+  const [justAdded, setJustAdded] = useState(false)
+  const { addToCart } = useCart()
+
+  function handleAdd(e: React.MouseEvent) {
+    e.stopPropagation()
+    addToCart({ id: product.slug, productType: 'tyre', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
+    setJustAdded(true)
+    setTimeout(() => setJustAdded(false), 1400)
+  }
 
   return (
     <div
@@ -96,7 +108,7 @@ function TyreCard({ product, onAddToCart, justAdded }: {
 
       {/* Add to cart button */}
       <button
-        onClick={() => onAddToCart(product.id)}
+        onClick={handleAdd}
         aria-label="Add to cart"
         style={{
           position:     'absolute',
@@ -179,7 +191,7 @@ function TyreCard({ product, onAddToCart, justAdded }: {
           </p>
 
           <Link
-            href={`/tyres/${product.id}`}
+            href={`/tyres/${product.slug ?? product.id}`}
             className="inline-flex items-center gap-1"
             style={{
               background:    '#E8572A',
@@ -219,33 +231,64 @@ const selectStyle: React.CSSProperties = {
   minWidth:     '140px',
 }
 
-/* ── Main grid section ───────────────────────────────────────────────────── */
-export default function TyreGrid() {
-  const [selectedBrand, setSelectedBrand] = useState('All Brands')
-  const [sortBy,        setSortBy]        = useState('Default')
-  const [justAdded,     setJustAdded]     = useState<string | null>(null)
+/* ── Props from search URL ────────────────────────────────────────────────── */
+interface TyreGridProps {
+  initialWidth?:   string
+  initialProfile?: string
+  initialRim?:     string
+  initialBrand?:   string
+  initialType?:    string
+}
 
-  /* Filter */
-  const filtered = useMemo(() =>
-    selectedBrand === 'All Brands'
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter(p => p.brand === selectedBrand),
-    [selectedBrand]
+/* ── Main grid section ───────────────────────────────────────────────────── */
+export default function TyreGrid({ initialWidth, initialProfile, initialRim, initialBrand, initialType }: TyreGridProps = {}) {
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand || 'All Brands')
+  const [sortBy,        setSortBy]        = useState('Default')
+
+  /*
+    Size query built from URL params — e.g. "205/55R16".
+    Exact matches are preferred; if none exist the full catalogue is shown
+    with an "no exact match" notice so the user still sees alternatives.
+  */
+  const sizeQuery = initialWidth && initialProfile && initialRim
+    ? `${initialWidth}/${initialProfile}R${initialRim}`
+    : null
+
+  /* Type filter (from URL param) applied first, brand filter on top */
+  const typeFiltered = useMemo(() =>
+    initialType
+      ? ALL_PRODUCTS.filter(p => p.type === initialType)
+      : ALL_PRODUCTS,
+    [initialType]
   )
+
+  const brandFiltered = useMemo(() =>
+    selectedBrand === 'All Brands'
+      ? typeFiltered
+      : typeFiltered.filter(p => p.brand === selectedBrand),
+    [selectedBrand, typeFiltered]
+  )
+
+  /* Size filter — exact match first, fallback to all */
+  const sizeFiltered  = useMemo(() => {
+    if (!sizeQuery) return brandFiltered
+    const exact = brandFiltered.filter(p => p.size === sizeQuery)
+    return exact.length > 0 ? exact : brandFiltered   // fallback = show all with notice
+  }, [brandFiltered, sizeQuery])
+
+  const exactSizeMatch = sizeQuery
+    ? brandFiltered.some(p => p.size === sizeQuery)
+    : true
 
   /* Sort */
   const products = useMemo(() => {
-    const arr = [...filtered]
+    const arr = [...sizeFiltered]
     if (sortBy === 'Price: Low to High')  arr.sort((a, b) => a.price - b.price)
     if (sortBy === 'Price: High to Low') arr.sort((a, b) => b.price - a.price)
     if (sortBy === 'Name: A–Z')          arr.sort((a, b) => a.model.localeCompare(b.model))
     return arr
-  }, [filtered, sortBy])
+  }, [sizeFiltered, sortBy])
 
-  function addToCart(id: string) {
-    setJustAdded(id)
-    setTimeout(() => setJustAdded(null), 1400)
-  }
 
   return (
     <section style={{ paddingBottom: '56px' }}>
@@ -254,28 +297,27 @@ export default function TyreGrid() {
         {/* ── Filter bar ── */}
         <div
           className="flex flex-wrap items-center justify-between gap-4"
-          style={{ padding: '20px 0 20px', borderBottom: '1px solid #E0E0E0', marginBottom: '24px' }}
+          style={{ padding: '20px 0', borderBottom: '1px solid #E0E0E0', marginBottom: '24px' }}
         >
           {/* Breadcrumb */}
           <nav style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#888', fontWeight: 500 }}>
-            <Link href="/"       style={{ color: '#888', textDecoration: 'none' }}>Home</Link>
+            <Link href="/"      style={{ color: '#888', textDecoration: 'none' }}>Home</Link>
             <span style={{ margin: '0 6px' }}>/</span>
-            <Link href="/tyres"  style={{ color: '#888', textDecoration: 'none' }}>Tyres</Link>
+            <Link href="/tyres" style={{ color: '#888', textDecoration: 'none' }}>Tyres</Link>
             <span style={{ margin: '0 6px' }}>/</span>
-            <span style={{ color: '#1A1A1A', fontWeight: 600 }}>Collection</span>
+            <span style={{ color: '#1A1A1A', fontWeight: 600 }}>
+              {sizeQuery ? `Results for ${sizeQuery}` : initialType ? `${initialType.replace('_', ' ')} Tyres` : 'Collection'}
+            </span>
           </nav>
 
           {/* Dropdowns */}
           <div className="flex items-center gap-3">
-            {/* Brand filter */}
             <div style={{ position: 'relative' }}>
               <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={selectStyle}>
                 {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               <i className="ti ti-chevron-down" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#888', pointerEvents: 'none' }} aria-hidden="true" />
             </div>
-
-            {/* Sort */}
             <div style={{ position: 'relative' }}>
               <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={selectStyle}>
                 {SORT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -285,20 +327,44 @@ export default function TyreGrid() {
           </div>
         </div>
 
-        {/* ── Product grid — 4 columns ── */}
+        {/* ── Active filter chips ── */}
+        {(sizeQuery || selectedBrand !== 'All Brands') && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {sizeQuery && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1A1A1A', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                <i className="ti ti-ruler-2" style={{ fontSize: '13px' }} aria-hidden="true" />
+                {sizeQuery}
+                <Link href="/tyres/results" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginLeft: '2px' }}>×</Link>
+              </span>
+            )}
+            {selectedBrand !== 'All Brands' && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#F0F0F0', color: '#333', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                {selectedBrand}
+                <button onClick={() => setSelectedBrand('All Brands')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: 0, lineHeight: 1 }}>×</button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ── No exact size match notice ── */}
+        {sizeQuery && !exactSizeMatch && (
+          <div style={{ background: '#FFF8F5', border: '1px solid #FDDCCC', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <i className="ti ti-info-circle" style={{ fontSize: '18px', color: '#E8572A', flexShrink: 0 }} aria-hidden="true" />
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#555', fontWeight: 400 }}>
+              No exact match found for <strong style={{ color: '#1A1A1A' }}>{sizeQuery}</strong>. Showing all available tyres — contact us to order your specific size.
+            </p>
+          </div>
+        )}
+
+        {/* ── Product grid ── */}
         {products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '16px' }}>
-            No tyres found for the selected brand.
+            No tyres found. Try a different filter.
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {products.map(product => (
-              <TyreCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-                justAdded={justAdded === product.id}
-              />
+              <TyreCard key={product.id} product={product} />
             ))}
           </div>
         )}

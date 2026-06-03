@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useCart } from '../../context/CartContext'
 
 interface Product {
   brand: string
@@ -10,20 +11,21 @@ interface Product {
   model: string
   size: string
   spec: string
+  price: number
   slug: string
   image: string
   tab: 'tyres' | 'wheels'
 }
 
 const PRODUCTS: Product[] = [
-  { tab: 'tyres',  brand: 'Hankook',     brandLogo: '/images/brands/yokohama.svg',    model: 'Ventus S1 evo3',   size: '245/70R16', spec: '118/115S', slug: '/tyres',  image: '/images/tyres/Tyre 1.png' },
-  { tab: 'tyres',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'UltraContact UX7', size: '245/70R16', spec: '118/115S', slug: '/tyres',  image: '/images/tyres/Tyre 1.png' },
-  { tab: 'tyres',  brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'P Zero Sport',     size: '245/70R16', spec: '118/115S', slug: '/tyres',  image: '/images/tyres/Tyre 1.png' },
-  { tab: 'tyres',  brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Victra Sport 5',   size: '245/70R16', spec: '118/115S', slug: '/tyres',  image: '/images/tyres/Tyre 1.png' },
-  { tab: 'wheels', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg',  model: 'Boxer',            size: '17" × 8J',  spec: '6×139.7',  slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
-  { tab: 'wheels', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg',  model: 'Arsenal',          size: '18" × 9J',  spec: '5×114.3',  slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
-  { tab: 'wheels', brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'SportContact 7',   size: '19" × 9J',  spec: '5×112',    slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
-  { tab: 'wheels', brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'P Zero Track',     size: '20" × 10J', spec: '5×114.3',  slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
+  { tab: 'tyres',  brand: 'Hankook',     brandLogo: '/images/brands/hankook.svg',     model: 'Ventus S1 evo3',   size: '215/65R16', spec: '98H',     price: 120.50, slug: '/tyres/hankook-ventus-s1-evo3-215-65r16',       image: '/images/tyres/Tyre 1.png' },
+  { tab: 'tyres',  brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'UltraContact UX7', size: '215/65R16', spec: '98H',     price: 100.00, slug: '/tyres/continental-ultracontact-ux7-215-65r16', image: '/images/tyres/Tyre 1.png' },
+  { tab: 'tyres',  brand: 'Pirelli',     brandLogo: '/images/brands/pirelli.svg',     model: 'P Zero Sport',     size: '245/45R18', spec: '100Y',    price: 185.00, slug: '/tyres/pirelli-p-zero-sport-245-45r18',         image: '/images/tyres/Tyre 1.png' },
+  { tab: 'tyres',  brand: 'Maxxis',      brandLogo: '/images/brands/maxxis.svg',      model: 'Victra Sport 5',   size: '225/40R18', spec: '92Y',     price: 145.00, slug: '/tyres/maxxis-victra-sport-5-225-40r18',        image: '/images/tyres/Tyre 1.png' },
+  { tab: 'wheels', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg',  model: 'AWOL',             size: '17" × 8.5', spec: '6×139.7', price: 230.00, slug: '/wheels/black-rhino-awol-17x85',                image: '/images/wheel/Wheel 1.png' },
+  { tab: 'wheels', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg',  model: 'Arsenal',          size: '18" × 9J',  spec: '5×114.3', price: 265.00, slug: '/wheels/black-rhino-arsenal-18x9',              image: '/images/wheel/Wheel 1.png' },
+  { tab: 'wheels', brand: 'ROH',         brandLogo: '/images/brands/roh.svg',          model: 'Terrain',          size: '16" × 8J',  spec: '6×139.7', price: 195.00, slug: '/wheels/roh-terrain-16x8',                      image: '/images/wheel/Wheel 1.png' },
+  { tab: 'wheels', brand: 'ROH',         brandLogo: '/images/brands/roh.svg',          model: 'Warrior',          size: '20" × 9J',  spec: '5×150',   price: 295.00, slug: '/wheels/roh-warrior-20x9',                      image: '/images/wheel/Wheel 1.png' },
 ]
 
 /*
@@ -37,6 +39,26 @@ const BUTTON_AREA_H = 54
 export default function BestDeals() {
   const [tab, setTab]                 = useState<'tyres' | 'wheels'>('tyres')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+  const [addedId,     setAddedId]     = useState<string | null>(null)
+  const { addToCart } = useCart()
+
+  function handleAddToCart(e: React.MouseEvent, product: Product) {
+    e.preventDefault()
+    e.stopPropagation()
+    addToCart({
+      id:          product.slug,
+      productType: product.tab === 'tyres' ? 'tyre' : 'wheel',
+      brand:       product.brand,
+      brandLogo:   product.brandLogo,
+      model:       product.model,
+      size:        product.size,
+      spec:        product.spec,
+      price:       product.price,
+      image:       product.image,
+    })
+    setAddedId(product.slug)
+    setTimeout(() => setAddedId(null), 1400)
+  }
 
   const visible = PRODUCTS.filter(p => p.tab === tab)
 
@@ -54,7 +76,7 @@ export default function BestDeals() {
         paddingBottom: '48px',
       }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80%', margin: '0 auto' }}>
 
         {/* ── Header row ── */}
         <div className="flex items-center justify-between mb-8">
@@ -245,21 +267,31 @@ export default function BestDeals() {
                       pointerEvents: isHovered ? 'auto' : 'none',
                     }}
                   >
-                    <div
+                    <button
+                      onClick={e => handleAddToCart(e, product)}
                       style={{
+                        width:         '100%',
                         padding:       '11px 16px',
-                        background:    '#1A1A1A',
+                        background:    addedId === product.slug ? '#22c55e' : '#1A1A1A',
                         color:         '#fff',
                         borderRadius:  '8px',
+                        border:        'none',
+                        cursor:        'pointer',
                         fontFamily:    "'DM Sans', sans-serif",
                         fontSize:      '13px',
                         fontWeight:     700,
                         letterSpacing: '0.06em',
                         textAlign:     'center',
+                        transition:    'background 0.2s ease',
+                        display:       'flex',
+                        alignItems:    'center',
+                        justifyContent:'center',
+                        gap:           '6px',
                       }}
                     >
-                      SHOP NOW
-                    </div>
+                      <i className={addedId === product.slug ? 'ti ti-check' : 'ti ti-shopping-cart'} style={{ fontSize: '14px' }} aria-hidden="true" />
+                      {addedId === product.slug ? 'Added!' : 'SHOP NOW'}
+                    </button>
                   </div>
 
                 </div>
@@ -271,7 +303,7 @@ export default function BestDeals() {
         {/* ── Footer link ── */}
         <div className="text-center mt-8">
           <Link
-            href={tab === 'tyres' ? '/tyres/collection' : '/wheels/collection'}
+            href={tab === 'tyres' ? '/tyres/results' : '/wheels/results'}
             className="inline-flex items-center gap-2 transition-opacity hover:opacity-70"
             style={{
               color:      '#E8572A',

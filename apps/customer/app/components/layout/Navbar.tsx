@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useCart } from '../../context/CartContext'
 
 const heroPill: React.CSSProperties = {
   background: 'linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%)',
@@ -30,7 +31,7 @@ const scrolledPill: React.CSSProperties = {
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [cartCount] = useState(0)
+  const { cartCount } = useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -61,7 +62,7 @@ export default function Navbar() {
         transition: 'background 0.35s ease, box-shadow 0.35s ease, padding-top 0.35s ease, border-color 0.35s ease',
       }}
     >
-      <nav className="max-w-7xl mx-auto px-6 sm:px-8">
+      <nav className="w-full px-6 sm:px-10">
         <div className="flex items-center h-16">
 
           {/* Left — Logo */}

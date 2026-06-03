@@ -53,7 +53,7 @@ export default function StoreLocator() {
       {/* Hint of green scrim */}
       <div className="absolute inset-0" style={{ background: 'rgba(22, 65, 32, 0.15)' }} />
 
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="relative z-10" style={{ maxWidth: '60%', margin: '0 auto' }}>
 
         <div className="mb-8">
           <div

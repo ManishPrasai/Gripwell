@@ -5,11 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 const TYPES = [
-  { label: 'SUV Tyre',         href: '/tyres?type=SUV',         image: '/images/tyres/tyre-suv.png' },
-  { label: 'All Terrain Tyre', href: '/tyres?type=ALL_TERRAIN', image: '/images/tyres/tyre-all-terrain.png' },
-  { label: 'Passenger Tyre',   href: '/tyres?type=PASSENGER',   image: '/images/tyres/tyre-passenger.png' },
-  { label: '4×4 Tyre',         href: '/tyres?type=4X4',         image: '/images/tyres/tyre-4x4.png' },
-  { label: 'Mud Terrain Tyre', href: '/tyres?type=MUD_TERRAIN', image: '/images/tyres/tyre-mud.png' },
+  { label: 'SUV Tyre',         href: '/tyres/results?type=SUV',         image: '/images/tyres/tyre-suv.png' },
+  { label: 'All Terrain Tyre', href: '/tyres/results?type=ALL_TERRAIN', image: '/images/tyres/tyre-all-terrain.png' },
+  { label: 'Passenger Tyre',   href: '/tyres/results?type=PASSENGER',   image: '/images/tyres/tyre-passenger.png' },
+  { label: '4×4 Tyre',         href: '/tyres/results?type=SUV',         image: '/images/tyres/tyre-4x4.png' },
+  { label: 'Mud Terrain Tyre', href: '/tyres/results?type=MUD_TERRAIN', image: '/images/tyres/tyre-mud.png' },
 ]
 
 export default function ShopByTyreType() {

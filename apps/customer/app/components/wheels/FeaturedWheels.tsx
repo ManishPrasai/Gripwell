@@ -3,12 +3,13 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useCart } from '../../context/CartContext'
 
 /* ── 3 featured wheels ───────────────────────────────────────────────────── */
 const WHEELS = [
-  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Crawler',  size: '17" × 8J', spec: '6×139.7', slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
-  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal',  size: '18" × 9J', spec: '5×114.3', slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Crawler', size: '20" × 9J', spec: '5×150',   slug: '/wheels', image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17" × 8.5', spec: '6×139.7', slug: '/wheels/black-rhino-awol-17x85',    image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal', size: '18" × 9J',  spec: '5×114.3', slug: '/wheels/black-rhino-arsenal-18x9',  image: '/images/wheel/Wheel 1.png' },
+  { brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Warrior', size: '20" × 9J',  spec: '5×150',   slug: '/wheels/roh-warrior-20x9',          image: '/images/wheel/Wheel 1.png' },
 ]
 
 /* Layout constants ─────────────────────────────────────────────────────── */
@@ -17,8 +18,17 @@ const INFO_H = 108  // Content flow layer height (badge + title + specs + paddin
 
 /* ── Card component ──────────────────────────────────────────────────────── */
 function WheelCard({ product }: { product: typeof WHEELS[0] }) {
-  const [hovered, setHovered] = useState(false)
+  const [hovered,   setHovered]   = useState(false)
+  const [justAdded, setJustAdded] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+  const { addToCart } = useCart()
+
+  function handleAdd(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    addToCart({ id: product.slug, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: 230, image: product.image })
+    setJustAdded(true)
+    setTimeout(() => setJustAdded(false), 1400)
+  }
 
   /*
     Asymmetric clamped physics — spec §2.
@@ -210,19 +220,16 @@ function WheelCard({ product }: { product: typeof WHEELS[0] }) {
           zIndex:        3,
         }}
       >
-        <div style={{
-          padding:       '12px 16px',
-          background:    '#1A1A1A',
-          color:         '#fff',
-          borderRadius:  '8px',
-          fontFamily:    "'DM Sans', sans-serif",
-          fontSize:      '13px',
-          fontWeight:    700,
-          letterSpacing: '0.07em',
-          textAlign:     'center',
-          textTransform: 'uppercase',
-        }}>
-          View More
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ flex: 1, padding: '12px 16px', background: '#1A1A1A', color: '#fff', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, letterSpacing: '0.07em', textAlign: 'center', textTransform: 'uppercase' }}>
+            View More
+          </div>
+          <button
+            onClick={handleAdd}
+            style={{ width: '44px', height: '44px', borderRadius: '8px', background: justAdded ? '#22c55e' : '#E8572A', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.2s' }}
+          >
+            <i className={justAdded ? 'ti ti-check' : 'ti ti-shopping-cart'} style={{ fontSize: '16px', color: '#fff' }} aria-hidden="true" />
+          </button>
         </div>
       </div>
 
