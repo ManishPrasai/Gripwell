@@ -1,9 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export function middleware() {
+export function middleware(request: NextRequest) {
+  const refreshToken = request.cookies.get('refresh_token')?.value
+
+  if (!refreshToken) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('from', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: []
+  matcher: [
+    '/account/:path*',
+    '/orders/:path*',
+    '/checkout/:path*',
+    '/profile/:path*',
+    '/bookings/:path*',
+  ],
 }
