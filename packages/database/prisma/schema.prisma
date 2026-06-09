@@ -78,6 +78,7 @@ model Tyre {
   id                   String    @id @default(uuid())
   brand                String
   model                String
+  description          String?
   tyreSizeId           String
   type                 TyreType
   price                Decimal   @db.Decimal(10, 2)
@@ -128,6 +129,7 @@ model Wheel {
   id             String    @id @default(uuid())
   brand          String
   model          String
+  description    String?
   diameter       Int
   width          Decimal   @db.Decimal(4, 1)
   pcd            String
@@ -300,6 +302,25 @@ model AppointmentSlot {
 }
 
 // ─────────────────────────────────────
+// PERSISTENT CART (authenticated users)
+// ─────────────────────────────────────
+
+model CartItem {
+  id          String   @id @default(uuid())
+  customerId  String
+  productType String   // 'tyre' | 'wheel'
+  productId   String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productType, productId])
+  @@index([customerId])
+}
+
+// ─────────────────────────────────────
 // CUSTOMERS
 // ─────────────────────────────────────
 
@@ -326,6 +347,7 @@ model Customer {
   reviews           Review[]
   notifications     Notification[]
   chatConversations ChatConversation[]
+  cartItems         CartItem[]
 
   @@index([email])
   @@index([isActive])

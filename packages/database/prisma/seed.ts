@@ -1,322 +1,318 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, TyreType } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STORES = [
+  { name: 'Nova Tyres Alphington',  slug: 'alphington',  address: '200 Grange Rd',       suburb: 'Alphington',    state: 'VIC', postcode: '3078', phone: '03 7009 7700', email: 'alphington@novatyres.com.au',  lat: -37.7787, lon: 145.0204 },
+  { name: 'Nova Tyres Springvale',  slug: 'springvale',  address: '4/134 Springvale Rd', suburb: 'Springvale',    state: 'VIC', postcode: '3171', phone: '03 9562 4269', email: 'springvale@novatyres.com.au',  lat: -37.9519, lon: 145.1523 },
+  { name: 'Nova Tyres Sefton',      slug: 'sefton',      address: '107 Carlingford St',  suburb: 'Sefton',        state: 'NSW', postcode: '2162', phone: '02 9644 0000', email: 'sefton@novatyres.com.au',      lat: -33.8918, lon: 151.0249 },
+  { name: 'Nova Tyres Dandenong',   slug: 'dandenong',   address: '308 S Gippsland Hwy', suburb: 'Dandenong',     state: 'VIC', postcode: '3175', phone: '03 8787 5846', email: 'dandenong@novatyres.com.au',   lat: -38.0026, lon: 145.2167 },
+  { name: 'Nova Tyres Bayswater',   slug: 'bayswater',   address: '194 Canterbury Rd',   suburb: 'Bayswater',     state: 'VIC', postcode: '3153', phone: '03 9720 9354', email: 'bayswater@novatyres.com.au',   lat: -37.8465, lon: 145.2683 },
+  { name: 'Nova Tyres Sunshine',    slug: 'sunshine',    address: '9 Devonshire Rd',     suburb: 'Sunshine',      state: 'VIC', postcode: '3020', phone: '03 9311 0000', email: 'sunshine@novatyres.com.au',    lat: -37.7893, lon: 144.8337 },
+  { name: 'Nova Tyres Geelong',     slug: 'geelong',     address: '1/118 Bellarine Hwy', suburb: 'Newcomb',       state: 'VIC', postcode: '3219', phone: '03 5221 0000', email: 'geelong@novatyres.com.au',     lat: -38.1510, lon: 144.3933 },
+  { name: 'Nova Tyres Brisbane',    slug: 'brisbane',    address: '123 Ipswich Rd',      suburb: 'Woolloongabba', state: 'QLD', postcode: '4102', phone: '07 3276 0000', email: 'brisbane@novatyres.com.au',    lat: -27.4975, lon: 153.0257 },
+  { name: 'Nova Tyres Adelaide',    slug: 'adelaide',    address: '456 Port Rd',         suburb: 'Hindmarsh',     state: 'SA',  postcode: '5007', phone: '08 8346 0000', email: 'adelaide@novatyres.com.au',    lat: -34.9001, lon: 138.5784 },
+]
+
+const STORE_HOURS = [
+  { day: 'Monday',    openTime: '08:00', closeTime: '17:30', isClosed: false },
+  { day: 'Tuesday',   openTime: '08:00', closeTime: '17:30', isClosed: false },
+  { day: 'Wednesday', openTime: '08:00', closeTime: '17:30', isClosed: false },
+  { day: 'Thursday',  openTime: '08:00', closeTime: '17:30', isClosed: false },
+  { day: 'Friday',    openTime: '08:00', closeTime: '17:30', isClosed: false },
+  { day: 'Saturday',  openTime: '08:00', closeTime: '16:00', isClosed: false },
+  { day: 'Sunday',    openTime: '00:00', closeTime: '00:00', isClosed: true  },
+]
+
+const SERVICES = [
+  { name: 'Free Pre-RWC Check',     description: 'Comprehensive pre-roadworthy certificate inspection to identify any issues before your official RWC test. Includes brakes, tyres, lights, steering and suspension.',         priceFrom: 0,   durationMinutes: 45  },
+  { name: 'Free Safety Inspection', description: 'A thorough safety check of your vehicle covering tyres, brakes, lights, steering and fluid levels at no cost to you.',                                                       priceFrom: 0,   durationMinutes: 30  },
+  { name: 'Log Book Service',       description: "Full manufacturer-scheduled log book service to keep your new car warranty intact and your vehicle running at peak performance.",                                             priceFrom: 149, durationMinutes: 90  },
+  { name: 'Yearly Services',        description: 'Annual vehicle service covering oil and filter change, fluid top-ups, tyre rotation, brake inspection and a comprehensive safety check.',                                     priceFrom: 199, durationMinutes: 120 },
+  { name: '3 Year Services',        description: 'Comprehensive 3-year service including all standard items plus coolant flush, brake fluid change, spark plug replacement and a full mechanical inspection.',                  priceFrom: 299, durationMinutes: 180 },
+  { name: '6 Year Service',         description: 'Full 6-year major service covering timing belt/chain inspection, fuel system service, all fluid replacements and an in-depth mechanical and electrical health check.',        priceFrom: 449, durationMinutes: 240 },
+  { name: 'Ultimate Service',       description: 'Our most comprehensive service package covering every mechanical and safety aspect of your vehicle — including all fluids, filters, belts, brakes and a full safety report.', priceFrom: 599, durationMinutes: 300 },
+]
+
+const TYRE_SIZES = [
+  { width: 245, profile: 70, rimDiameter: 16, loadIndex: 118, speedRating: 'S', construction: 'R' },
+  { width: 215, profile: 65, rimDiameter: 16, loadIndex: 98,  speedRating: 'H', construction: 'R' },
+  { width: 245, profile: 45, rimDiameter: 18, loadIndex: 100, speedRating: 'Y', construction: 'R' },
+  { width: 225, profile: 40, rimDiameter: 18, loadIndex: 92,  speedRating: 'Y', construction: 'R' },
+  { width: 205, profile: 55, rimDiameter: 16, loadIndex: 91,  speedRating: 'V', construction: 'R' },
+  { width: 225, profile: 50, rimDiameter: 17, loadIndex: 98,  speedRating: 'W', construction: 'R' },
+  { width: 265, profile: 70, rimDiameter: 16, loadIndex: 112, speedRating: 'H', construction: 'R' },
+  { width: 275, profile: 55, rimDiameter: 20, loadIndex: 117, speedRating: 'H', construction: 'R' },
+]
+
+// Image mapped by tyre type
+const TYRE_TYPE_IMAGE: Record<string, string> = {
+  PASSENGER:   '/images/tyres/tyre-passenger.png',
+  SUV:         '/images/tyres/tyre-suv.png',
+  MUD_TERRAIN: '/images/tyres/tyre-mud.png',
+  COMMERCIAL:  '/images/tyres/tyre-4x4.png',
+}
+
+const TYRES = [
+  {
+    brand: 'Continental', model: 'CrossContact A/T',
+    slug: 'continental-crosscontact-at-245-70r16',
+    type: TyreType.SUV, sizeIdx: 0, price: 91.50,
+    isBestSeller: true, isFeatured: true,
+    description: 'The CrossContact A/T combines on-road comfort with proven off-road capability. Ideal for SUVs and 4WDs that need reliable all-terrain performance year-round.',
+  },
+  {
+    brand: 'Hankook', model: 'Ventus S1 evo3',
+    slug: 'hankook-ventus-s1-evo3-215-65r16',
+    type: TyreType.PASSENGER, sizeIdx: 1, price: 120.50,
+    isBestSeller: false, isFeatured: true,
+    description: 'The Ventus S1 evo3 delivers outstanding dry and wet handling for sporty passenger vehicles. High-speed stability meets responsive, precise steering feel.',
+  },
+  {
+    brand: 'Continental', model: 'UltraContact UX7',
+    slug: 'continental-ultracontact-ux7-215-65r16',
+    type: TyreType.PASSENGER, sizeIdx: 1, price: 100.00,
+    isBestSeller: true, isFeatured: false,
+    description: "Continental's advanced touring tyre offering exceptional comfort, fuel efficiency and all-weather safety — engineered for everyday drivers who demand more.",
+  },
+  {
+    brand: 'Pirelli', model: 'P Zero Sport',
+    slug: 'pirelli-p-zero-sport-245-45r18',
+    type: TyreType.PASSENGER, sizeIdx: 2, price: 185.00,
+    isBestSeller: false, isFeatured: true,
+    description: "Pirelli's flagship ultra-high-performance tyre. Track-derived technology delivers maximum dry grip and precise handling for performance and luxury vehicles.",
+  },
+  {
+    brand: 'Maxxis', model: 'Victra Sport 5',
+    slug: 'maxxis-victra-sport-5-225-40r18',
+    type: TyreType.PASSENGER, sizeIdx: 3, price: 145.00,
+    isBestSeller: true, isFeatured: false,
+    description: 'The Victra Sport 5 provides high performance at a competitive price. Optimised for sports and performance vehicles with excellent handling in wet and dry conditions.',
+  },
+  {
+    brand: 'Hankook', model: 'Kinergy Eco 2',
+    slug: 'hankook-kinergy-eco2-205-55r16',
+    type: TyreType.PASSENGER, sizeIdx: 4, price: 98.00,
+    isBestSeller: false, isFeatured: false,
+    description: 'The Kinergy Eco 2 prioritises fuel efficiency and all-season safety. Perfect for everyday commuters seeking economy without compromising ride comfort or wet traction.',
+  },
+  {
+    brand: 'Pirelli', model: 'Cinturato P7',
+    slug: 'pirelli-cinturato-p7-225-50r17',
+    type: TyreType.PASSENGER, sizeIdx: 5, price: 160.00,
+    isBestSeller: false, isFeatured: false,
+    description: "Pirelli's green performance tyre combining efficiency and safety with low rolling resistance. Engineered for premium vehicles that demand comfort and environmental responsibility.",
+  },
+  {
+    brand: 'Yokohama', model: 'Geolandar A/T',
+    slug: 'yokohama-geolandar-at-265-70r16',
+    type: TyreType.MUD_TERRAIN, sizeIdx: 6, price: 199.00,
+    isBestSeller: true, isFeatured: true,
+    description: "Australia's trusted all-terrain tyre for 4WDs and SUVs. Aggressive shoulder blocks deliver confident off-road grip while maintaining quiet, comfortable highway manners.",
+  },
+  {
+    brand: 'BF Goodrich', model: 'Mud Terrain T/A',
+    slug: 'bfgoodrich-mud-terrain-ta-275-55r20',
+    type: TyreType.MUD_TERRAIN, sizeIdx: 7, price: 329.00,
+    isBestSeller: false, isFeatured: true,
+    description: 'Legendary mud terrain tyre engineered for maximum off-road traction in the toughest conditions. Massive tread lugs self-clean in deep mud, rocks and loose terrain.',
+  },
+]
+
+const WHEELS = [
+  {
+    brand: 'Black Rhino', model: 'AWOL',    slug: 'black-rhino-awol-17x85',
+    diameter: 17, width: 8.5, pcd: '6×139.7', offset: -18, finish: 'Matte Black',  price: 230.00,
+    description: 'Premium off-road alloy wheel built for serious 4WD performance. Deep dish design with aggressive styling and high load rating for heavy-duty applications.',
+  },
+  {
+    brand: 'Black Rhino', model: 'Arsenal', slug: 'black-rhino-arsenal-18x9',
+    diameter: 18, width: 9.0, pcd: '5×114.3', offset: 12,  finish: 'Bronze',       price: 265.00,
+    description: 'Military-grade durability meets refined aesthetics. Multi-spoke design in striking bronze pairs perfectly with lifted SUVs and dual-cab utes.',
+  },
+  {
+    brand: 'ROH', model: 'Terrain',         slug: 'roh-terrain-16x8',
+    diameter: 16, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gunmetal',     price: 195.00,
+    description: "Australia's trusted off-road wheel. The ROH Terrain is engineered for tough conditions with a proven track record across all terrains — mud, rock and everything in between.",
+  },
+  {
+    brand: 'ROH', model: 'Warrior',         slug: 'roh-warrior-20x9',
+    diameter: 20, width: 9.0, pcd: '5×150',   offset: 18,  finish: 'Satin Black',  price: 295.00,
+    description: 'Combines aggressive styling with everyday usability. Large diameter options for lifted trucks and SUVs that need presence without sacrificing practicality.',
+  },
+  {
+    brand: 'King Wheels', model: 'Force',   slug: 'king-force-17x8',
+    diameter: 17, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gloss Black',  price: 185.00,
+    description: 'Value-packed alloy wheel offering great looks at an accessible price. The King Force is the perfect upgrade for 4WDs and utes seeking style and strength.',
+  },
+  {
+    brand: 'Sonix', model: 'XR7',           slug: 'sonix-xr7-18x85',
+    diameter: 18, width: 8.5, pcd: '5×112',   offset: 35,  finish: 'Hyper Silver', price: 175.00,
+    description: 'European styling at an Australian price. The XR7 features a refined multi-spoke design in hyper silver that complements European and Japanese passenger vehicles.',
+  },
+]
+
+// Weekday and Saturday appointment time slots
+const WEEKDAY_SLOTS = ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00', '15:00', '16:00']
+const SATURDAY_SLOTS = ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00']
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function main() {
-  console.log('Seeding database...')
+  console.log('🌱 Starting database seed...\n')
 
-  // Create first Super Admin
+  // ── Super Admin ─────────────────────────────────────────────────────────────
   const passwordHash = await bcrypt.hash('admin123456', 12)
-
   const superAdmin = await prisma.adminUser.upsert({
     where: { email: 'admin@novatyres.com.au' },
     update: {},
-    create: {
-      firstName: 'Nova',
-      lastName: 'Admin',
-      email: 'admin@novatyres.com.au',
-      passwordHash,
-      role: 'SUPER_ADMIN',
-      isActive: true
-    }
+    create: { firstName: 'Nova', lastName: 'Admin', email: 'admin@novatyres.com.au', passwordHash, role: 'SUPER_ADMIN', isActive: true },
   })
+  console.log('✅ Super Admin:', superAdmin.email)
 
-  console.log('Super Admin created:', superAdmin.email)
+  // ── Stores ──────────────────────────────────────────────────────────────────
+  const storeIdMap: Record<string, string> = {}
+  for (const s of STORES) {
+    const store = await prisma.store.upsert({
+      where: { slug: s.slug },
+      update: { name: s.name, address: s.address, suburb: s.suburb, state: s.state, postcode: s.postcode, phone: s.phone, email: s.email, latitude: s.lat, longitude: s.lon },
+      create: { name: s.name, slug: s.slug, address: s.address, suburb: s.suburb, state: s.state, postcode: s.postcode, phone: s.phone, email: s.email, latitude: s.lat, longitude: s.lon, isActive: true },
+    })
+    storeIdMap[s.slug] = store.id
+  }
+  console.log(`✅ ${STORES.length} stores seeded`)
 
-  const stores = [
-    { name: 'Nova Tyres Springvale', slug: 'springvale', suburb: 'Springvale', state: 'VIC', postcode: '3171', address: '123 Springvale Road', phone: '03 9547 0000', email: 'springvale@novatyres.com.au', latitude: -37.9498, longitude: 145.1526 },
-    { name: 'Nova Tyres Dandenong', slug: 'dandenong', suburb: 'Dandenong', state: 'VIC', postcode: '3175', address: '456 Lonsdale Street', phone: '03 9792 0000', email: 'dandenong@novatyres.com.au', latitude: -37.9872, longitude: 145.2150 },
-    { name: 'Nova Tyres Alphington', slug: 'alphington', suburb: 'Alphington', state: 'VIC', postcode: '3078', address: '789 Heidelberg Road', phone: '03 9499 0000', email: 'alphington@novatyres.com.au', latitude: -37.7833, longitude: 145.0167 },
-    { name: 'Nova Tyres Bayswater', slug: 'bayswater', suburb: 'Bayswater', state: 'VIC', postcode: '3153', address: '321 Mountain Highway', phone: '03 9720 0000', email: 'bayswater@novatyres.com.au', latitude: -37.8500, longitude: 145.2667 },
-    { name: 'Nova Tyres Sunshine', slug: 'sunshine', suburb: 'Sunshine', state: 'VIC', postcode: '3020', address: '654 Ballarat Road', phone: '03 9311 0000', email: 'sunshine@novatyres.com.au', latitude: -37.7833, longitude: 144.8333 },
-    { name: 'Nova Tyres Geelong', slug: 'geelong', suburb: 'Geelong', state: 'VIC', postcode: '3220', address: '987 Moorabool Street', phone: '03 5221 0000', email: 'geelong@novatyres.com.au', latitude: -38.1499, longitude: 144.3617 },
-    { name: 'Nova Tyres Sefton', slug: 'sefton', suburb: 'Sefton', state: 'NSW', postcode: '2162', address: '147 Sefton Road', phone: '02 9644 0000', email: 'sefton@novatyres.com.au', latitude: -33.8667, longitude: 151.0167 },
-    { name: 'Nova Tyres Brisbane', slug: 'brisbane', suburb: 'Cooper Plains', state: 'QLD', postcode: '4108', address: '258 Ipswich Road', phone: '07 3276 0000', email: 'brisbane@novatyres.com.au', latitude: -27.5667, longitude: 153.0167 },
-    { name: 'Nova Tyres Adelaide', slug: 'adelaide', suburb: 'Croydon Park', state: 'SA', postcode: '5008', address: '369 Port Road', phone: '08 8346 0000', email: 'adelaide@novatyres.com.au', latitude: -34.8833, longitude: 138.5500 },
-  ]
+  // ── Store Hours ─────────────────────────────────────────────────────────────
+  for (const storeId of Object.values(storeIdMap)) {
+    for (const h of STORE_HOURS) {
+      await prisma.storeHours.upsert({
+        where: { storeId_dayOfWeek: { storeId, dayOfWeek: h.day } },
+        update: { openTime: h.openTime, closeTime: h.closeTime, isClosed: h.isClosed },
+        create: { storeId, dayOfWeek: h.day, openTime: h.openTime, closeTime: h.closeTime, isClosed: h.isClosed },
+      })
+    }
+  }
+  console.log(`✅ Store hours seeded (${STORES.length} stores × ${STORE_HOURS.length} days)`)
 
-  for (const store of stores) {
-    await prisma.store.upsert({
-      where: { slug: store.slug },
-      update: {},
-      create: {
-        ...store,
-        isActive: true
+  // ── Services ────────────────────────────────────────────────────────────────
+  const serviceIds: string[] = []
+  for (const svc of SERVICES) {
+    const existing = await prisma.service.findFirst({ where: { name: svc.name } })
+    if (existing) {
+      await prisma.service.update({ where: { id: existing.id }, data: { description: svc.description, priceFrom: svc.priceFrom, durationMinutes: svc.durationMinutes } })
+      serviceIds.push(existing.id)
+    } else {
+      const created = await prisma.service.create({ data: { ...svc, isActive: true } })
+      serviceIds.push(created.id)
+    }
+  }
+  console.log(`✅ ${SERVICES.length} services seeded`)
+
+  // ── Store Services (all services available at all stores) ───────────────────
+  for (const storeId of Object.values(storeIdMap)) {
+    for (const serviceId of serviceIds) {
+      await prisma.storeService.upsert({
+        where: { storeId_serviceId: { storeId, serviceId } },
+        update: { isAvailable: true },
+        create: { storeId, serviceId, isAvailable: true },
+      })
+    }
+  }
+  console.log(`✅ Store services linked`)
+
+  // ── Appointment Slots (next 60 days) ────────────────────────────────────────
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const slotRows: { storeId: string; date: Date; time: string; isAvailable: boolean; maxBookings: number; currentBookings: number }[] = []
+
+  for (const storeId of Object.values(storeIdMap)) {
+    for (let d = 0; d < 60; d++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + d)
+      const dow = date.getDay() // 0=Sun, 6=Sat
+      if (dow === 0) continue   // closed Sundays
+
+      const times = dow === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS
+      for (const time of times) {
+        slotRows.push({ storeId, date, time, isAvailable: true, maxBookings: 2, currentBookings: 0 })
       }
-    })
-    console.log(`Store created: ${store.name}`)
+    }
   }
 
-  // Create TyreSizes
-  const tyreSizes = [
-    { width: 205, profile: 55, rimDiameter: 16, loadIndex: 91, speedRating: 'V', construction: 'R' },
-    { width: 225, profile: 45, rimDiameter: 17, loadIndex: 94, speedRating: 'W', construction: 'R' },
-    { width: 235, profile: 65, rimDiameter: 17, loadIndex: 108, speedRating: 'H', construction: 'R' },
-    { width: 265, profile: 70, rimDiameter: 16, loadIndex: 112, speedRating: 'H', construction: 'R' },
-    { width: 195, profile: 65, rimDiameter: 15, loadIndex: 91, speedRating: 'H', construction: 'R' },
-    { width: 245, profile: 40, rimDiameter: 18, loadIndex: 97, speedRating: 'Y', construction: 'R' },
-    { width: 275, profile: 55, rimDiameter: 20, loadIndex: 117, speedRating: 'H', construction: 'R' },
-    { width: 215, profile: 60, rimDiameter: 16, loadIndex: 95, speedRating: 'H', construction: 'R' },
-  ]
+  await prisma.appointmentSlot.createMany({ data: slotRows, skipDuplicates: true })
+  console.log(`✅ ${slotRows.length} appointment slots seeded`)
 
-  const createdSizes = []
-  for (const size of tyreSizes) {
-    const created = await prisma.tyreSize.upsert({
-      where: {
-        width_profile_rimDiameter: {
-          width: size.width,
-          profile: size.profile,
-          rimDiameter: size.rimDiameter
-        }
+  // ── Tyre Sizes ──────────────────────────────────────────────────────────────
+  const sizeIds: string[] = []
+  for (const ts of TYRE_SIZES) {
+    const size = await prisma.tyreSize.upsert({
+      where: { width_profile_rimDiameter: { width: ts.width, profile: ts.profile, rimDiameter: ts.rimDiameter } },
+      update: {},
+      create: ts,
+    })
+    sizeIds.push(size.id)
+  }
+  console.log(`✅ ${TYRE_SIZES.length} tyre sizes seeded`)
+
+  // ── Tyres ───────────────────────────────────────────────────────────────────
+  for (const t of TYRES) {
+    const tyre = await prisma.tyre.upsert({
+      where: { slug: t.slug },
+      update: { description: t.description, price: t.price, isBestSeller: t.isBestSeller, isFeatured: t.isFeatured },
+      create: {
+        brand: t.brand, model: t.model, description: t.description, slug: t.slug,
+        type: t.type, tyreSizeId: sizeIds[t.sizeIdx], price: t.price,
+        compareAtPrice: parseFloat((t.price * 1.2).toFixed(2)),
+        stockQuantity: Math.floor(Math.random() * 30) + 10,
+        isBestSeller: t.isBestSeller, isFeatured: t.isFeatured, isActive: true,
       },
-      update: {},
-      create: size
     })
-    createdSizes.push(created)
-    console.log(`TyreSize created: ${size.width}/${size.profile}R${size.rimDiameter}`)
+    const imageCount = await prisma.tyreImage.count({ where: { tyreId: tyre.id } })
+    if (imageCount === 0) {
+      await prisma.tyreImage.create({
+        data: { tyreId: tyre.id, url: TYRE_TYPE_IMAGE[t.type], altText: `${t.brand} ${t.model}`, sortOrder: 0 },
+      })
+    }
+    console.log(`  → ${t.brand} ${t.model}`)
   }
+  console.log('✅ Tyres seeded')
 
-  // Create Tyres
-  const tyres = [
-    {
-      brand: 'Bridgestone',
-      model: 'Ecopia EP150',
-      tyreSizeId: createdSizes[0].id,
-      type: 'PASSENGER' as const,
-      price: 149.00,
-      compareAtPrice: 189.00,
-      stockQuantity: 50,
-      isBestSeller: true,
-      isFeatured: true,
-      fuelEfficiencyRating: 'A',
-      wetGripRating: 'B',
-      noiseLevelDb: 68,
-      slug: 'bridgestone-ecopia-ep150-205-55r16',
-      isActive: true
-    },
-    {
-      brand: 'Michelin',
-      model: 'Energy XM2',
-      tyreSizeId: createdSizes[0].id,
-      type: 'PASSENGER' as const,
-      price: 179.00,
-      compareAtPrice: 219.00,
-      stockQuantity: 35,
-      isBestSeller: true,
-      isFeatured: false,
-      fuelEfficiencyRating: 'A',
-      wetGripRating: 'A',
-      noiseLevelDb: 69,
-      slug: 'michelin-energy-xm2-205-55r16',
-      isActive: true
-    },
-    {
-      brand: 'Pirelli',
-      model: 'P Zero SUV',
-      tyreSizeId: createdSizes[1].id,
-      type: 'SUV' as const,
-      price: 289.00,
-      compareAtPrice: 349.00,
-      stockQuantity: 20,
-      isBestSeller: true,
-      isFeatured: true,
-      fuelEfficiencyRating: 'B',
-      wetGripRating: 'A',
-      noiseLevelDb: 71,
-      slug: 'pirelli-p-zero-suv-225-45r17',
-      isActive: true
-    },
-    {
-      brand: 'Continental',
-      model: 'ContiCrossContact',
-      tyreSizeId: createdSizes[2].id,
-      type: 'SUV' as const,
-      price: 249.00,
-      compareAtPrice: 299.00,
-      stockQuantity: 30,
-      isBestSeller: false,
-      isFeatured: true,
-      fuelEfficiencyRating: 'B',
-      wetGripRating: 'B',
-      noiseLevelDb: 72,
-      slug: 'continental-conticrosscontact-235-65r17',
-      isActive: true
-    },
-    {
-      brand: 'Hankook',
-      model: 'Kinergy Eco',
-      tyreSizeId: createdSizes[4].id,
-      type: 'PASSENGER' as const,
-      price: 119.00,
-      compareAtPrice: 149.00,
-      stockQuantity: 60,
-      isBestSeller: false,
-      isFeatured: false,
-      fuelEfficiencyRating: 'B',
-      wetGripRating: 'B',
-      noiseLevelDb: 67,
-      slug: 'hankook-kinergy-eco-195-65r15',
-      isActive: true
-    },
-    {
-      brand: 'Dunlop',
-      model: 'SP Sport Maxx',
-      tyreSizeId: createdSizes[5].id,
-      type: 'PASSENGER' as const,
-      price: 219.00,
-      compareAtPrice: 269.00,
-      stockQuantity: 25,
-      isBestSeller: false,
-      isFeatured: false,
-      fuelEfficiencyRating: 'A',
-      wetGripRating: 'A',
-      noiseLevelDb: 70,
-      slug: 'dunlop-sp-sport-maxx-245-40r18',
-      isActive: true
-    },
-    {
-      brand: 'Yokohama',
-      model: 'Geolandar AT',
-      tyreSizeId: createdSizes[3].id,
-      type: 'MUD_TERRAIN' as const,
-      price: 199.00,
-      compareAtPrice: 249.00,
-      stockQuantity: 40,
-      isBestSeller: true,
-      isFeatured: true,
-      fuelEfficiencyRating: 'C',
-      wetGripRating: 'C',
-      noiseLevelDb: 74,
-      slug: 'yokohama-geolandar-at-265-70r16',
-      isActive: true
-    },
-    {
-      brand: 'BF Goodrich',
-      model: 'All Terrain TA',
-      tyreSizeId: createdSizes[6].id,
-      type: 'MUD_TERRAIN' as const,
-      price: 329.00,
-      compareAtPrice: 399.00,
-      stockQuantity: 15,
-      isBestSeller: false,
-      isFeatured: true,
-      fuelEfficiencyRating: 'D',
-      wetGripRating: 'C',
-      noiseLevelDb: 76,
-      slug: 'bf-goodrich-all-terrain-ta-275-55r20',
-      isActive: true
-    },
-    {
-      brand: 'Toyo',
-      model: 'Open Country MT',
-      tyreSizeId: createdSizes[3].id,
-      type: 'MUD_TERRAIN' as const,
-      price: 259.00,
-      compareAtPrice: 319.00,
-      stockQuantity: 22,
-      isBestSeller: false,
-      isFeatured: false,
-      fuelEfficiencyRating: 'D',
-      wetGripRating: 'D',
-      noiseLevelDb: 77,
-      slug: 'toyo-open-country-mt-265-70r16',
-      isActive: true
-    },
-    {
-      brand: 'Michelin',
-      model: 'LTX AT2',
-      tyreSizeId: createdSizes[2].id,
-      type: 'SUV' as const,
-      price: 299.00,
-      compareAtPrice: 359.00,
-      stockQuantity: 18,
-      isBestSeller: false,
-      isFeatured: false,
-      fuelEfficiencyRating: 'C',
-      wetGripRating: 'B',
-      noiseLevelDb: 73,
-      slug: 'michelin-ltx-at2-235-65r17',
-      isActive: true
-    },
-  ]
-
-  for (const tyre of tyres) {
-    await prisma.tyre.upsert({
-      where: { slug: tyre.slug },
-      update: {},
-      create: tyre
+  // ── Wheels ──────────────────────────────────────────────────────────────────
+  for (const w of WHEELS) {
+    const wheel = await prisma.wheel.upsert({
+      where: { slug: w.slug },
+      update: { description: w.description, price: w.price },
+      create: {
+        brand: w.brand, model: w.model, description: w.description, slug: w.slug,
+        diameter: w.diameter, width: w.width, pcd: w.pcd, offset: w.offset,
+        material: 'Alloy', finish: w.finish, price: w.price,
+        compareAtPrice: parseFloat((w.price * 1.2).toFixed(2)),
+        stockQuantity: Math.floor(Math.random() * 16) + 4, isActive: true,
+      },
     })
-    console.log(`Tyre created: ${tyre.brand} ${tyre.model}`)
+    const imageCount = await prisma.wheelImage.count({ where: { wheelId: wheel.id } })
+    if (imageCount === 0) {
+      await prisma.wheelImage.create({
+        data: { wheelId: wheel.id, url: '/images/wheel/Wheel 1.png', altText: `${w.brand} ${w.model}`, sortOrder: 0 },
+      })
+    }
+    console.log(`  → ${w.brand} ${w.model}`)
   }
+  console.log('✅ Wheels seeded')
 
-  // Create Wheels
-  const wheels = [
-    {
-      brand: 'King Wheels',
-      model: 'D-Hole Black',
-      diameter: 16,
-      width: 8.0,
-      pcd: '5x114.3',
-      offset: 0,
-      bore: 84.1,
-      material: 'steel',
-      finish: 'black',
-      price: 89.00,
-      compareAtPrice: 119.00,
-      stockQuantity: 30,
-      slug: 'king-wheels-d-hole-black-16',
-      isActive: true
-    },
-    {
-      brand: 'King Wheels',
-      model: 'Terra Black',
-      diameter: 16,
-      width: 8.0,
-      pcd: '6x139.7',
-      offset: 0,
-      bore: 108.0,
-      material: 'steel',
-      finish: 'black',
-      price: 95.00,
-      compareAtPrice: 129.00,
-      stockQuantity: 25,
-      slug: 'king-wheels-terra-black-16',
-      isActive: true
-    },
-    {
-      brand: 'Simmons',
-      model: 'OM-1 Matte Black',
-      diameter: 17,
-      width: 9.0,
-      pcd: '5x127',
-      offset: 0,
-      bore: 78.1,
-      material: 'alloy',
-      finish: 'matte black',
-      price: 349.00,
-      compareAtPrice: 429.00,
-      stockQuantity: 12,
-      slug: 'simmons-om1-matte-black-17',
-      isActive: true
-    },
-  ]
-
-  for (const wheel of wheels) {
-    await prisma.wheel.upsert({
-      where: { slug: wheel.slug },
-      update: {},
-      create: wheel
-    })
-    console.log(`Wheel created: ${wheel.brand} ${wheel.model}`)
-  }
-
-
-  console.log('Seeding complete.')
+  console.log('\n🎉 Seed complete!')
 }
 
 main()
-  .catch(console.error)
+  .catch(e => { console.error(e); process.exit(1) })
   .finally(() => prisma.$disconnect())

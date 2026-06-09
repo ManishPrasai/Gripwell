@@ -5,7 +5,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfileincrease the vertical space between each section and make the trust pill close to the section separator but not too close and move the hero search section 5% narrower and 20px closer to trust signal. Increase trust signal typography by 15–20%. keep the divider between hero and bottom white exactly wher  it is.
     container_name: nova_tyres_web
     restart: always
     ports:
