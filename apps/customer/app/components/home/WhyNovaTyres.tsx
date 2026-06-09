@@ -93,13 +93,13 @@ export default function WhyNovaTyres() {
       if (!animatingRef.current) navigate(1)
     }, 4000)
     return () => clearTimeout(id)
-  }, [current, hovered])   // restarts cleanly each time current or hovered changes
+  }, [current, hovered])   // eslint-disable-line react-hooks/exhaustive-deps
 
   const slide = SLIDES[current]
 
   return (
     <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '80%', margin: '0 auto' }}>
 
         {/* ── Section header ── */}
         <div className="flex flex-wrap items-end justify-between gap-4 mb-12">

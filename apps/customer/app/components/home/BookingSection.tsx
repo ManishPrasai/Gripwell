@@ -119,6 +119,7 @@ export default function BookingSection() {
 
   return (
     <section
+      id="booking"
       className="relative py-16 px-4 overflow-hidden"
       style={{ background: '#0a0a0a' }}
     >

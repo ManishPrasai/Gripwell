@@ -60,7 +60,7 @@ export default function CustomerReviews() {
 
   return (
     <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '96%', margin: '0 auto' }}>
 
         {/* ── Header ── */}
         <div className="flex flex-wrap items-end justify-between gap-6 mb-8">

@@ -5,7 +5,7 @@ import BookingSection    from './components/home/BookingSection'
 import WhyNovaTyres      from './components/home/WhyNovaTyres'
 import BrandsStrip       from './components/home/BrandsStrip'
 import CustomerReviews   from './components/home/CustomerReviews'
-import StoreLocator      from './components/home/StoreLocator'
+import StoreLocator      from '@/app/components/locations/StoreLocator'
 import NewsletterSection from './components/home/NewsletterSection'
 import SocialGrid        from './components/home/SocialGrid'
 

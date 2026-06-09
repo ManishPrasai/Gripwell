@@ -1,36 +1,37 @@
 const brands = [
-  { name: 'Continental', logo: '/images/brands/continental.svg' },
-  { name: 'Pirelli',     logo: '/images/brands/pirelli.svg' },
-  { name: 'Nitto',       logo: '/images/brands/nitto.svg' },
-  { name: 'Yokohama',    logo: '/images/brands/yokohama.svg' },
-  { name: 'Maxxis',      logo: '/images/brands/maxxis.svg' },
-  { name: 'Atlander',    logo: '/images/brands/atlander.svg' },
-  { name: 'Bridgestone', logo: '/images/brands/bridgestone.svg' },
-  { name: 'Michelin',    logo: '/images/brands/michelin.svg' },
+  { name: 'Continental', logo: '/images/brands/continental.svg',  h: 30 },
+  { name: 'Pirelli',     logo: '/images/brands/pirelli.svg',       h: 32 },
+  { name: 'Bridgestone', logo: '/images/brands/bridgestone.svg',   h: 30 },
+  { name: 'Michelin',    logo: '/images/brands/michelin.svg',       h: 30 },
+  { name: 'Yokohama',    logo: '/images/brands/yokohama.svg',       h: 30 },
+  { name: 'Maxxis',      logo: '/images/brands/maxxis.svg',         h: 30 },
+  { name: 'Nitto',       logo: '/images/brands/nitto.svg',          h: 30 },
+  { name: 'Hankook',     logo: '/images/brands/hankook.svg',        h: 30 },
+  { name: 'Atlander',    logo: '/images/brands/atlander.svg',       h: 29 },
 ]
 
 export default function BrandsStrip() {
   return (
     <section className="py-10 px-4 border-y" style={{ background: 'white', borderColor: '#E5E5E5' }}>
-      <div className="max-w-7xl mx-auto">
+      <div style={{ maxWidth: '96%', margin: '0 auto' }}>
         <p
-          className="text-center uppercase tracking-widest mb-6"
+          className="text-center uppercase tracking-widest mb-8"
           style={{ color: '#888', letterSpacing: '0.15em', fontSize: '12px', fontWeight: 500 }}
         >
           Trusted Brands — 200+ Models in Stock
         </p>
 
-        <div className="flex items-center justify-center gap-8 flex-wrap">
+        <div className="flex items-center justify-center gap-10 flex-wrap">
           {brands.map(brand => (
             <div
               key={brand.name}
-              className="flex items-center justify-center opacity-50 hover:opacity-80 transition-opacity"
-              style={{ height: '32px', minWidth: '80px' }}
+              className="flex items-center justify-center transition-opacity duration-200 hover:opacity-70"
+              style={{ height: `${brand.h}px`, minWidth: '60px' }}
             >
               <img
                 src={brand.logo}
                 alt={brand.name}
-                className="h-full object-contain grayscale"
+                style={{ height: '100%', width: 'auto', objectFit: 'contain' }}
               />
             </div>
           ))}

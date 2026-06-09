@@ -4,174 +4,263 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-const categories = [
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
   {
-    title: 'All Terrain Tyre',
+    title:    'All Terrain Tyre',
     subtitle: 'Versatile performance. On and off the road.',
-    href: '/tyres/results?type=MUD_TERRAIN',
-    bgImage: '/images/categories/all-terrain.jpg.png',
-    color: '#2D4A35',
+    href:     '/tyres/results?type=MUD_TERRAIN',
+    image:    '/images/categories/all-terrain.jpg.png',
+    bg:       '#1C2820',
   },
   {
-    title: '4×4 Tyre',
+    title:    '4×4 Tyre',
     subtitle: 'Built for power. Ready for anything.',
-    href: '/tyres/results?type=SUV',
-    bgImage: '/images/categories/4x4.jpg.png',
-    color: '#1C3A2B',
+    href:     '/tyres/results?type=SUV',
+    image:    '/images/categories/4x4.jpg.png',
+    bg:       '#1A2422',
   },
   {
-    title: 'Passenger Tyre',
+    title:    'Passenger Tyre',
     subtitle: 'Smooth, quiet and reliable for everyday driving.',
-    href: '/tyres/results?type=PASSENGER',
-    bgImage: '/images/categories/passenger.jpg.png',
-    color: '#2A3F35',
+    href:     '/tyres/results?type=PASSENGER',
+    image:    '/images/categories/passenger.jpg.png',
+    bg:       '#1E2428',
   },
   {
-    title: 'Mud Terrain Tyre',
+    title:    'Mud Terrain Tyre',
     subtitle: 'Maximum traction. Conquer the mud.',
-    href: '/tyres/results?type=MUD_TERRAIN',
-    bgImage: '/images/categories/mud-terrain.jpg.png',
-    color: '#1A2E22',
+    href:     '/tyres/results?type=MUD_TERRAIN',
+    image:    '/images/categories/mud-terrain.jpg.png',
+    bg:       '#181E1A',
   },
 ]
 
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function BrowseByCategory() {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+  const [hoveredCard,    setHoveredCard]    = useState<number | null>(null)
+  const [premiumHovered, setPremiumHovered] = useState(false)
+  const [ctaHovered,     setCtaHovered]     = useState(false)
 
   return (
-    <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div style={{ maxWidth: '80%', margin: '0 auto' }}>
+    <section style={{ background: '#FAF9F5', paddingTop: '88px', paddingBottom: '88px' }}>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Header row ── */}
-        <div className="flex items-start justify-between mb-10 flex-wrap gap-6">
+        {/* ══ TOP ROW — text block (left) + Premium Tyres banner (right) ══ */}
+        <div className="flex flex-col lg:flex-row items-start gap-6 mb-5">
 
-          {/* Left: label · heading · body copy · CTA */}
-          <div>
+          {/* ── Left: copy + CTA ── */}
+          <div className="lg:flex-shrink-0 lg:max-w-[480px] pt-1">
+            {/* Category badge */}
             <p
-              className="uppercase mb-2"
-              style={{ color: '#E8572A', letterSpacing: '0.12em', fontSize: '12px', fontWeight: 500 }}
-            >
-              Browse by Category
-            </p>
-            <h2
+              className="uppercase mb-5"
               style={{
-                fontSize: 'clamp(28px, 4vw, 40px)',
-                color: '#1A1A1A',
-                fontFamily: "'Bebas Neue', sans-serif",
-                letterSpacing: '0.02em',
-                lineHeight: 1.1,
+                color:          '#FF5A1F',
+                letterSpacing:  '0.20em',
+                fontSize:       '11px',
+                fontWeight:     700,
+                fontFamily:     "'DM Sans', sans-serif",
               }}
             >
-              Find the Right<br />Tyre for Your Drive
+              Browse By Category
+            </p>
+
+            {/* Main heading — Bebas Neue, full caps, industrial */}
+            <h2
+              style={{
+                fontSize:       'clamp(36px, 4.8vw, 56px)',
+                color:          '#111111',
+                fontFamily:     "'Bebas Neue', sans-serif",
+                letterSpacing:  '0.05em',
+                lineHeight:      1.0,
+                textTransform:  'uppercase',
+                marginBottom:   '20px',
+                maxWidth:       '480px',
+              }}
+            >
+              Find The Right<br />Tyre For Your Drive
             </h2>
+
+            {/* Description */}
             <p
-              className="mt-3"
-              style={{ color: '#666', maxWidth: '320px', lineHeight: '1.6', fontSize: '15px', fontWeight: 400 }}
+              style={{
+                color:          '#555555',
+                maxWidth:       '380px',
+                lineHeight:     '1.75',
+                fontSize:       '15px',
+                fontWeight:     400,
+                fontFamily:     "'DM Sans', sans-serif",
+                marginBottom:   '36px',
+              }}
             >
               From everyday drives to off-road adventures, explore tyres engineered
               for performance, safety and confidence.
             </p>
 
-            {/* Clean outline pill — no icon */}
+            {/* Explore All Tyres — outline → solid on hover */}
             <Link
               href="/tyres"
-              className="inline-flex items-center mt-5 border rounded-full transition-all hover:bg-gray-50"
+              onMouseEnter={() => setCtaHovered(true)}
+              onMouseLeave={() => setCtaHovered(false)}
+              className="inline-flex items-center gap-2"
               style={{
-                borderColor: '#1A1A1A',
-                color: '#1A1A1A',
-                fontSize: '14px',
-                fontWeight: 600,
-                padding: '9px 22px',
+                border:         '1.5px solid #111111',
+                borderRadius:   '999px',
+                color:          ctaHovered ? '#ffffff' : '#111111',
+                background:     ctaHovered ? '#111111' : 'transparent',
+                fontSize:       '14px',
+                fontWeight:     700,
+                fontFamily:     "'DM Sans', sans-serif",
+                letterSpacing:  '0.04em',
+                padding:        '12px 26px',
                 textDecoration: 'none',
+                transition:     'background 0.28s ease, color 0.28s ease',
               }}
             >
               Explore All Tyres
+              <svg
+                width="15" height="15" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor"
+                strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
             </Link>
           </div>
 
-          {/* ── Premium Tyres card ──
-              Drop a night-time sports-car shot at:
-                /public/images/categories/premium-bg.jpg
-              The gradient overlay below shows as the fallback until that image
-              is present — the card looks great either way. */}
-          <div
-            className="rounded-2xl overflow-hidden flex flex-col justify-between"
+          {/* ── Right: Premium Tyres tall vertical banner ── */}
+          <Link
+            href="/tyres?type=premium"
+            onMouseEnter={() => setPremiumHovered(true)}
+            onMouseLeave={() => setPremiumHovered(false)}
+            className="relative w-full lg:flex-1 lg:min-w-[360px] flex flex-col justify-between rounded-2xl overflow-hidden"
             style={{
-              position: 'relative',
-              minWidth: '240px',
-              maxWidth: '280px',
-              minHeight: '215px',
-              background: '#0D1F17',
-              flexShrink: 0,
+              height:         '360px',
+              background:     '#0C0D0F',
+              textDecoration: 'none',
+              boxShadow:      premiumHovered
+                ? '0 28px 64px rgba(0,0,0,0.34)'
+                : '0 6px 24px rgba(0,0,0,0.14)',
+              transition:     'box-shadow 0.35s ease',
             }}
           >
-            {/* Background image — silently absent until file is added */}
+            {/* Background image */}
             <Image
               src="/images/categories/premium-bg.jpg"
-              alt=""
+              alt="Premium Tyres"
               fill
-              sizes="280px"
-              style={{ objectFit: 'cover', opacity: 0.65 }}
+              sizes="(max-width: 1024px) 100vw, 288px"
+              style={{
+                objectFit:      'cover',
+                objectPosition: 'calc(70% + 5px) center',
+                opacity:        premiumHovered ? 0.99 : 0.99,
+                transform:      premiumHovered ? 'scale(1.06)' : 'scale(1)',
+                transition:     'opacity 0.45s ease, transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
+              }}
             />
 
-            {/* Dark gradient overlay — semi-transparent so the image shows through */}
+            {/* Gradient overlay */}
             <div
               style={{
                 position: 'absolute',
-                inset: 0,
+                inset:     0,
                 background:
-                  'linear-gradient(135deg, rgba(10,25,18,0.62) 0%, rgba(4,4,4,0.52) 100%)',
+                  'linear-gradient(to top, rgba(4,4,6,0.95) 0%, rgba(4,4,6,0.50) 45%, rgba(4,4,6,0.12) 100%)',
               }}
             />
 
-            {/* Card content */}
-            <div style={{ position: 'relative', zIndex: 1, padding: '22px 22px 0' }}>
+            {/* Top content */}
+            <div style={{ position: 'relative', zIndex: 1, padding: '26px 26px 0' }}>
+              {/* Icon badge */}
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'rgba(232,87,42,0.15)',
-                  border: '1px solid rgba(232,87,42,0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '14px',
+                  width:           '42px',
+                  height:          '42px',
+                  borderRadius:    '12px',
+                  background:      'rgba(255,90,31,0.14)',
+                  border:          '1px solid rgba(255,90,31,0.38)',
+                  display:         'flex',
+                  alignItems:      'center',
+                  justifyContent:  'center',
+                  marginBottom:    '18px',
                 }}
               >
-                <i className="ti ti-bolt" style={{ fontSize: '16px', color: '#E8572A' }} aria-hidden="true" />
+                <i className="ti ti-bolt" style={{ fontSize: '19px', color: '#FF5A1F' }} aria-hidden="true" />
               </div>
-              <p style={{ color: '#fff', fontSize: '19px', fontWeight: 600, marginBottom: '8px', lineHeight: 1.2 }}>
+
+              <p
+                style={{
+                  color:          '#ffffff',
+                  fontSize:       '21px',
+                  fontWeight:     700,
+                  marginBottom:   '10px',
+                  lineHeight:     1.2,
+                  fontFamily:     "'DM Sans', sans-serif",
+                  letterSpacing:  '-0.01em',
+                }}
+              >
                 Premium Tyres
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '13px', fontWeight: 400, lineHeight: '1.55' }}>
-                Exceptional performance. Maximum safety. Engineered for excellence.
+              <p
+                style={{
+                  color:       'rgba(255,255,255,0.50)',
+                  fontSize:    '13px',
+                  fontWeight:  400,
+                  lineHeight:  '1.65',
+                  fontFamily:  "'DM Sans', sans-serif",
+                }}
+              >
+                Exceptional performance.<br />
+                Maximum safety. Engineered<br />
+                for excellence.
               </p>
             </div>
 
-            <Link
-              href="/tyres?type=premium"
-              className="inline-flex items-center gap-2 uppercase transition-opacity hover:opacity-80"
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                padding: '16px 22px 22px',
-                color: '#E8572A',
-                letterSpacing: '0.1em',
-                fontSize: '12px',
-                fontWeight: 600,
-                textDecoration: 'none',
-              }}
-            >
-              Explore Premium
-              <i className="ti ti-arrow-right" style={{ fontSize: '14px' }} aria-hidden="true" />
-            </Link>
-          </div>
+            {/* Bottom CTA row */}
+            <div style={{ position: 'relative', zIndex: 1, padding: '0 26px 26px' }}>
+              <div
+                className="inline-flex items-center gap-2 uppercase"
+                style={{
+                  color:          '#FF5A1F',
+                  letterSpacing:  '0.11em',
+                  fontSize:       '12px',
+                  fontWeight:     700,
+                  fontFamily:     "'DM Sans', sans-serif",
+                }}
+              >
+                Explore Premium
+                {/* Circular arrow — fills solid orange on card hover */}
+                <div
+                  style={{
+                    width:           '30px',
+                    height:          '30px',
+                    borderRadius:    '50%',
+                    background:      premiumHovered ? '#FF5A1F' : 'rgba(255,90,31,0.18)',
+                    border:          '1px solid rgba(255,90,31,0.45)',
+                    display:         'flex',
+                    alignItems:      'center',
+                    justifyContent:  'center',
+                    transition:      'background 0.28s ease',
+                  }}
+                >
+                  <i
+                    className="ti ti-arrow-up-right"
+                    style={{
+                      fontSize:   '13px',
+                      color:      premiumHovered ? '#ffffff' : '#FF5A1F',
+                      transition: 'color 0.28s ease',
+                    }}
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
-        {/* ── Category grid ── */}
+        {/* ══ CATEGORY GRID — 4 portrait cards ══ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {categories.map((cat, i) => {
+          {CATEGORIES.map((cat, i) => {
             const isHovered = hoveredCard === i
             return (
               <Link
@@ -180,124 +269,117 @@ export default function BrowseByCategory() {
                 onMouseEnter={() => setHoveredCard(i)}
                 onMouseLeave={() => setHoveredCard(null)}
                 style={{
-                  /*
-                    The Link IS the card — position:relative lets next/image fill
-                    work correctly, display:block turns the <a> into a block
-                    for aspect-ratio, and overflow:hidden clips the scaled contents.
-                  */
-                  display: 'block',
-                  position: 'relative',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  aspectRatio: '3/4',
-                  minHeight: '240px',
-                  background: cat.color,
+                  display:        'block',
+                  position:       'relative',
+                  borderRadius:   '16px',
+                  overflow:       'hidden',
+                  aspectRatio:    '3/4',
+                  minHeight:      '260px',
+                  background:     cat.bg,
                   textDecoration: 'none',
-                  /* Whole-card scale lift on hover */
-                  transform: isHovered ? 'scale(1.025)' : 'scale(1)',
-                  boxShadow: isHovered
-                    ? '0 20px 56px rgba(0,0,0,0.30)'
-                    : '0 2px 10px rgba(0,0,0,0.08)',
+                  transform:      isHovered ? 'translateY(-5px) scale(1.018)' : 'translateY(0) scale(1)',
+                  boxShadow:      isHovered
+                    ? '0 28px 52px rgba(0,0,0,0.30)'
+                    : '0 2px 12px rgba(0,0,0,0.10)',
                   transition:
-                    'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease',
-                  /* Lift hovered card above its siblings */
-                  zIndex: isHovered ? 2 : 1,
-                  cursor: 'pointer',
+                    'transform 0.40s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.40s ease',
+                  zIndex:   isHovered ? 2 : 1,
+                  cursor:   'pointer',
                 }}
               >
-
-                {/* Layer 1 — Background environment image */}
+                {/* Background image — scales on hover */}
                 <Image
-                  src={cat.bgImage}
-                  alt=""
+                  src={cat.image}
+                  alt={cat.title}
                   fill
                   sizes="(max-width: 768px) 50vw, 25vw"
                   style={{
-                    objectFit: 'cover',
-                    opacity: isHovered ? 0.72 : 0.58,
-                    transition: 'opacity 0.4s ease',
+                    objectFit:  'cover',
+                    opacity:    isHovered ? 0.80 : 0.62,
+                    transform:  isHovered ? 'scale(1.08)' : 'scale(1)',
+                    transition: 'opacity 0.45s ease, transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)',
                   }}
                 />
 
-                {/* Layer 2 — Gradient scrim (deepens on hover) */}
+                {/* Gradient scrim — deepens on hover */}
                 <div
                   style={{
-                    position: 'absolute',
-                    inset: 0,
+                    position:   'absolute',
+                    inset:       0,
                     background: isHovered
-                      ? 'linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.22) 55%, transparent 100%)'
-                      : 'linear-gradient(to top, rgba(0,0,0,0.74) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)',
-                    transition: 'background 0.4s ease',
+                      ? 'linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.22) 52%, transparent 100%)'
+                      : 'linear-gradient(to top, rgba(0,0,0,0.76) 0%, rgba(0,0,0,0.08) 52%, transparent 100%)',
+                    transition: 'background 0.40s ease',
                   }}
                 />
 
-                {/*
-                  Layer 4 — Bottom info bar.
-                  Flex row: text on the left, orange arrow button on the right.
-                  Both are always visible — the button brightens & pops on hover.
-                */}
+                {/* Bottom info bar */}
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    padding: '14px 14px 16px',
-                    display: 'flex',
-                    alignItems: 'flex-end',
+                    position:       'absolute',
+                    bottom:          0,
+                    left:            0,
+                    right:           0,
+                    padding:        '16px 14px 16px',
+                    display:        'flex',
+                    alignItems:     'flex-end',
                     justifyContent: 'space-between',
-                    gap: '8px',
+                    gap:            '8px',
                   }}
                 >
                   {/* Title + subtitle */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p
                       style={{
-                        color: '#fff',
-                        fontSize: 'clamp(13px, 1.5vw, 17px)',
-                        fontWeight: 600,
-                        marginBottom: '3px',
-                        lineHeight: 1.25,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        color:         '#ffffff',
+                        fontSize:      'clamp(13px, 1.4vw, 16px)',
+                        fontWeight:    700,
+                        marginBottom:  '4px',
+                        lineHeight:    1.2,
+                        fontFamily:    "'DM Sans', sans-serif",
+                        whiteSpace:    'nowrap',
+                        overflow:      'hidden',
+                        textOverflow:  'ellipsis',
                       }}
                     >
                       {cat.title}
                     </p>
                     <p
                       style={{
-                        color: 'rgba(255,255,255,0.65)',
-                        fontSize: 'clamp(10px, 1vw, 12px)',
+                        color:      'rgba(255,255,255,0.60)',
+                        fontSize:   'clamp(10px, 0.9vw, 12px)',
                         fontWeight: 500,
-                        lineHeight: 1.4,
+                        lineHeight: 1.45,
+                        fontFamily: "'DM Sans', sans-serif",
                       }}
                     >
                       {cat.subtitle}
                     </p>
                   </div>
 
-                  {/* Orange circular ↗ button — always present, pops on hover */}
+                  {/* Orange circular arrow — pops on hover */}
                   <div
                     style={{
-                      flexShrink: 0,
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '50%',
-                      background: '#E8572A',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: isHovered ? 1 : 0.82,
-                      transform: isHovered ? 'scale(1.12)' : 'scale(1)',
-                      boxShadow: isHovered ? '0 4px 18px rgba(232,87,42,0.55)' : 'none',
-                      transition: 'opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease',
+                      flexShrink:    0,
+                      width:         '34px',
+                      height:        '34px',
+                      borderRadius:  '50%',
+                      background:    isHovered ? '#FF5A1F' : 'rgba(255,90,31,0.82)',
+                      display:       'flex',
+                      alignItems:    'center',
+                      justifyContent:'center',
+                      transform:     isHovered ? 'scale(1.16)' : 'scale(1)',
+                      boxShadow:     isHovered ? '0 6px 20px rgba(255,90,31,0.55)' : 'none',
+                      transition:    'background 0.28s ease, transform 0.28s ease, box-shadow 0.28s ease',
                     }}
                   >
-                    <i className="ti ti-arrow-up-right" style={{ fontSize: '15px', color: '#fff' }} aria-hidden="true" />
+                    <i
+                      className="ti ti-arrow-up-right"
+                      style={{ fontSize: '15px', color: '#ffffff' }}
+                      aria-hidden="true"
+                    />
                   </div>
                 </div>
-
               </Link>
             )
           })}
