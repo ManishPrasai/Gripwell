@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma, verifyAccessToken } from '@nova/database'
 
 export async function GET(req: NextRequest) {

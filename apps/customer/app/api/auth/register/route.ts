@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { prisma, hashPassword, generateAccessToken, generateRefreshToken, hashRefreshToken } from '@nova/database'
 
 export async function POST(req: NextRequest) {

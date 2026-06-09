@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, getCache, setCache, TTL } from '@/lib/db'
+import { prisma, getCache, setCache, TTL } from '@nova/database'
 
 export async function GET(
   req: NextRequest,
