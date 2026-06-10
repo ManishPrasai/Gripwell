@@ -74,14 +74,14 @@ function mapTyre(t: TyreItem): Product {
   const { width, profile, rimDiameter, loadIndex, speedRating } = t.tyreSize
   return {
     tab:       'tyres',
-    id:        t.id,
+    id:        t.slug,              // raw slug → used as CartItem.productId for price lookup
     brand:     t.brand,
     brandLogo: getBrandLogo(t.brand),
     model:     t.model,
     size:      `${width}/${profile}R${rimDiameter}`,
     spec:      loadIndex && speedRating ? `${loadIndex}${speedRating}` : speedRating ?? '',
     price:     parseFloat(String(t.price)),
-    slug:      `/tyres/${t.slug}`,
+    slug:      `/tyres/${t.slug}`,  // URL path for navigation links only
     image:     t.images[0]?.url ?? '/images/tyres/tyre-passenger.png',
   }
 }
@@ -89,14 +89,14 @@ function mapTyre(t: TyreItem): Product {
 function mapWheel(w: WheelItem): Product {
   return {
     tab:       'wheels',
-    id:        w.id,
+    id:        w.slug,              // raw slug → used as CartItem.productId for price lookup
     brand:     w.brand,
     brandLogo: getBrandLogo(w.brand),
     model:     w.model,
     size:      `${w.diameter}" × ${parseFloat(String(w.width)).toFixed(1)}J`,
     spec:      w.pcd,
     price:     parseFloat(String(w.price)),
-    slug:      `/wheels/${w.slug}`,
+    slug:      `/wheels/${w.slug}`, // URL path for navigation links only
     image:     w.images[0]?.url ?? '/images/wheel/Wheel 1.png',
   }
 }
@@ -168,7 +168,7 @@ export default function BestDeals() {
     e.preventDefault()
     e.stopPropagation()
     addToCart({
-      id:          product.slug,
+      id:          product.id,   // raw slug, matches Tyre/Wheel.slug in DB
       productType: product.tab === 'tyres' ? 'tyre' : 'wheel',
       brand:       product.brand,
       brandLogo:   product.brandLogo,

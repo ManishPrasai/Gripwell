@@ -7,9 +7,9 @@ import { useCart } from '../../context/CartContext'
 
 /* ── 3 featured wheels ───────────────────────────────────────────────────── */
 const WHEELS = [
-  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17" × 8.5', spec: '6×139.7', slug: '/wheels/black-rhino-awol-17x85',    image: '/images/wheel/Wheel 1.png' },
-  { brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal', size: '18" × 9J',  spec: '5×114.3', slug: '/wheels/black-rhino-arsenal-18x9',  image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Warrior', size: '20" × 9J',  spec: '5×150',   slug: '/wheels/roh-warrior-20x9',          image: '/images/wheel/Wheel 1.png' },
+  { id: 'black-rhino-awol-17x85',   href: '/wheels/black-rhino-awol-17x85',   brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17" × 8.5', spec: '6×139.7', price: 230, image: '/images/wheel/Wheel 1.png' },
+  { id: 'black-rhino-arsenal-18x9', href: '/wheels/black-rhino-arsenal-18x9', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal', size: '18" × 9J',  spec: '5×114.3', price: 265, image: '/images/wheel/Wheel 1.png' },
+  { id: 'roh-warrior-20x9',         href: '/wheels/roh-warrior-20x9',         brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Warrior', size: '20" × 9J',  spec: '5×150',   price: 295, image: '/images/wheel/Wheel 1.png' },
 ]
 
 /* Layout constants ─────────────────────────────────────────────────────── */
@@ -25,7 +25,7 @@ function WheelCard({ product }: { product: typeof WHEELS[0] }) {
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault(); e.stopPropagation()
-    addToCart({ id: product.slug, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: 230, image: product.image })
+    addToCart({ id: product.id, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
     setJustAdded(true)
     setTimeout(() => setJustAdded(false), 1400)
   }
@@ -73,7 +73,7 @@ function WheelCard({ product }: { product: typeof WHEELS[0] }) {
       Link makes the whole card keyboard/screen-reader navigable.
     */
     <Link
-      href={product.slug}
+      href={product.href}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={onMouseLeave}
       onMouseMove={onMouseMove}

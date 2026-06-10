@@ -367,20 +367,22 @@ export default function CartContents() {
               </span>
             </div>
 
-            <button
+            <Link
+              href="/checkout"
               style={{
-                width: '100%', background: '#E8572A', color: '#fff', border: 'none',
-                borderRadius: '10px', padding: '14px', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                width: '100%', background: '#E8572A', color: '#fff',
+                borderRadius: '10px', padding: '14px',
                 fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px',
-                letterSpacing: '0.04em', marginBottom: '12px', transition: 'opacity 0.2s',
+                letterSpacing: '0.04em', marginBottom: '12px', textDecoration: 'none',
+                transition: 'opacity 0.2s',
               }}
               onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
               onMouseOut={e => (e.currentTarget.style.opacity = '1')}
             >
               <i className="ti ti-lock" style={{ fontSize: '16px' }} aria-hidden="true" />
               Proceed to checkout
-            </button>
+            </Link>
 
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#aaa', textAlign: 'center', marginBottom: '12px' }}>
               Secured Checkout
