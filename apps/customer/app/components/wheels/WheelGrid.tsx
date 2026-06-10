@@ -1,13 +1,24 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
 
-/* ── Product data ─────────────────────────────────────────────────────────── */
+/* ── Brand logo map ───────────────────────────────────────────────────────── */
+const BRAND_LOGOS: Record<string, string> = {
+  'black rhino':  '/images/brands/Black Rino.svg',
+  'roh':          '/images/brands/roh.svg',
+  'king wheels':  '/images/brands/king-wheels.svg',
+  'sonix':        '/images/brands/sonix.svg',
+  'fuel':         '/images/brands/fuel.svg',
+  'method':       '/images/brands/method.svg',
+}
+
+/* ── Types ────────────────────────────────────────────────────────────────── */
 interface WheelProduct {
-  id:        string
+  id:        string   // UUID — React key
+  slug:      string   // raw DB slug → stored as CartItem.productId
   brand:     string
   brandLogo: string
   model:     string
@@ -17,22 +28,33 @@ interface WheelProduct {
   image:     string
 }
 
-const ALL_PRODUCTS: WheelProduct[] = [
-  { id: 'w1',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17×8.5', spec: '6×139.7', price: 230.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w2',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17×8.5', spec: '6×139.7', price: 230.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w3',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17×8.5', spec: '6×139.7', price: 230.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w4',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'AWOL',    size: '17×8.5', spec: '6×139.7', price: 230.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w5',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal', size: '18×9J',  spec: '5×114.3', price: 265.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w6',  brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg', model: 'Arsenal', size: '18×9J',  spec: '5×114.3', price: 265.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w7',  brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Terrain', size: '16×8J',  spec: '6×139.7', price: 195.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w8',  brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Terrain', size: '17×8J',  spec: '6×139.7', price: 210.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w9',  brand: 'ROH',         brandLogo: '/images/brands/roh.svg',         model: 'Warrior', size: '20×9J',  spec: '5×150',   price: 295.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w10', brand: 'King Wheels', brandLogo: '/images/brands/king-wheels.svg', model: 'Force',   size: '17×8J',  spec: '6×139.7', price: 185.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w11', brand: 'King Wheels', brandLogo: '/images/brands/king-wheels.svg', model: 'Force',   size: '18×9J',  spec: '5×114.3', price: 205.00, image: '/images/wheel/Wheel 1.png' },
-  { id: 'w12', brand: 'Sonix',       brandLogo: '/images/brands/sonix.svg',       model: 'XR7',     size: '18×8.5', spec: '5×112',   price: 175.00, image: '/images/wheel/Wheel 1.png' },
-]
+interface ApiWheel {
+  id:             string
+  brand:          string
+  model:          string
+  diameter:       number
+  width:          string | number
+  pcd:            string
+  price:          string | number
+  compareAtPrice: string | number | null
+  slug:           string
+  images:         { url: string; altText: string | null }[]
+}
 
-const BRANDS       = ['All Brands', ...Array.from(new Set(ALL_PRODUCTS.map(p => p.brand)))]
+function mapWheel(w: ApiWheel): WheelProduct {
+  return {
+    id:        w.id,
+    slug:      w.slug,
+    brand:     w.brand,
+    brandLogo: BRAND_LOGOS[w.brand.toLowerCase()] ?? '/images/wheel/Wheel 1.png',
+    model:     w.model,
+    size:      `${w.diameter}×${parseFloat(String(w.width)).toFixed(1)}`,
+    spec:      w.pcd,
+    price:     parseFloat(String(w.price)),
+    image:     w.images[0]?.url ?? '/images/wheel/Wheel 1.png',
+  }
+}
+
 const SORT_OPTIONS = ['Default', 'Price: Low to High', 'Price: High to Low', 'Name: A–Z']
 
 /* ── Brand logo with text fallback ───────────────────────────────────────── */
@@ -57,7 +79,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation()
-    addToCart({ id: product.slug ?? product.id, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
+    addToCart({ id: product.slug, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
     setJustAdded(true)
     setTimeout(() => setJustAdded(false), 1400)
   }
@@ -141,7 +163,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
             A${product.price.toFixed(2)}
           </p>
           <Link
-            href={`/wheels/${(product as WheelProduct & { slug?: string }).slug ?? product.id}`}
+            href={`/wheels/${product.slug}`}
             className="inline-flex items-center gap-1"
             style={{ background: '#E8572A', color: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', padding: '7px 14px', borderRadius: '6px', textDecoration: 'none', whiteSpace: 'nowrap' }}
           >
@@ -149,6 +171,20 @@ function WheelCard({ product }: { product: WheelProduct }) {
             <i className="ti ti-arrow-right" style={{ fontSize: '12px' }} aria-hidden="true" />
           </Link>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Skeleton card ────────────────────────────────────────────────────────── */
+function SkeletonCard() {
+  return (
+    <div style={{ height: '320px', borderRadius: '12px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
+      <div style={{ height: '180px', background: '#F0F0F0', margin: '16px 16px 0' }} />
+      <div style={{ padding: '14px 16px' }}>
+        <div style={{ width: '64px', height: '18px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '10px' }} />
+        <div style={{ width: '80%', height: '14px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '8px' }} />
+        <div style={{ width: '50%', height: '12px', background: '#F0F0F0', borderRadius: '4px' }} />
       </div>
     </div>
   )
@@ -171,22 +207,36 @@ interface WheelGridProps {
 
 /* ── Section ─────────────────────────────────────────────────────────────── */
 export default function WheelGrid({ initialBrand, initialDiameter, initialFinish }: WheelGridProps = {}) {
+  const [allProducts,   setAllProducts]   = useState<WheelProduct[]>([])
+  const [loading,       setLoading]       = useState(true)
   const [selectedBrand, setSelectedBrand] = useState(initialBrand || 'All Brands')
   const [sortBy,        setSortBy]        = useState('Default')
 
-  /* Diameter filter — checks product size starts with the selected diameter */
-  const filtered = useMemo(() => {
-    let arr = selectedBrand === 'All Brands'
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter(p => p.brand === selectedBrand)
+  useEffect(() => {
+    const params = new URLSearchParams({ limit: '50' })
+    if (initialBrand)    params.set('brand',    initialBrand)
+    if (initialDiameter) params.set('diameter', initialDiameter.replace('"', ''))
+    if (initialFinish)   params.set('finish',   initialFinish)
 
-    if (initialDiameter) {
-      const d = initialDiameter.replace('"', '')
-      const exact = arr.filter(p => p.size.startsWith(d + '×') || p.size.startsWith(d + 'x'))
-      if (exact.length > 0) arr = exact
-    }
-    return arr
-  }, [selectedBrand, initialDiameter])
+    fetch(`/api/wheels?${params}`)
+      .then(r => r.json())
+      .then(data => {
+        setAllProducts((data.wheels ?? []).map(mapWheel))
+      })
+      .catch(err => console.error('[WheelGrid] fetch failed:', err))
+      .finally(() => setLoading(false))
+  }, [initialBrand, initialDiameter, initialFinish])
+
+  const brands = useMemo(
+    () => ['All Brands', ...Array.from(new Set(allProducts.map(p => p.brand)))],
+    [allProducts]
+  )
+
+  const filtered = useMemo(() => {
+    return selectedBrand === 'All Brands'
+      ? allProducts
+      : allProducts.filter(p => p.brand === selectedBrand)
+  }, [selectedBrand, allProducts])
 
   const products = useMemo(() => {
     const arr = [...filtered]
@@ -220,7 +270,7 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
           <div className="flex items-center gap-3">
             <div style={{ position: 'relative' }}>
               <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={selectStyle}>
-                {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                {brands.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               <i className="ti ti-chevron-down" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#888', pointerEvents: 'none' }} aria-hidden="true" />
             </div>
@@ -259,7 +309,11 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
         )}
 
         {/* Grid */}
-        {products.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '16px' }}>
             No wheels found. Try a different filter.
           </div>
