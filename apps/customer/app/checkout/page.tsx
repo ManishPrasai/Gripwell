@@ -15,7 +15,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const FITTING_COST = 25.00
 const AU_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
 
-const SELECTED_STORE = {
+const DEFAULT_STORE = {
   name:    'Nova Tyres Sefton',
   address: '107 Carlingford St, Sefton',
   state:   'NSW 2162',
@@ -248,6 +248,24 @@ export default function CheckoutPage() {
   const [payIntentLoading, setPayIntentLoading] = useState(false)
   const [payIntentError,   setPayIntentError]   = useState<string | null>(null)
 
+  // Selected fitting store (read from cart localStorage)
+  const [selectedStore, setSelectedStore] = useState(DEFAULT_STORE)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nova_selected_store')
+      if (raw) {
+        const s = JSON.parse(raw)
+        setSelectedStore({
+          name:    s.name,
+          address: `${s.address}, ${s.suburb}`,
+          state:   `${s.state} ${s.postcode}`,
+          phone:   s.phone ?? '',
+        })
+      }
+    } catch {}
+  }, [])
+
   // Misc
   const [notes,         setNotes]         = useState('')
   const [placed,        setPlaced]        = useState(false)
@@ -342,7 +360,7 @@ export default function CheckoutPage() {
           </div>
           <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', color: '#1A1A1A', letterSpacing: '0.04em', marginBottom: '12px' }}>Order Confirmed!</h1>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
-            Thanks for your order. Your items will be delivered directly to <strong>{SELECTED_STORE.name}</strong> for fitting. We&apos;ll be in touch shortly.
+            Thanks for your order. Your items will be delivered directly to <strong>{selectedStore.name}</strong> for fitting. We&apos;ll be in touch shortly.
           </p>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px' }}>
             Back to home
@@ -677,17 +695,17 @@ export default function CheckoutPage() {
               </div>
 
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
-                {SELECTED_STORE.name}
+                {selectedStore.name}
               </p>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '2px' }}>
-                {SELECTED_STORE.address}
+                {selectedStore.address}
               </p>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '8px' }}>
-                {SELECTED_STORE.state}
+                {selectedStore.state}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '12px' }}>
                 <i className="ti ti-phone" style={{ fontSize: '13px', color: '#666' }} aria-hidden="true" />
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{SELECTED_STORE.phone}</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
               </div>
 
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>

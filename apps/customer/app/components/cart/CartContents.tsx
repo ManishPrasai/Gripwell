@@ -1,16 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
 
-/* ── Demo cart data ──────────────────────────────────────────────────────── */
-const INITIAL_ITEMS = [
-  { id: 'c1', brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',  size: '245/70R16', spec: '118/115S', price: 91.50,  qty: 1, image: '/images/tyres/Tyre 1.png' },
-  { id: 'c2', brand: 'Black Rhino', brandLogo: '/images/brands/Black Rino.svg',  model: 'Black Rhino AWOL', size: '17×8.5',    spec: '6×139.7',  price: 230.00, qty: 1, image: '/images/wheel/Wheel 1.png' },
-  { id: 'c3', brand: 'Continental', brandLogo: '/images/brands/continental.svg', model: 'CrossContact A/T',  size: '245/70R16', spec: '118/115S', price: 91.50,  qty: 1, image: '/images/tyres/Tyre 1.png' },
-]
+type StoreData = {
+  id:       string
+  name:     string
+  address:  string
+  suburb:   string
+  state:    string
+  postcode: string
+  phone:    string | null
+}
 
 const VEHICLE_TYPES = [
   { id: 'passenger', label: 'Passenger Car',  desc: 'Sedans, hatchbacks, coupes, wagons', icon: 'ti-car' },
@@ -19,12 +22,6 @@ const VEHICLE_TYPES = [
   { id: 'truck',     label: 'Truck',           desc: 'Heavy truck & large vehicles',       icon: 'ti-truck-delivery' },
 ]
 
-const STORES = [
-  { id: 's1', name: 'Nova Tyres Sefton',     address: '107 Carlingford St, Sefton NSW 2162' },
-  { id: 's2', name: 'Nova Tyres Springvale', address: '4/134 Springvale Rd, Springvale VIC 3171' },
-  { id: 's3', name: 'Nova Tyres Bayswater',  address: '194 Canterbury Rd, Bayswater North VIC 3153' },
-  { id: 's4', name: 'Nova Tyres Alphington', address: '200 Grange Rd, Alphington VIC 3078' },
-]
 
 const INFO_CARDS = [
   { icon: 'ti-clock', title: 'Estimated fitting time', value: '45–60min', desc: 'Time may vary upon store & vehicle' },
@@ -163,7 +160,8 @@ function VehicleCard({ v, selected, onSelect }: { v: typeof VEHICLE_TYPES[0]; se
 }
 
 /* ── Store list item ─────────────────────────────────────────────────────── */
-function StoreItem({ store, selected, onSelect }: { store: typeof STORES[0]; selected: boolean; onSelect: () => void }) {
+function StoreItem({ store, selected, onSelect }: { store: StoreData; selected: boolean; onSelect: () => void }) {
+  const fullAddress = `${store.address}, ${store.suburb} ${store.state} ${store.postcode}`
   return (
     <button
       onClick={onSelect}
@@ -183,7 +181,7 @@ function StoreItem({ store, selected, onSelect }: { store: typeof STORES[0]; sel
       <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '3px' }}>{store.name}</p>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <i className="ti ti-map-pin" style={{ fontSize: '12px', color: '#076330', flexShrink: 0 }} aria-hidden="true" />
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, fontSize: '12px', color: '#888' }}>{store.address}</p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, fontSize: '12px', color: '#888' }}>{fullAddress}</p>
       </div>
     </button>
   )
@@ -209,9 +207,32 @@ function InfoCard({ item }: { item: typeof INFO_CARDS[0] }) {
 /* ── Main component ──────────────────────────────────────────────────────── */
 export default function CartContents() {
   const { items, updateQty, removeItem, cartCount: itemCount, cartTotal: subtotal } = useCart()
-  const [vehicleType,   setVehicleType]   = useState('passenger')
-  const [postcode,      setPostcode]      = useState('')
-  const [selectedStore, setSelectedStore] = useState<string | null>(null)
+  const [vehicleType,    setVehicleType]    = useState('passenger')
+  const [postcode,       setPostcode]       = useState('')
+  const [selectedStore,  setSelectedStore]  = useState<string | null>(null)
+  const [stores,         setStores]         = useState<StoreData[]>([])
+  const [storesLoading,  setStoresLoading]  = useState(true)
+
+  useEffect(() => {
+    fetch('/api/stores')
+      .then(r => r.json())
+      .then(data => setStores(data.stores ?? []))
+      .catch(() => {})
+      .finally(() => setStoresLoading(false))
+  }, [])
+
+  function handleStoreSelect(store: StoreData) {
+    setSelectedStore(store.id)
+    localStorage.setItem('nova_selected_store', JSON.stringify({
+      id:       store.id,
+      name:     store.name,
+      address:  store.address,
+      suburb:   store.suburb,
+      state:    store.state,
+      postcode: store.postcode,
+      phone:    store.phone ?? '',
+    }))
+  }
 
   const total = subtotal + FITTING_COST
 
@@ -328,9 +349,15 @@ export default function CartContents() {
 
                 {/* Store list */}
                 <div style={{ overflow: 'auto', maxHeight: '260px' }}>
-                  {STORES.map(s => (
-                    <StoreItem key={s.id} store={s} selected={selectedStore === s.id} onSelect={() => setSelectedStore(s.id)} />
-                  ))}
+                  {storesLoading ? (
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '12px 0' }}>Loading stores…</p>
+                  ) : stores.length === 0 ? (
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '12px 0' }}>No stores available.</p>
+                  ) : (
+                    stores.map(s => (
+                      <StoreItem key={s.id} store={s} selected={selectedStore === s.id} onSelect={() => handleStoreSelect(s)} />
+                    ))
+                  )}
                 </div>
               </div>
             </Step>

@@ -1,15 +1,8 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-
-// ── Store details ─────────────────────────────────────────────────────────────
-const STORE = {
-  name:    'Nova Tyres Sefton',
-  address: '107 Carlingford St, Sefton NSW 2162',
-  phone:   '0403 388 774',
-}
 
 // ── Order progress steps ──────────────────────────────────────────────────────
 const STEPS = [
@@ -26,6 +19,22 @@ function ConfirmationContent() {
   const totalStr    = params.get('total')
   const total       = totalStr ? parseFloat(totalStr) : null
   const orderDate   = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  const [store, setStore] = useState({ name: 'Nova Tyres Sefton', address: '107 Carlingford St, Sefton NSW 2162', phone: '0403 388 774' })
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nova_selected_store')
+      if (raw) {
+        const s = JSON.parse(raw)
+        setStore({
+          name:    s.name,
+          address: `${s.address}, ${s.suburb} ${s.state} ${s.postcode}`,
+          phone:   s.phone ?? '',
+        })
+      }
+    } catch {}
+  }, [])
 
   return (
     <main style={{ background: '#0D1A12', minHeight: '100vh', paddingTop: '96px', paddingBottom: '80px', color: '#FAF9F5' }}>
@@ -174,15 +183,15 @@ function ConfirmationContent() {
           </div>
 
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#FAF9F5', marginBottom: '6px' }}>
-            {STORE.name}
+            {store.name}
           </p>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#5A8066', lineHeight: 1.7, marginBottom: '16px' }}>
-            {STORE.address}
+            {store.address}
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <i className="ti ti-phone" style={{ fontSize: '14px', color: '#5A8066' }} aria-hidden="true" />
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#7BA88A' }}>{STORE.phone}</span>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#7BA88A' }}>{store.phone}</span>
           </div>
 
           {/* Delivery info badge */}
