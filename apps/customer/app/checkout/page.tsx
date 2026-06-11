@@ -143,38 +143,39 @@ function StripePaymentForm({
     setPaying(true)
     setPayError(null)
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout`,
-        payment_method_data: { billing_details: billingDetails },
-      },
-      redirect: 'if_required',
-    })
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout`,
+          payment_method_data: { billing_details: billingDetails },
+        },
+        redirect: 'if_required',
+      })
 
-    if (error) {
-      setPayError(error.message ?? 'Payment failed. Please try again.')
+      if (error) {
+        setPayError(error.message ?? 'Payment failed. Please try again.')
+        return
+      }
+
+      const res  = await fetch('/api/checkout/success', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setPayError(data.error ?? 'Order creation failed. Please contact us.')
+        return
+      }
+
+      onSuccess(data.orderNumber, data.total ?? total)
+    } catch (err) {
+      setPayError('An unexpected error occurred. Please try again.')
+    } finally {
       setPaying(false)
-      return
     }
-
-    // Both 'succeeded' and 'processing' — record the order; webhooks handle final state
-    console.log('[stripe] Payment', paymentIntent?.status, paymentIntent?.id)
-
-    const res  = await fetch('/api/checkout/success', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
-    })
-    const data = await res.json()
-
-    if (!res.ok) {
-      setPayError(data.error ?? 'Order creation failed. Please contact us.')
-      setPaying(false)
-      return
-    }
-
-    onSuccess(data.orderNumber, data.total ?? total)
   }
 
   return (
@@ -190,13 +191,12 @@ function StripePaymentForm({
         </span>
       </div>
 
-      {/* PaymentElement with tabs layout. Billing fields suppressed here because
-          we already collected them in steps 1 & 2 and pass them via confirmParams. */}
+      {/* Billing fields suppressed here — already collected in steps 1 & 2 */}
       <PaymentElement
         options={{
-          layout: 'tabs',
+          layout: 'accordion',
           fields: { billingDetails: 'never' },
-          wallets: { applePay: 'auto', googlePay: 'auto' },
+          wallets: { applePay: 'never', googlePay: 'never' },
         }}
       />
 
@@ -538,7 +538,7 @@ export default function CheckoutPage() {
                       options={{
                         clientSecret,
                         appearance: {
-                          theme: 'flat',
+                          theme: 'stripe',
                           variables: {
                             colorPrimary: '#076330',
                             colorBackground: '#ffffff',
@@ -546,6 +546,7 @@ export default function CheckoutPage() {
                             colorDanger: '#C62828',
                             fontFamily: "'DM Sans', sans-serif",
                             borderRadius: '8px',
+                            spacingUnit: '4px',
                           },
                         },
                       }}
