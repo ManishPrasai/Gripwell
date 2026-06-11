@@ -83,12 +83,12 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
 
   return (
     <main style={{ background: '#fff', paddingTop: '100px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="nv-shell" style={{ paddingTop: '32px', paddingBottom: '32px' }}>
 
         {/* ══════════════════════════════════════════════════
             TOP: image gallery + product info
         ══════════════════════════════════════════════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start', marginBottom: '48px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start" style={{ marginBottom: '48px' }}>
 
           {/* Image gallery */}
           <div style={{ display: 'flex', gap: '16px' }}>

@@ -212,14 +212,12 @@ export default function BestDeals() {
         .bd-grid-wheels { animation: bdSlideFromLeft  0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
       `}</style>
 
-      {/* Core Page Container — w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
-          Same 1280px content boundary as the Navbar and Hero, so the heading
-          and product grid lock to the same horizontal grid line on every
-          viewport from laptop to ultrawide (replaces the old fluid 80% pad). */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Core Page Container — .nv-shell: the one shared 1280px content
+          boundary with fixed gutter guards, identical on every page. */}
+      <div className="nv-shell">
 
         {/* ── Header row ── */}
-        <div className="flex items-center justify-between mb-8">
+        <div data-reveal className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <h2
             style={{
               color:         '#1A1A1A',

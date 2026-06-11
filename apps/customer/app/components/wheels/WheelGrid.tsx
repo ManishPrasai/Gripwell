@@ -250,7 +250,7 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
 
   return (
     <section style={{ paddingBottom: '56px' }}>
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="nv-shell">
 
         {/* Filter bar */}
         <div

@@ -61,10 +61,10 @@ export default function WheelProductDetail({ wheel }: { wheel: WheelProduct }) {
 
   return (
     <main style={{ background: '#fff', paddingTop: '100px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+      <div className="nv-shell" style={{ paddingTop: '32px', paddingBottom: '32px' }}>
 
         {/* Top: gallery + info */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'start', marginBottom: '48px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start" style={{ marginBottom: '48px' }}>
 
           {/* Gallery */}
           <div style={{ display: 'flex', gap: '16px' }}>

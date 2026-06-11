@@ -240,10 +240,10 @@ function WheelCard({ product }: { product: typeof WHEELS[0] }) {
 /* ── Section ─────────────────────────────────────────────────────────────── */
 export default function FeaturedWheels() {
   return (
-    <section className="px-4" style={{ background: '#FAF9F5', paddingTop: '48px', paddingBottom: '48px' }}>
-      <div className="max-w-7xl mx-auto">
+    <section style={{ background: '#FAF9F5', paddingTop: '48px', paddingBottom: '48px' }}>
+      <div className="nv-shell">
 
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div data-reveal className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <h2 style={{
             color:        '#1A1A1A',
             fontFamily:   "'Bebas Neue', sans-serif",

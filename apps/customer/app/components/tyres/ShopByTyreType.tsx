@@ -17,7 +17,7 @@ export default function ShopByTyreType() {
 
   return (
     <section style={{ background: '#fff', paddingTop: '48px', paddingBottom: '16px' }}>
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="nv-shell">
 
         <h2 style={{
           fontFamily: "'DM Sans', sans-serif",
@@ -50,27 +50,21 @@ export default function ShopByTyreType() {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  /*
-                    Generous horizontal padding gives the image room to scale
-                    outward. overflow:hidden on the CARD clips edge bleed into
-                    adjacent columns without ever clipping the top/bottom.
-                  */
                   padding: '44px 28px 20px',
                   textDecoration: 'none',
                   borderRight: i < TYPES.length - 1 ? '1px solid #EBEBEB' : 'none',
                   background: isHov ? '#ECECEC' : 'transparent',
                   transition: 'background 0.3s ease-in-out',
-                  overflow: 'hidden',
+                  position: 'relative',
+                  zIndex: isHov ? 1 : 0,
                 }}
               >
-                {/* Image wrapper — no overflow:hidden; clipping is handled by the card */}
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    paddingBottom: '120%',
-                  }}
-                >
+                <div style={{
+                  position: 'relative',
+                  width: '100%',
+                  paddingTop: '15%',
+                  paddingBottom: '115%',
+                }}>
                   <Image
                     src={t.image}
                     alt={t.label}
@@ -79,8 +73,8 @@ export default function ShopByTyreType() {
                     style={{
                       objectFit: 'contain',
                       objectPosition: 'center',
-                      transform: isHov ? 'scale(1.15)' : 'scale(1)',
-                      transition: 'transform 0.35s ease-in-out',
+                      transform: isHov ? 'scale(1.12)' : 'scale(1)',
+                      transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
                     }}
                   />
                 </div>

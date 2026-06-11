@@ -12,8 +12,8 @@ const brands = [
 
 export default function BrandsStrip() {
   return (
-    <section className="py-10 px-4 border-y" style={{ background: 'white', borderColor: '#E5E5E5' }}>
-      <div style={{ maxWidth: '96%', margin: '0 auto' }}>
+    <section className="py-10 border-y" style={{ background: 'white', borderColor: '#E5E5E5' }}>
+      <div className="nv-shell">
         <p
           className="text-center uppercase tracking-widest mb-8"
           style={{ color: '#888', letterSpacing: '0.15em', fontSize: '12px', fontWeight: 500 }}

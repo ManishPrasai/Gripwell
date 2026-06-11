@@ -98,11 +98,11 @@ export default function WhyNovaTyres() {
   const slide = SLIDES[current]
 
   return (
-    <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div style={{ maxWidth: '80%', margin: '0 auto' }}>
+    <section className="py-16" style={{ background: '#FAF9F5' }}>
+      <div className="nv-shell">
 
         {/* ── Section header ── */}
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
+        <div data-reveal className="flex flex-wrap items-end justify-between gap-4 mb-12">
           <div>
             <p style={{
               color: '#E8572A', fontSize: '12px', fontWeight: 700,

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bebas_Neue, DM_Sans, Inter } from 'next/font/google'
+import { Bebas_Neue, DM_Sans, DM_Mono, Inter } from 'next/font/google'
 import './globals.css'
 import Navbar    from './components/layout/Navbar'
 import Footer    from './components/layout/Footer'
@@ -19,10 +19,19 @@ const bebasNeue = Bebas_Neue({
 })
 
 const dmSans = DM_Sans({
-  weight:   ['400', '500', '700', '900'],
+  weight:   ['400', '500', '600', '700', '800', '900'],
   style:    ['normal', 'italic'],
   subsets:  ['latin'],
   variable: '--font-dm-sans',
+  display:  'swap',
+})
+
+/* DM Mono — the service page reference design uses it for kickers,
+   form labels, stats and metadata (styles.css --font-mono) */
+const dmMono = DM_Mono({
+  weight:   ['400', '500'],
+  subsets:  ['latin'],
+  variable: '--font-dm-mono',
   display:  'swap',
 })
 
@@ -42,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${dmSans.variable} ${inter.variable}`}
+      className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable} ${inter.variable}`}
     >
       <head>
         {/* Tabler icons CDN — kept here as it is a CSS icon font, not a text font */}

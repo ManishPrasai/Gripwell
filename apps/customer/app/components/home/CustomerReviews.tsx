@@ -59,11 +59,11 @@ export default function CustomerReviews() {
   const regular  = reviews.filter(r => !r.featured)
 
   return (
-    <section className="py-16 px-4" style={{ background: '#FAF9F5' }}>
-      <div style={{ maxWidth: '96%', margin: '0 auto' }}>
+    <section className="py-16" style={{ background: '#FAF9F5' }}>
+      <div className="nv-shell">
 
         {/* ── Header ── */}
-        <div className="flex flex-wrap items-end justify-between gap-6 mb-8">
+        <div data-reveal className="flex flex-wrap items-end justify-between gap-6 mb-8">
           <div>
             <p
               className="uppercase tracking-widest mb-1"

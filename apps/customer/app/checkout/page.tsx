@@ -361,7 +361,7 @@ export default function CheckoutPage() {
 
       {/* ── Post-redirect error / cancel banner ── */}
       {redirectBanner && (
-        <div style={{ maxWidth: '1120px', margin: '0 auto 20px', padding: '0 20px' }}>
+        <div className="nv-shell" style={{ marginBottom: '20px' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px',
             background: '#FFF2F2', border: '1px solid #FFCDD2', borderRadius: '12px',
@@ -383,7 +383,7 @@ export default function CheckoutPage() {
       )}
 
       {/* ── Two-column layout ── */}
-      <div style={{ maxWidth: '1120px', margin: '0 auto', padding: '0 20px', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: '24px', alignItems: 'start' }}>
+      <div className="nv-shell grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
 
         {/* ════ LEFT: Steps ════ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

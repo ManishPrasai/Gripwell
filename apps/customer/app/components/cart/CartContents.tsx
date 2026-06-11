@@ -216,8 +216,8 @@ export default function CartContents() {
   const total = subtotal + FITTING_COST
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: '24px', alignItems: 'start' }}>
+    <div className="nv-shell">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
 
         {/* ════════════ LEFT COLUMN ════════════ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

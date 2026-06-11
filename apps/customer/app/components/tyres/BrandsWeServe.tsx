@@ -67,7 +67,7 @@ function BrandCell({ name, logo, logoH = 44, logoMaxW = 160, darkFix }: {
 export default function BrandsWeServe() {
   return (
     <section style={{ background: '#fff', paddingTop: '40px', paddingBottom: '0px' }}>
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="nv-shell">
 
         {/* Divider separating Shop by Tyre Type from Brands We Serve */}
         <div style={{ height: '1px', background: '#E8E8E8', marginBottom: '14px' }} />

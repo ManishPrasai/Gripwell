@@ -44,13 +44,13 @@ export default function BrowseByCategory() {
 
   return (
     <section style={{ background: '#FAF9F5', paddingTop: '88px', paddingBottom: '88px' }}>
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="nv-shell">
 
         {/* ══ TOP ROW — text block (left) + Premium Tyres banner (right) ══ */}
         <div className="flex flex-col lg:flex-row items-start gap-6 mb-5">
 
           {/* ── Left: copy + CTA ── */}
-          <div className="lg:flex-shrink-0 lg:max-w-[480px] pt-1">
+          <div data-reveal className="lg:flex-shrink-0 lg:max-w-[480px] pt-1">
             {/* Category badge */}
             <p
               className="uppercase mb-5"
@@ -259,7 +259,7 @@ export default function BrowseByCategory() {
         </div>
 
         {/* ══ CATEGORY GRID — 4 portrait cards ══ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div data-reveal className="nv-d1 grid grid-cols-2 md:grid-cols-4 gap-3">
           {CATEGORIES.map((cat, i) => {
             const isHovered = hoveredCard === i
             return (

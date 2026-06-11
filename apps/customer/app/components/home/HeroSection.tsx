@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import TyreSizeGuideModal from './TyreSizeGuideModal'
 
@@ -44,51 +45,216 @@ function rimsForWidthProfile(combos: TyreSizeCombo[], w: string, p: string): str
 }
 
 /* Custom listbox — native <select> popups pick their own open direction (often
-   upward) based on browser heuristics we can't override. This panel is always
-   anchored below its trigger so it never flips up over the form. */
+   upward) based on browser heuristics we can't override.
+
+   Both desktop panel and mobile sheet are portalled to <body>. A portal is
+   mandatory, not cosmetic: the search card's backdrop-filter creates a
+   stacking context (as does the persistent transform left on .hs-drops by its
+   fill-mode:both entry animation), so any z-index applied to an in-card panel
+   is trapped inside the card and loses to the later-in-DOM trust-signal pill,
+   which forms its own stacking context. Rendering from <body> with
+   position:fixed escapes every ancestor stacking context, letting the panel
+   float over the CTA button, card edge, and trust badges without ever
+   affecting layout flow. */
 function SizeDropdown({
+  label,
   value,
   onChange,
   groups,
   suffix = '',
 }: {
+  label:    string
   value:    string
   onChange: (v: string) => void
   groups:   { popular: string[]; all: string[] }
   suffix?:  string
 }) {
   const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [highlighted, setHighlighted] = useState(0)
+  const [panelPos, setPanelPos] = useState<{ left: number; top: number; width: number; maxHeight: number } | null>(null)
+  const rootRef    = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef   = useRef<HTMLDivElement>(null)
+
+  /* Single flat list (popular block first, then all) so keyboard navigation
+     has one continuous index space across both visual groups. */
+  const flatOptions = useMemo(
+    () => [...groups.popular, ...groups.all],
+    [groups.popular, groups.all],
+  )
 
   useEffect(() => {
-    if (!open) return
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  /* Desktop: anchor the fixed-position panel to the trigger's viewport rect.
+     Re-measure on scroll/resize so it stays glued while open. */
+  useEffect(() => {
+    if (!open || isMobile) return
+    function updatePos() {
+      const el = triggerRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      setPanelPos({
+        left:      r.left,
+        top:       r.bottom + 8,
+        width:     r.width,
+        maxHeight: Math.max(160, Math.min(288, window.innerHeight - r.bottom - 24)),
+      })
+    }
+    updatePos()
+    window.addEventListener('resize', updatePos)
+    window.addEventListener('scroll', updatePos, true)
+    return () => {
+      window.removeEventListener('resize', updatePos)
+      window.removeEventListener('scroll', updatePos, true)
+      setPanelPos(null)
+    }
+  }, [open, isMobile])
+
+  /* Desktop: close on outside tap. Panel lives in a portal, so check both
+     the trigger subtree and the panel subtree. Mobile sheet has its own backdrop. */
+  useEffect(() => {
+    if (!open || isMobile) return
     function onPointerDown(e: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (rootRef.current?.contains(t) || panelRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [open, isMobile])
+
+  /* On open, start keyboard highlight at the currently selected value */
+  useEffect(() => {
+    if (!open) return
+    const idx = flatOptions.indexOf(value)
+    setHighlighted(idx >= 0 ? idx : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
+
+  /* Keep the highlighted option visible while arrowing through the list */
+  useEffect(() => {
+    if (!open || isMobile || !panelPos) return
+    panelRef.current
+      ?.querySelector(`[data-idx="${highlighted}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+  }, [highlighted, open, isMobile, panelPos])
+
+  /* Keyboard: Escape dismisses (both layouts); arrows/Home/End/Enter drive
+     selection on desktop. Focus stays on the trigger, listbox-style. */
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setOpen(false)
+        triggerRef.current?.focus()
+        return
+      }
+      if (isMobile) return
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setHighlighted(i => Math.min(i + 1, flatOptions.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setHighlighted(i => Math.max(i - 1, 0))
+          break
+        case 'Home':
+          e.preventDefault()
+          setHighlighted(0)
+          break
+        case 'End':
+          e.preventDefault()
+          setHighlighted(flatOptions.length - 1)
+          break
+        case 'Enter':
+        case ' ': {
+          e.preventDefault()
+          const v = flatOptions[highlighted]
+          if (v !== undefined) pick(v)
+          break
+        }
+        case 'Tab':
+          setOpen(false)
+          break
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, isMobile, highlighted, flatOptions])
+
+  /* Mobile sheet: lock body scroll while open */
+  useEffect(() => {
+    if (!(open && isMobile)) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [open, isMobile])
 
   function pick(v: string) {
     onChange(v)
     setOpen(false)
+    triggerRef.current?.focus()
   }
 
-  function renderOption(v: string, keyPrefix: string) {
+  function renderOption(v: string, idx: number, mobile = false) {
     const active = v === value
+    const isHighlighted = !mobile && idx === highlighted
     return (
-      <button key={`${keyPrefix}-${v}`} type="button" onClick={() => pick(v)}
-        className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors duration-100 cursor-pointer ${
-          active ? 'bg-orange-600/15 text-orange-400 font-semibold' : 'text-white font-medium hover:bg-neutral-800'
+      <button key={idx} type="button" role="option" aria-selected={active}
+        data-idx={idx} tabIndex={-1}
+        onClick={() => pick(v)}
+        onMouseEnter={() => { if (!mobile) setHighlighted(idx) }}
+        className={`w-full text-left rounded-lg transition-colors duration-100 cursor-pointer ${
+          mobile ? 'px-4 py-3.5 text-base' : 'px-4 py-2 text-sm'
+        } ${
+          active
+            ? 'bg-orange-600/15 text-orange-400 font-semibold'
+            : isHighlighted
+              ? 'bg-neutral-800 text-white font-medium'
+              : 'text-white font-medium hover:bg-neutral-800'
         }`}>
         {v}{suffix}
       </button>
     )
   }
 
+  function renderGroups(mobile = false) {
+    const popLen = groups.popular.length
+    return (
+      <>
+        {popLen > 0 && (
+          <div className="mb-1.5">
+            <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Popular Sizes</p>
+            {groups.popular.map((v, i) => renderOption(v, i, mobile))}
+          </div>
+        )}
+        <div>
+          <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">All Options</p>
+          {groups.all.map((v, i) => renderOption(v, popLen + i, mobile))}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="relative" ref={rootRef}>
-      <button type="button" onClick={() => setOpen(o => !o)}
+      <button type="button" ref={triggerRef} onClick={() => setOpen(o => !o)}
+        onKeyDown={e => {
+          if (!open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault()
+            setOpen(true)
+          }
+        }}
+        aria-haspopup="listbox" aria-expanded={open}
         className="w-full flex items-center justify-between bg-neutral-900/90 border border-neutral-800 text-white rounded-xl px-4 py-3.5 text-base font-semibold focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 cursor-pointer">
         <span>{value}{suffix}</span>
         <svg className={`text-neutral-400 w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
@@ -97,19 +263,55 @@ function SizeDropdown({
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-900 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] z-50 p-2">
-          {groups.popular.length > 0 && (
-            <div className="mb-1.5">
-              <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Popular Sizes</p>
-              {groups.popular.map(v => renderOption(v, 'pop'))}
+      {/* ── Desktop: body-portalled fixed panel — escapes the card's
+           backdrop-filter stacking context, floats over CTA + trust badges,
+           and never shifts page layout. Opaque bg-neutral-900 prevents any
+           bleed-through from content behind it. ── */}
+      {open && !isMobile && panelPos && typeof document !== 'undefined' && createPortal(
+        <div ref={panelRef} role="listbox" aria-label={`Select ${label}`}
+          className="fixed overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-900 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] z-[10000] p-2"
+          style={{ left: panelPos.left, top: panelPos.top, width: panelPos.width, maxHeight: panelPos.maxHeight }}>
+          {renderGroups()}
+        </div>,
+        document.body,
+      )}
+
+      {/* ── Mobile: full-bleed bottom sheet ──
+           SSR-safe: isMobile is false until the matchMedia effect runs after
+           mount, so this branch can never execute on the server; the typeof
+           guard makes that invariant explicit. */}
+      {open && isMobile && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[10050]" role="dialog" aria-modal="true" aria-label={`Select ${label}`}>
+          <div
+            className="absolute inset-0 bg-black/60"
+            style={{ animation: 'nv-fade-in 0.25s ease both' }}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            className="absolute left-0 right-0 bottom-0 rounded-t-2xl border-t border-neutral-800 bg-neutral-900 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] flex flex-col"
+            style={{ maxHeight: '72svh', animation: 'nv-sheet-up 0.32s cubic-bezier(0.22,1,0.36,1) both' }}
+          >
+            {/* Drag handle + title row */}
+            <div className="flex-shrink-0 pt-3 pb-2 px-5">
+              <div className="mx-auto w-10 h-1 rounded-full bg-neutral-700 mb-3" />
+              <div className="flex items-center justify-between">
+                <span className="text-white text-base font-bold" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                  Select {label}
+                </span>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Close"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-800 text-neutral-400 cursor-pointer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                    <line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          )}
-          <div>
-            <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">All Options</p>
-            {groups.all.map(v => renderOption(v, 'all'))}
+            <div className="overflow-y-auto overscroll-contain p-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+              {renderGroups(true)}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
@@ -307,7 +509,7 @@ export default function HeroSection() {
             badge/headline/search card line up with the rest of the page grid
             on every viewport from laptop to ultrawide. */}
         <div
-          className="hs-content relative z-10 flex flex-col items-center text-center w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+          className="hs-content nv-shell relative z-10 flex flex-col items-center text-center"
           style={{ paddingTop: `${NAV_CLEAR}px`, paddingBottom: '88px' }}
         >
 
@@ -385,24 +587,24 @@ export default function HeroSection() {
               {/* Selection fields */}
               {tab === 'tyres' ? (
                 <div key="tyres" className="hs-drops hs-drops-tyres grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-                  <div>
+                  <div className="relative">
                     <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Width</label>
-                    <SizeDropdown value={width} onChange={handleWidthChange} groups={widthOptionGroups} />
+                    <SizeDropdown label="Width" value={width} onChange={handleWidthChange} groups={widthOptionGroups} />
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Profile</label>
-                    <SizeDropdown value={profile} onChange={handleProfileChange} groups={profileOptionGroups} />
+                    <SizeDropdown label="Profile" value={profile} onChange={handleProfileChange} groups={profileOptionGroups} />
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Rim</label>
-                    <SizeDropdown value={rim} onChange={setRim} groups={rimOptionGroups} suffix={'"'} />
+                    <SizeDropdown label="Rim" value={rim} onChange={setRim} groups={rimOptionGroups} suffix={'"'} />
                   </div>
                 </div>
               ) : (
                 <div key="wheels" className="hs-drops hs-drops-wheels grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6 items-end mt-4">
-                  <div>
+                  <div className="relative">
                     <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-1.5 block">Rim Size</label>
-                    <SizeDropdown value={wRim} onChange={setWRim} groups={wheelRimOptionGroups} suffix={'"'} />
+                    <SizeDropdown label="Rim Size" value={wRim} onChange={setWRim} groups={wheelRimOptionGroups} suffix={'"'} />
                   </div>
                   <div>
                     <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-1.5 block">Popular sizes</label>

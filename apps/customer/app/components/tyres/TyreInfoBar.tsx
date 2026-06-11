@@ -24,7 +24,7 @@ const ITEMS = [
 export default function TyreInfoBar() {
   return (
     <section style={{ background: '#fff', paddingTop: '16px', paddingBottom: '40px' }}>
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="nv-shell">
 
         {/* Divider */}
         <div style={{ height: '1px', background: '#E8E8E8', marginBottom: '0' }} />

@@ -234,3 +234,104 @@
     @apply font-sans;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   NOVA LAYOUT SYSTEM
+   One canonical content shell shared by every section on every page.
+   Sections paint their backgrounds edge-to-edge; the shell pins content
+   to a fixed 1280px boundary with fixed gutter guards at the far edges,
+   so column structures and spacing read identically on laptop, tall and
+   ultrawide displays.
+═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --nv-shell-max: 1280px;
+  --nv-gutter: 16px;
+}
+@media (min-width: 640px)  { :root { --nv-gutter: 24px; } }
+@media (min-width: 1024px) { :root { --nv-gutter: 32px; } }
+
+.nv-shell {
+  width: 100%;
+  max-width: calc(var(--nv-shell-max) + 2 * var(--nv-gutter));
+  margin-inline: auto;
+  padding-inline: var(--nv-gutter);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   NOVA MOTION SYSTEM
+   - [data-reveal] elements fade/rise in when scrolled into view.
+     Compositor-only properties (opacity + transform) — zero layout shift.
+   - Elements stay fully visible until JS arms the system (html.nv-motion),
+     so no-JS visitors and crawlers never see hidden content.
+   - .nv-d1 … .nv-d4 add stagger, mirroring the reference's .d1–.d4.
+═══════════════════════════════════════════════════════════════════════ */
+html.nv-motion [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity   0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+html.nv-motion [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+html.nv-motion [data-reveal].nv-d1 { transition-delay: 0.08s; }
+html.nv-motion [data-reveal].nv-d2 { transition-delay: 0.16s; }
+html.nv-motion [data-reveal].nv-d3 { transition-delay: 0.24s; }
+html.nv-motion [data-reveal].nv-d4 { transition-delay: 0.32s; }
+
+/* Interactive polish — GPU-accelerated micro-interactions */
+.nv-press { transition: transform 0.15s ease; }
+.nv-press:active { transform: scale(0.97); }
+
+.nv-lift {
+  transition:
+    transform  0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nv-lift:hover { transform: translateY(-4px); }
+
+/* Visible keyboard-focus ring on all interactive elements */
+.nv-focus:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #FF5A1F;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Defer offscreen rendering for heavy below-fold sections */
+.nv-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+/* Mobile bottom-sheet animation (hero size pickers) */
+@keyframes nv-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes nv-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Accessibility: kill all decorative motion for users who opt out */
+@media (prefers-reduced-motion: reduce) {
+  html.nv-motion [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .nv-press, .nv-lift { transition: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

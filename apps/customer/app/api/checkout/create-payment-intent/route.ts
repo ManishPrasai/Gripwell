@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 
-// ── Stripe server client ──────────────────────────────────────────────────────
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
-})
+// ── Stripe server client (lazy) ───────────────────────────────────────────────
+// Initialised on first request, not at module load, so the build phase never
+// calls new Stripe() with an undefined key and the compiler doesn't hang.
+let _stripe: Stripe | null = null
+function getStripe(): Stripe {
+  if (_stripe) return _stripe
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia' })
+  return _stripe
+}
 
 // ── Fitting fee (must match checkout UI) ─────────────────────────────────────
 const FITTING_CENTS = 2500   // A$25.00
@@ -87,7 +94,7 @@ export async function POST() {
     }
 
     // ── 4. Create Stripe PaymentIntent ────────────────────────────────────────
-    const intent = await stripe.paymentIntents.create({
+    const intent = await getStripe().paymentIntents.create({
       amount:   totalCents,
       currency: 'aud',
       automatic_payment_methods: { enabled: true },

@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 
-// ── Stripe server client ──────────────────────────────────────────────────────
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
-})
+// ── Stripe server client (lazy) ───────────────────────────────────────────────
+// Both getStripe() and getWebhookSecret() defer env reads to request time so
+// the build phase never evaluates them with undefined values.
+let _stripe: Stripe | null = null
+function getStripe(): Stripe {
+  if (_stripe) return _stripe
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia' })
+  return _stripe
+}
 
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!
+function getWebhookSecret(): string {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET
+  if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set')
+  return secret
+}
 const FITTING_FEE    = 25.00
 
 // ── Dev user (same pattern as other routes) ───────────────────────────────────
@@ -82,7 +93,7 @@ export async function POST(req: NextRequest) {
   // ── 2. Verify signature ────────────────────────────────────────────────────
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, WEBHOOK_SECRET)
+    event = getStripe().webhooks.constructEvent(rawBody, sig, getWebhookSecret())
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
     console.error('[webhook/stripe] Signature verification failed:', msg)
