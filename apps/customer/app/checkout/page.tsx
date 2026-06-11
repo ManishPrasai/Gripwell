@@ -135,11 +135,12 @@ function StripePaymentForm({
 }) {
   const stripe   = useStripe()
   const elements = useElements()
-  const [payError, setPayError] = useState<string | null>(null)
-  const [paying,   setPaying]   = useState(false)
+  const [payError,      setPayError]      = useState<string | null>(null)
+  const [paying,        setPaying]        = useState(false)
+  const [elementReady,  setElementReady]  = useState(false)
 
   async function handlePay() {
-    if (!stripe || !elements) return
+    if (!stripe || !elements || !elementReady) return
     setPaying(true)
     setPayError(null)
 
@@ -172,7 +173,8 @@ function StripePaymentForm({
 
       onSuccess(data.orderNumber, data.total ?? total)
     } catch (err) {
-      setPayError('An unexpected error occurred. Please try again.')
+      const msg = err instanceof Error ? err.message : String(err)
+      setPayError(msg || 'Payment failed. Please try again.')
     } finally {
       setPaying(false)
     }
@@ -191,8 +193,14 @@ function StripePaymentForm({
         </span>
       </div>
 
-      {/* Billing fields suppressed here — already collected in steps 1 & 2 */}
+      {/* Card form — billing fields suppressed, already collected in steps 1 & 2 */}
+      {!elementReady && (
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+          Loading payment form…
+        </p>
+      )}
       <PaymentElement
+        onReady={() => setElementReady(true)}
         options={{
           fields: { billingDetails: 'never' },
         }}
@@ -206,8 +214,8 @@ function StripePaymentForm({
       )}
 
       {/* Place order */}
-      <OBtn onClick={handlePay} disabled={paying || !stripe || !elements}>
-        {paying ? 'Processing…' : (
+      <OBtn onClick={handlePay} disabled={paying || !stripe || !elements || !elementReady}>
+        {paying ? 'Processing…' : !elementReady ? 'Loading payment form…' : (
           <>
             <svg width="15" height="15" viewBox="0 0 24 28" fill="none">
               <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="rgba(255,255,255,0.9)"/>
