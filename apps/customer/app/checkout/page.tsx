@@ -194,9 +194,7 @@ function StripePaymentForm({
       {/* Billing fields suppressed here — already collected in steps 1 & 2 */}
       <PaymentElement
         options={{
-          layout: 'accordion',
           fields: { billingDetails: 'never' },
-          wallets: { applePay: 'never', googlePay: 'never' },
         }}
       />
 

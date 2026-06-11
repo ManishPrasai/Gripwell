@@ -97,7 +97,7 @@ export async function POST() {
     const intent = await getStripe().paymentIntents.create({
       amount:   totalCents,
       currency: 'aud',
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card'],
       metadata: {
         customerId:  userId,
         environment: 'dev-local',
