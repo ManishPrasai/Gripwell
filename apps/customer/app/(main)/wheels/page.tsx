@@ -1,7 +1,7 @@
-import WheelHero        from '../components/wheels/WheelHero'
-import FeaturedWheels   from '../components/wheels/FeaturedWheels'
-import FittingLocations from '../components/tyres/FittingLocations'
-import TyreInfoBar      from '../components/tyres/TyreInfoBar'
+import WheelHero        from '../../components/wheels/WheelHero'
+import FeaturedWheels   from '../../components/wheels/FeaturedWheels'
+import FittingLocations from '../../components/tyres/FittingLocations'
+import TyreInfoBar      from '../../components/tyres/TyreInfoBar'
 
 export const metadata = {
   title: 'Find Wheels — Nova Tyres',

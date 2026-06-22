@@ -1,5 +1,5 @@
-import CollectionHero from '../../components/tyres/CollectionHero'
-import TyreGrid       from '../../components/tyres/TyreGrid'
+import CollectionHero from '../../../components/tyres/CollectionHero'
+import TyreGrid       from '../../../components/tyres/TyreGrid'
 
 export const metadata = {
   title: 'Tyre Search Results — Nova Tyres',

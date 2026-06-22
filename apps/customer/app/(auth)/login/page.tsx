@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -28,7 +28,11 @@ const input: React.CSSProperties = {
   transition: 'background .18s ease, border-color .18s ease, box-shadow .18s ease',
 }
 
-export default function AuthPage() {
+export default function AuthPageWrapper() {
+  return <Suspense><AuthPage /></Suspense>
+}
+
+function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get('from') || '/'

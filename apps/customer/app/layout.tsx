@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Bebas_Neue, DM_Sans, DM_Mono, Inter } from 'next/font/google'
 import './globals.css'
-import Navbar    from './components/layout/Navbar'
-import Footer    from './components/layout/Footer'
 import Providers from './providers'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -62,11 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning>
         <Providers>
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}>
-            <Navbar />
-          </div>
           {children}
-          <Footer />
         </Providers>
         <Analytics />
       </body>
