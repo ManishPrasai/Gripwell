@@ -40,8 +40,20 @@ function AuthPage() {
   const [tab, setTab] = useState<'signin' | 'signup'>('signin')
   const [showPw, setShowPw] = useState(false)
   const [pw, setPw] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
   const [loading, setLoading] = useState(false)
+
+  function handleGoogleLogin() {
+    const params = new URLSearchParams({
+      client_id:     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      redirect_uri:  `${window.location.origin}/api/auth/google/callback`,
+      response_type: 'code',
+      scope:         'openid profile email',
+      access_type:   'offline',
+      prompt:        'consent',
+    })
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+  }
 
   const isSignup = tab === 'signup'
   const level = scorePassword(pw)
@@ -226,7 +238,7 @@ function AuthPage() {
 
           {/* Social buttons */}
           <div style={{ display: 'grid', gridTemplateColumns: isSignup ? '1fr 1fr' : '1fr', gap: '12px' }}>
-            <button type="button" style={{
+            <button type="button" onClick={handleGoogleLogin} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', height: '50px',
               background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', cursor: 'pointer',
               fontFamily: "'DM Sans', sans-serif", fontSize: '14.5px', fontWeight: 600, color: '#111',
