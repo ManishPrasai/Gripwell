@@ -331,6 +331,7 @@ model Customer {
   lastName     String
   email        String    @unique
   phone        String?
+  profileImage String?
   passwordHash String
   isVerified   Boolean   @default(false)
   isActive     Boolean   @default(true)

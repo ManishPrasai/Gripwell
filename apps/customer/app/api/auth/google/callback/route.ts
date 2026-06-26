@@ -79,12 +79,15 @@ export async function GET(req: NextRequest) {
           firstName:    payload.given_name  ?? payload.name?.split(' ')[0] ?? 'Google',
           lastName:     payload.family_name ?? payload.name?.split(' ').slice(1).join(' ') ?? 'User',
           email,
+          profileImage: payload.picture ?? null,
           passwordHash: 'oauth:google',
           isVerified:   payload.email_verified ?? false,
           isActive:     true,
         },
         select: { id: true, firstName: true, lastName: true, email: true, phone: true, isVerified: true, isActive: true },
       })
+    } else if (payload.picture) {
+      await prisma.customer.update({ where: { id: customer.id }, data: { profileImage: payload.picture } })
     }
 
     // Generate tokens — same logic as /api/auth/login
