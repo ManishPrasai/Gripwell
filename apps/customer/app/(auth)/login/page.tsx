@@ -44,8 +44,10 @@ function AuthPage() {
   const [loading, setLoading] = useState(false)
 
   function handleGoogleLogin() {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!clientId) { setError('Google login is not configured. Please contact support.'); return }
     const params = new URLSearchParams({
-      client_id:     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      client_id:     clientId,
       redirect_uri:  `${window.location.origin}/api/auth/google/callback`,
       response_type: 'code',
       scope:         'openid profile email',
