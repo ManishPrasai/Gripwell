@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
         lastName: true,
         email: true,
         phone: true,
+        profileImage: true,
         isVerified: true,
         createdAt: true
       }

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { useCart } from '../context/CartContext'
+import { useCart } from '../../context/CartContext'
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -15,7 +15,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 const FITTING_COST = 25.00
 const AU_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
 
-const SELECTED_STORE = {
+const DEFAULT_STORE = {
   name:    'Nova Tyres Sefton',
   address: '107 Carlingford St, Sefton',
   state:   'NSW 2162',
@@ -135,46 +135,49 @@ function StripePaymentForm({
 }) {
   const stripe   = useStripe()
   const elements = useElements()
-  const [payError, setPayError] = useState<string | null>(null)
-  const [paying,   setPaying]   = useState(false)
+  const [payError,      setPayError]      = useState<string | null>(null)
+  const [paying,        setPaying]        = useState(false)
+  const [elementReady,  setElementReady]  = useState(false)
 
   async function handlePay() {
-    if (!stripe || !elements) return
+    if (!stripe || !elements || !elementReady) return
     setPaying(true)
     setPayError(null)
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout`,
-        payment_method_data: { billing_details: billingDetails },
-      },
-      redirect: 'if_required',
-    })
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout`,
+          payment_method_data: { billing_details: billingDetails },
+        },
+        redirect: 'if_required',
+      })
 
-    if (error) {
-      setPayError(error.message ?? 'Payment failed. Please try again.')
+      if (error) {
+        setPayError(error.message ?? 'Payment failed. Please try again.')
+        return
+      }
+
+      const res  = await fetch('/api/checkout/success', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setPayError(data.error ?? 'Order creation failed. Please contact us.')
+        return
+      }
+
+      onSuccess(data.orderNumber, data.total ?? total)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setPayError(msg || 'Payment failed. Please try again.')
+    } finally {
       setPaying(false)
-      return
     }
-
-    // Both 'succeeded' and 'processing' — record the order; webhooks handle final state
-    console.log('[stripe] Payment', paymentIntent?.status, paymentIntent?.id)
-
-    const res  = await fetch('/api/checkout/success', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
-    })
-    const data = await res.json()
-
-    if (!res.ok) {
-      setPayError(data.error ?? 'Order creation failed. Please contact us.')
-      setPaying(false)
-      return
-    }
-
-    onSuccess(data.orderNumber, data.total ?? total)
   }
 
   return (
@@ -190,13 +193,17 @@ function StripePaymentForm({
         </span>
       </div>
 
-      {/* PaymentElement with tabs layout. Billing fields suppressed here because
-          we already collected them in steps 1 & 2 and pass them via confirmParams. */}
+      {/* Card form — billing fields suppressed, already collected in steps 1 & 2 */}
+      {!elementReady && (
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+          Loading payment form…
+        </p>
+      )}
       <PaymentElement
+        onReady={() => setElementReady(true)}
+        onLoaderError={(e) => setPayError(`Stripe failed to load: ${e.error?.message ?? 'unknown error'}`)}
         options={{
-          layout: 'tabs',
           fields: { billingDetails: 'never' },
-          wallets: { applePay: 'auto', googlePay: 'auto' },
         }}
       />
 
@@ -208,8 +215,8 @@ function StripePaymentForm({
       )}
 
       {/* Place order */}
-      <OBtn onClick={handlePay} disabled={paying || !stripe || !elements}>
-        {paying ? 'Processing…' : (
+      <OBtn onClick={handlePay} disabled={paying || !stripe || !elements || !elementReady}>
+        {paying ? 'Processing…' : !elementReady ? 'Loading payment form…' : (
           <>
             <svg width="15" height="15" viewBox="0 0 24 28" fill="none">
               <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="rgba(255,255,255,0.9)"/>
@@ -240,6 +247,24 @@ export default function CheckoutPage() {
   const [clientSecret,     setClientSecret]     = useState<string | null>(null)
   const [payIntentLoading, setPayIntentLoading] = useState(false)
   const [payIntentError,   setPayIntentError]   = useState<string | null>(null)
+
+  // Selected fitting store (read from cart localStorage)
+  const [selectedStore, setSelectedStore] = useState(DEFAULT_STORE)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nova_selected_store')
+      if (raw) {
+        const s = JSON.parse(raw)
+        setSelectedStore({
+          name:    s.name,
+          address: `${s.address}, ${s.suburb}`,
+          state:   `${s.state} ${s.postcode}`,
+          phone:   s.phone ?? '',
+        })
+      }
+    } catch {}
+  }, [])
 
   // Misc
   const [notes,         setNotes]         = useState('')
@@ -335,7 +360,7 @@ export default function CheckoutPage() {
           </div>
           <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', color: '#1A1A1A', letterSpacing: '0.04em', marginBottom: '12px' }}>Order Confirmed!</h1>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
-            Thanks for your order. Your items will be delivered directly to <strong>{SELECTED_STORE.name}</strong> for fitting. We&apos;ll be in touch shortly.
+            Thanks for your order. Your items will be delivered directly to <strong>{selectedStore.name}</strong> for fitting. We&apos;ll be in touch shortly.
           </p>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px' }}>
             Back to home
@@ -538,7 +563,7 @@ export default function CheckoutPage() {
                       options={{
                         clientSecret,
                         appearance: {
-                          theme: 'flat',
+                          theme: 'stripe',
                           variables: {
                             colorPrimary: '#076330',
                             colorBackground: '#ffffff',
@@ -546,6 +571,7 @@ export default function CheckoutPage() {
                             colorDanger: '#C62828',
                             fontFamily: "'DM Sans', sans-serif",
                             borderRadius: '8px',
+                            spacingUnit: '4px',
                           },
                         },
                       }}
@@ -669,17 +695,17 @@ export default function CheckoutPage() {
               </div>
 
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
-                {SELECTED_STORE.name}
+                {selectedStore.name}
               </p>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '2px' }}>
-                {SELECTED_STORE.address}
+                {selectedStore.address}
               </p>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '8px' }}>
-                {SELECTED_STORE.state}
+                {selectedStore.state}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '12px' }}>
                 <i className="ti ti-phone" style={{ fontSize: '13px', color: '#666' }} aria-hidden="true" />
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{SELECTED_STORE.phone}</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
               </div>
 
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>

@@ -57,6 +57,8 @@ function mapWheel(w: ApiWheel): WheelProduct {
 
 const SORT_OPTIONS = ['Default', 'Price: Low to High', 'Price: High to Low', 'Name: A–Z']
 
+const BUTTON_AREA_H = 54
+
 /* ── Brand logo with text fallback ───────────────────────────────────────── */
 function BrandLogoImg({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
@@ -78,6 +80,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
   const { addToCart } = useCart()
 
   function handleAdd(e: React.MouseEvent) {
+    e.preventDefault()
     e.stopPropagation()
     addToCart({ id: product.slug, productType: 'wheel', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
     setJustAdded(true)
@@ -85,106 +88,158 @@ function WheelCard({ product }: { product: WheelProduct }) {
   }
 
   return (
-    <div
+    <Link
+      href={`/wheels/${product.slug}`}
+      style={{ textDecoration: 'none' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background:    '#fff',
-        borderRadius:  '12px',
-        border:        '1px solid #E5E5E5',
-        overflow:      'hidden',
-        position:      'relative',
-        boxShadow:     hovered ? '0 8px 32px rgba(0,0,0,0.10)' : '0 1px 4px rgba(0,0,0,0.05)',
-        transition:    'box-shadow 0.25s ease, transform 0.25s ease',
-        transform:     hovered ? 'translateY(-3px)' : 'translateY(0)',
-        display:       'flex',
-        flexDirection: 'column',
-      }}
     >
-      {/* Add to cart */}
-      <button
-        onClick={handleAdd}
-        aria-label="Add to cart"
+      <div
         style={{
-          position:      'absolute',
-          top:           '12px',
-          right:         '12px',
-          width:         '34px',
-          height:        '34px',
-          borderRadius:  '50%',
-          background:    justAdded ? '#22c55e' : '#fff',
-          border:        justAdded ? 'none' : '1px solid #E5E5E5',
-          boxShadow:     '0 1px 6px rgba(0,0,0,0.1)',
-          display:       'flex',
-          alignItems:    'center',
-          justifyContent:'center',
-          cursor:        'pointer',
-          zIndex:         2,
-          transition:    'background 0.2s ease',
+          position:     'relative',
+          overflow:     'hidden',
+          background:   '#fff',
+          borderRadius: '16px',
+          border:       '1px solid #E5E5E5',
+          height:       '360px',
+          boxShadow:    hovered
+            ? '0 12px 40px rgba(0,0,0,0.14)'
+            : '0 1px 4px rgba(0,0,0,0.04)',
+          transition:   'box-shadow 0.3s ease',
         }}
       >
-        <i
-          className={justAdded ? 'ti ti-check' : 'ti ti-shopping-cart'}
-          style={{ fontSize: '15px', color: justAdded ? '#fff' : '#E8572A' }}
-          aria-hidden="true"
-        />
-      </button>
 
-      {/* Wheel image */}
-      <div style={{ padding: '40px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '1', maxHeight: '180px' }}>
+        {/* ── Layer 1: Product image ── */}
+        <div
+          style={{
+            position:       'absolute',
+            inset:           0,
+            paddingTop:     '20px',
+            paddingBottom:  '155px',
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'center',
+            perspective:    '700px',
+          }}
+        >
           <Image
             src={product.image}
             alt={`${product.brand} ${product.model}`}
-            fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            style={{ objectFit: 'contain' }}
+            width={280}
+            height={240}
+            style={{
+              objectFit:      'contain',
+              width:          '88%',
+              height:         '100%',
+              transformStyle: 'preserve-3d',
+              transform: hovered
+                ? 'translateZ(-60px) scale(0.86)'
+                : 'translateZ(0px)   scale(1)',
+              transition: 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)',
+            }}
           />
         </div>
-      </div>
 
-      {/* Info */}
-      <div style={{ padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        {/* ── Layer 2: Info (brand logo · model · spec · price) ── */}
+        <div
+          style={{
+            position:   'absolute',
+            bottom:      0,
+            left:        0,
+            right:       0,
+            background: '#fff',
+            padding:    '14px 16px 10px',
+            transform:  hovered ? `translateY(-${BUTTON_AREA_H}px)` : 'translateY(0)',
+            transition: 'transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)',
+          }}
+        >
+          <div
+            style={{
+              display:      'inline-flex',
+              alignItems:   'center',
+              border:       '1px solid #E5E5E5',
+              borderRadius: '6px',
+              padding:      '3px 10px',
+              background:   '#fff',
+              height:       '28px',
+              marginBottom: '8px',
+            }}
+          >
+            <BrandLogoImg src={product.brandLogo} brand={product.brand} />
+          </div>
 
-        <div style={{ marginBottom: '6px' }}>
-          <BrandLogoImg src={product.brandLogo} brand={product.brand} />
-        </div>
+          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, lineHeight: 1.3, marginBottom: '3px' }}>
+            {product.brand} {product.model}
+          </p>
 
-        <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, lineHeight: 1.3, marginBottom: '2px' }}>
-          {product.brand} {product.model}
-        </p>
+          <p style={{ color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>
+            {product.size}&nbsp;&nbsp;{product.spec}
+          </p>
 
-        <p style={{ color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 500, marginBottom: '10px' }}>
-          {product.size}&nbsp;&nbsp;{product.spec}
-        </p>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
           <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', fontWeight: 800 }}>
             A${product.price.toFixed(2)}
           </p>
-          <Link
-            href={`/wheels/${product.slug}`}
-            className="inline-flex items-center gap-1"
-            style={{ background: '#E8572A', color: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', padding: '7px 14px', borderRadius: '6px', textDecoration: 'none', whiteSpace: 'nowrap' }}
-          >
-            VIEW MORE
-            <i className="ti ti-arrow-right" style={{ fontSize: '12px' }} aria-hidden="true" />
-          </Link>
         </div>
+
+        {/* ── Layer 3: Add to cart — grows upward from card bottom ── */}
+        <div
+          style={{
+            position:      'absolute',
+            bottom:         0,
+            left:           0,
+            right:          0,
+            overflow:      'hidden',
+            maxHeight:     hovered ? '68px' : '0px',
+            transition:    'max-height 0.38s cubic-bezier(0.25,0.46,0.45,0.94)',
+            pointerEvents: hovered ? 'auto' : 'none',
+          }}
+        >
+          <div style={{ padding: '8px 16px 16px', background: '#fff' }}>
+            <button
+              onClick={handleAdd}
+              style={{
+                width:          '100%',
+                padding:        '11px 16px',
+                background:     justAdded ? '#22c55e' : '#1A1A1A',
+                color:          '#fff',
+                borderRadius:   '8px',
+                border:         'none',
+                cursor:         'pointer',
+                fontFamily:     "'DM Sans', sans-serif",
+                fontSize:       '13px',
+                fontWeight:      700,
+                letterSpacing:  '0.06em',
+                transition:     'background 0.2s ease',
+                display:        'flex',
+                alignItems:     'center',
+                justifyContent: 'center',
+                gap:            '6px',
+              }}
+            >
+              <i
+                className={justAdded ? 'ti ti-check' : 'ti ti-shopping-cart'}
+                style={{ fontSize: '14px' }}
+                aria-hidden="true"
+              />
+              {justAdded ? 'Added!' : 'ADD TO CART'}
+            </button>
+          </div>
+        </div>
+
       </div>
-    </div>
+    </Link>
   )
 }
 
 /* ── Skeleton card ────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ height: '320px', borderRadius: '12px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
-      <div style={{ height: '180px', background: '#F0F0F0', margin: '16px 16px 0' }} />
+    <div style={{ height: '360px', borderRadius: '16px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
+      <div style={{ height: '200px', background: '#F0F0F0', margin: '16px 16px 0' }} />
       <div style={{ padding: '14px 16px' }}>
-        <div style={{ width: '64px', height: '18px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '10px' }} />
-        <div style={{ width: '80%', height: '14px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '8px' }} />
-        <div style={{ width: '50%', height: '12px', background: '#F0F0F0', borderRadius: '4px' }} />
+        <div style={{ width: '64px', height: '20px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '12px' }} />
+        <div style={{ width: '80%', height: '16px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '8px' }} />
+        <div style={{ width: '50%', height: '14px', background: '#F0F0F0', borderRadius: '4px' }} />
       </div>
     </div>
   )

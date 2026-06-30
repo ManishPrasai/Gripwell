@@ -1,9 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { useCart } from '../../context/CartContext'
+
+interface MapStore {
+  id:      string
+  name:    string
+  address: string
+  suburb:  string
+  lat:     number
+  lng:     number
+}
+
+const StoreMap = dynamic(() => import('../locations/StoreMap'), { ssr: false })
 
 /* ── Similar tyres demo data ─────────────────────────────────────────────── */
 const SIMILAR = [
@@ -59,7 +71,30 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
   const [qty,        setQty]        = useState(1)
   const [activeTab,  setActiveTab]  = useState<'description' | 'details' | 'pickup'>('details')
   const [addedMsg,   setAddedMsg]   = useState(false)
+  const [stores,       setStores]       = useState<MapStore[]>([])
+  const [storeSearch,  setStoreSearch]  = useState('')
+  const [selectedStore, setSelectedStore] = useState<MapStore | null>(null)
   const { addToCart } = useCart()
+
+  useEffect(() => {
+    fetch('/api/stores')
+      .then(r => r.json())
+      .then(data => {
+        const mapped: MapStore[] = (data.stores ?? [])
+          .filter((s: { latitude?: number; longitude?: number }) => s.latitude && s.longitude)
+          .map((s: { id: string; name: string; address: string; suburb: string; state: string; postcode: string; latitude: number; longitude: number }) => ({
+            id:      s.id,
+            name:    s.name,
+            address: s.address,
+            suburb:  `${s.suburb} ${s.state} ${s.postcode}`,
+            lat:     s.latitude,
+            lng:     s.longitude,
+          }))
+        setStores(mapped)
+        if (mapped.length) setSelectedStore(mapped[0])
+      })
+      .catch(() => {})
+  }, [])
 
   const images  = product.images.length > 0 ? product.images : [{ url: '/images/tyres/Tyre 1.png', altText: product.model, sortOrder: 0 }]
   const price   = parseFloat(product.price)
@@ -80,6 +115,14 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
     : 4.8
 
   const { tyreSize: ts } = product
+
+  const filteredStores = useMemo(() => {
+    const q = storeSearch.trim().toLowerCase()
+    if (!q) return stores
+    return stores.filter(s =>
+      s.name.toLowerCase().includes(q) || s.suburb.toLowerCase().includes(q)
+    )
+  }, [stores, storeSearch])
 
   return (
     <main style={{ background: '#fff', paddingTop: '100px' }}>
@@ -422,32 +465,33 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
                 Multiple Stores <span style={{ color: '#E8572A', fontStyle: 'italic' }}>one phone call</span> away for new tyres.
               </h2>
               <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
-                <input placeholder="Search suburb or store..." style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '8px 12px', color: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', outline: 'none' }} />
+                <input
+                  placeholder="Search suburb or store..."
+                  value={storeSearch}
+                  onChange={e => setStoreSearch(e.target.value)}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', padding: '8px 12px', color: '#fff', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', outline: 'none' }}
+                />
               </div>
               <div style={{ maxHeight: '280px', overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {[
-                  { name: 'Nova Tyres Springvale', addr: '4/134 Springvale Rd, Springvale VIC 3171' },
-                  { name: 'Nova Tyres Sefton',     addr: '107 Carlingford St, Sefton NSW 2162' },
-                  { name: 'Nova Tyres Bayswater',  addr: '194 Canterbury Rd, Bayswater North VIC 3153' },
-                  { name: 'Nova Tyres Dandenong',  addr: '308 S Gippsland Hwy, Dandenong South VIC 3175' },
-                  { name: 'Nova Tyres Melbourne',  addr: '200 Grange Rd, Alphington VIC 3078' },
-                  { name: 'Nova Tyres Geelong',    addr: '1/118 Bellarine Hwy, Newcomb VIC 3219' },
-                  { name: 'Nova Tyres Sunshine',   addr: '9 Devonshire Rd, Sunshine VIC 3020' },
-                ].map(s => (
-                  <div key={s.name} style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', cursor: 'pointer' }}>
+                {filteredStores.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedStore(s)}
+                    style={{
+                      padding: '10px 12px', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', width: '100%',
+                      background: selectedStore?.id === s.id ? 'rgba(232,87,42,0.18)' : 'rgba(255,255,255,0.06)',
+                      border: selectedStore?.id === s.id ? '1px solid rgba(232,87,42,0.4)' : '1px solid transparent',
+                    }}
+                  >
                     <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#fff', marginBottom: '2px' }}>{s.name}</p>
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{s.addr}</p>
-                  </div>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{s.address}, {s.suburb}</p>
+                  </button>
                 ))}
               </div>
             </div>
-            {/* Right: map */}
-            <div style={{ minHeight: '400px' }}>
-              <iframe
-                src="https://www.openstreetmap.org/export/embed.html?bbox=144.5,-38.2,145.5,-37.5&layer=mapnik"
-                title="Store locations"
-                style={{ width: '100%', height: '100%', border: 'none', display: 'block', minHeight: '400px' }}
-              />
+            {/* Right: interactive Leaflet map */}
+            <div style={{ minHeight: '400px', position: 'relative' }}>
+              <StoreMap stores={filteredStores} selectedStore={selectedStore} onSelectStore={setSelectedStore} />
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import TyreProductDetail from '../../components/product/TyreProductDetail'
+import TyreProductDetail from '../../../components/product/TyreProductDetail'
 
 /* ── Demo fallback used when the DB is not yet seeded ───────────────────── */
 const DEMO_PRODUCTS: Record<string, object> = {

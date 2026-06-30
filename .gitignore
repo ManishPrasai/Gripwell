@@ -43,3 +43,7 @@ yarn-error.log*
 
 # Generated tool output
 graphify-out/
+
+# Local binaries
+*.exe
+nova-tyres.rar

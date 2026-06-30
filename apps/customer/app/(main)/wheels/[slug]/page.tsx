@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import WheelProductDetail from '../../components/product/WheelProductDetail'
+import WheelProductDetail from '../../../components/product/WheelProductDetail'
 
 const DEMO_WHEEL = {
   id: 'demo-w1',

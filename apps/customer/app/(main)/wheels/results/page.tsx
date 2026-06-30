@@ -1,5 +1,5 @@
-import WheelCollectionHero from '../../components/wheels/WheelCollectionHero'
-import WheelGrid           from '../../components/wheels/WheelGrid'
+import WheelCollectionHero from '../../../components/wheels/WheelCollectionHero'
+import WheelGrid           from '../../../components/wheels/WheelGrid'
 
 export const metadata = {
   title: 'Wheel Search Results — Nova Tyres',
