@@ -309,7 +309,7 @@ model AppointmentSlot {
 model CartItem {
   id          String   @id @default(uuid())
   customerId  String
-  productType String   // 'tyre' | 'wheel'
+  productType String // 'tyre' | 'wheel'
   productId   String
   quantity    Int      @default(1)
   createdAt   DateTime @default(now())
