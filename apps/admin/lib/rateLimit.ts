@@ -1,17 +1,14 @@
 /**
- * Redis sliding-window rate limiter for the admin login endpoint.
+ * Rate limiter for the admin login endpoint.
  *
- * Per-IP sliding window (15-minute window, 5-attempt ceiling):
- *  - Uses a sorted set keyed by IP: admin:ratelimit:login:<ip>
- *    Each member = unique attempt ID, score = timestamp ms.
- *  - On every call we prune entries older than the window, then count.
- *  - On breach we write a separate lockout key with a 15-min TTL.
+ * Primary:  Redis sliding-window (per-IP, 5 attempts / 15 min).
+ * Fallback: DB-backed count via the LoginAttempt table when Redis is
+ *           unavailable — so the limit fires even without a local Redis server.
  *
- * Falls back gracefully to "allow" when Redis is unavailable so a Redis
- * outage never blocks legitimate logins. The DB-backed LoginAttempt table
- * still records every attempt for audit purposes.
+ * Lockout email is sent by the caller (login route) when locked === true.
  */
 import { getAdminRedis } from './redis'
+import { prisma } from '@nova/database'
 
 const WINDOW_MS      = 15 * 60 * 1000   // 15 minutes
 const WINDOW_SECONDS = 15 * 60
@@ -22,41 +19,30 @@ function lockoutKey(ip: string) { return `admin:lockout:${ip}` }
 
 export interface RateLimitResult {
   allowed:   boolean
-  remaining: number        // attempts remaining in current window
-  resetAt:   Date          // when the window / lockout expires
-  locked:    boolean       // true when a hard lockout is in effect
+  remaining: number
+  resetAt:   Date
+  locked:    boolean   // true on the exact attempt that triggers lockout
 }
 
-/**
- * Record one login attempt from `ip` and return whether it is allowed.
- * Call this BEFORE password verification so every request is counted.
- */
-const ALLOW_FALLBACK: RateLimitResult = {
-  allowed: true, remaining: MAX_ATTEMPTS - 1, resetAt: new Date(), locked: false,
-}
+/* ─── Redis path ──────────────────────────────────────────────────────────── */
 
-export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
+async function checkRedis(ip: string): Promise<RateLimitResult | null> {
   const redis = getAdminRedis()
-  if (!redis) return ALLOW_FALLBACK
+  if (!redis) return null
 
   try {
     const now = Date.now()
 
-    // --- 1. Check active lockout ---
+    // 1. Check existing lockout
     const lockoutTTL = await redis.ttl(lockoutKey(ip))
     if (lockoutTTL > 0) {
-      return {
-        allowed:   false,
-        remaining: 0,
-        resetAt:   new Date(now + lockoutTTL * 1000),
-        locked:    true,
-      }
+      return { allowed: false, remaining: 0, resetAt: new Date(now + lockoutTTL * 1000), locked: false }
     }
 
-    const key = ipKey(ip)
+    const key         = ipKey(ip)
     const windowStart = now - WINDOW_MS
 
-    // --- 2. Sliding window: remove stale entries, count, add new ---
+    // 2. Sliding window
     const pipeline = redis.pipeline()
     pipeline.zremrangebyscore(key, 0, windowStart)
     pipeline.zcard(key)
@@ -67,41 +53,57 @@ export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> 
     const countBefore = (results?.[1]?.[1] as number) ?? 0
     const countAfter  = countBefore + 1
 
-    // --- 3. Enforce limit ---
+    // 3. Enforce
     if (countAfter > MAX_ATTEMPTS) {
       await redis.set(lockoutKey(ip), '1', 'EX', WINDOW_SECONDS)
       await redis.del(key)
-      return {
-        allowed:   false,
-        remaining: 0,
-        resetAt:   new Date(now + WINDOW_SECONDS * 1000),
-        locked:    true,
-      }
+      return { allowed: false, remaining: 0, resetAt: new Date(now + WINDOW_SECONDS * 1000), locked: true }
     }
 
-    return {
-      allowed:   true,
-      remaining: MAX_ATTEMPTS - countAfter,
-      resetAt:   new Date(now + WINDOW_SECONDS * 1000),
-      locked:    false,
-    }
+    return { allowed: true, remaining: MAX_ATTEMPTS - countAfter, resetAt: new Date(now + WINDOW_SECONDS * 1000), locked: false }
   } catch (err) {
-    // Redis unreachable — degrade gracefully so logins still work
-    console.error('[rateLimit] Redis error, falling back to allow:', err)
-    return ALLOW_FALLBACK
+    console.error('[rateLimit] Redis error, switching to DB fallback:', err)
+    return null   // signal: use DB fallback
   }
 }
 
-/**
- * Clear the rate-limit state for an IP (call after a successful login
- * so a legitimate admin who had previous failures isn't penalised).
- */
+/* ─── DB fallback path ────────────────────────────────────────────────────── */
+
+async function checkDB(ip: string): Promise<RateLimitResult> {
+  const windowStart = new Date(Date.now() - WINDOW_MS)
+  const resetAt     = new Date(Date.now() + WINDOW_MS)
+
+  const count = await prisma.loginAttempt.count({
+    where: {
+      ipAddress:   ip,
+      attemptedAt: { gte: windowStart },
+    },
+  })
+
+  // count here is BEFORE we add the current attempt (added by the caller)
+  const countAfter = count + 1
+
+  if (countAfter > MAX_ATTEMPTS) {
+    return { allowed: false, remaining: 0, resetAt, locked: countAfter === MAX_ATTEMPTS + 1 }
+  }
+
+  return { allowed: true, remaining: MAX_ATTEMPTS - countAfter, resetAt, locked: false }
+}
+
+/* ─── Public API ──────────────────────────────────────────────────────────── */
+
+export async function checkLoginRateLimit(ip: string): Promise<RateLimitResult> {
+  const redisResult = await checkRedis(ip)
+  if (redisResult !== null) return redisResult
+  return checkDB(ip)
+}
+
 export async function clearLoginRateLimit(ip: string): Promise<void> {
   const redis = getAdminRedis()
   if (!redis) return
   try {
     await redis.del(ipKey(ip), lockoutKey(ip))
   } catch {
-    // best-effort clear
+    // best-effort
   }
 }
