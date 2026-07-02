@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@nova/database'
+import { jwtVerify } from 'jose'
+
+/* Edge-safe JWT verification.
+   NOTE: the previous version imported verifyAccessToken from '@nova/database',
+   which transitively pulls in ioredis — incompatible with the Edge runtime and
+   crashed the middleware on every request. `jose` verifies the same HS256 token
+   (signed with NEXTAUTH_SECRET) without any Node-only dependencies. */
 
 const protectedRoutes = [
   '/dashboard',
@@ -20,13 +26,25 @@ const superAdminOnlyRoutes = [
   '/seo'
 ]
 
-export function middleware(req: NextRequest) {
+const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || '')
+
+async function verify(token?: string): Promise<Record<string, unknown> | null> {
+  if (!token) return null
+  try {
+    const { payload } = await jwtVerify(token, secret)
+    return payload as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
 
-  const payload = token ? verifyAccessToken(token) : null
+  const payload = await verify(token)
   const isAuthenticated = !!payload && payload.type === 'admin'
   const isSuperAdmin = payload?.role === 'SUPER_ADMIN'
 

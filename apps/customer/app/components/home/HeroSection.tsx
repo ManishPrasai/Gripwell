@@ -255,7 +255,7 @@ function SizeDropdown({
           }
         }}
         aria-haspopup="listbox" aria-expanded={open}
-        className="w-full flex items-center justify-between bg-neutral-900/90 border border-neutral-800 text-white rounded-xl px-4 py-3.5 text-base font-semibold focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 cursor-pointer">
+        className="w-full flex items-center justify-between bg-neutral-900/90 border border-neutral-800 text-white rounded-xl px-3 py-2.5 md:px-4 md:py-3.5 text-base font-semibold focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 cursor-pointer">
         <span>{value}{suffix}</span>
         <svg className={`text-neutral-400 w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -564,7 +564,7 @@ export default function HeroSection() {
               </p>
 
               {/* Tyres / Wheels toggle */}
-              <div className="hs-seg relative bg-neutral-900/80 border border-neutral-800 rounded-xl p-1.5 inline-flex gap-1">
+              <div className="hs-seg relative bg-neutral-900/80 border border-neutral-800 rounded-xl p-1.5 flex w-full md:inline-flex md:w-auto gap-1">
                 {/* Sliding active-pill — glides between buttons instead of popping */}
                 <div className="absolute top-1.5 bottom-1.5 rounded-lg bg-neutral-800 shadow-md transition-all duration-300 ease-out pointer-events-none"
                   style={{ left: `${segIndicator.left}px`, width: `${segIndicator.width}px` }} />
@@ -572,7 +572,7 @@ export default function HeroSection() {
                   const active = tab === t
                   return (
                     <button key={t} ref={el => { segRefs.current[t] = el }} onClick={() => setTab(t)}
-                      className={`relative z-10 inline-flex items-center gap-1.5 px-5 py-2 rounded-lg font-semibold text-sm cursor-pointer transition-colors duration-300 ease-out ${
+                      className={`relative z-10 flex-1 justify-center md:flex-none md:justify-start inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-lg font-semibold text-sm cursor-pointer transition-colors duration-300 ease-out ${
                         active ? 'text-white' : 'bg-transparent text-neutral-400 hover:text-white'
                       }`}
                       style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -586,17 +586,17 @@ export default function HeroSection() {
 
               {/* Selection fields */}
               {tab === 'tyres' ? (
-                <div key="tyres" className="hs-drops hs-drops-tyres grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+                <div key="tyres" className="hs-drops hs-drops-tyres grid grid-cols-3 gap-2 md:gap-4 mt-5">
                   <div className="relative">
-                    <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Width</label>
+                    <label className="text-[10px] md:text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-1.5 md:mb-2 block">Width</label>
                     <SizeDropdown label="Width" value={width} onChange={handleWidthChange} groups={widthOptionGroups} />
                   </div>
                   <div className="relative">
-                    <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Profile</label>
+                    <label className="text-[10px] md:text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-1.5 md:mb-2 block">Profile</label>
                     <SizeDropdown label="Profile" value={profile} onChange={handleProfileChange} groups={profileOptionGroups} />
                   </div>
                   <div className="relative">
-                    <label className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-2 block">Rim</label>
+                    <label className="text-[10px] md:text-[11px] font-bold tracking-wider text-neutral-400 uppercase mb-1.5 md:mb-2 block">Rim</label>
                     <SizeDropdown label="Rim" value={rim} onChange={setRim} groups={rimOptionGroups} suffix={'"'} />
                   </div>
                 </div>
@@ -649,7 +649,7 @@ export default function HeroSection() {
           {/* 4 — Trust signals */}
           <div className="hs-stats w-full flex justify-center mt-10">
             <div
-              className="inline-flex flex-col sm:flex-row items-center rounded-2xl sm:rounded-full"
+              className="inline-flex flex-row items-center rounded-full"
               style={{
                 background: 'rgba(4,4,4,0.75)',
                 backdropFilter: 'blur(20px)',
@@ -659,24 +659,23 @@ export default function HeroSection() {
               }}
             >
               {/* ── Block 1: Google rating ── */}
-              <div className="flex items-center gap-3 px-6 py-3.5">
-                {/* Bare Google G — no badge wrapper */}
-                <svg width="24" height="24" viewBox="0 0 48 48" aria-label="Google" className="flex-shrink-0">
+              <div className="flex items-center gap-2 md:gap-3 px-3 sm:px-5 md:px-6 py-3 md:py-3.5">
+                <svg width="20" height="20" viewBox="0 0 48 48" aria-label="Google" className="flex-shrink-0 hidden xs:block sm:block">
                   <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.9 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.1 3l6.1-6.1C34.9 4.5 29.7 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/>
                   <path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 6 1.1 8.1 3l6.1-6.1C34.9 4.5 29.7 2 24 2 16.2 2 9.4 7.3 6.3 14.7z"/>
                   <path fill="#FBBC05" d="M24 46c5.6 0 10.8-1.9 14.8-5.1l-6.8-5.6C29.9 37 27.1 38 24 38c-5.8 0-10.7-3.9-12.4-9.3l-7 5.4C7.9 41.7 15.4 46 24 46z"/>
                   <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.9 2.6-2.6 4.7-4.9 6.2l6.8 5.6C41.8 37.3 45 31 45 24c0-1.3-.2-2.7-.5-4z"/>
                 </svg>
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '21px', letterSpacing: '-0.02em' }}>4.8</span>
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <span className="text-white font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '18px', letterSpacing: '-0.02em' }}>4.8</span>
                     <div className="flex items-center gap-px" aria-label="4.8 out of 5 stars">
                       {[1,2,3,4].map(i => (
-                        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="#FF5A1F">
+                        <svg key={i} width="11" height="11" viewBox="0 0 24 24" fill="#FF5A1F">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
                       ))}
-                      <svg width="13" height="13" viewBox="0 0 24 24">
+                      <svg width="11" height="11" viewBox="0 0 24 24">
                         <defs>
                           <linearGradient id="tsg-half" x1="0" x2="1" y1="0" y2="0">
                             <stop offset="80%" stopColor="#FF5A1F"/>
@@ -687,59 +686,50 @@ export default function HeroSection() {
                       </svg>
                     </div>
                   </div>
-                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', fontWeight: 600 }}>
-                    450+ Google Reviews
+                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600 }}>
+                    450+ Reviews
                   </p>
                 </div>
               </div>
 
-              {/* divider */}
-              <span className="hidden sm:block w-px self-stretch" style={{ background: 'rgba(255,255,255,0.12)', margin: '10px 0' }} />
-              <span className="sm:hidden h-px" style={{ background: 'rgba(255,255,255,0.12)', margin: '0 24px', alignSelf: 'stretch' }} />
+              {/* vertical divider — always visible since layout is always horizontal */}
+              <span className="w-px self-stretch flex-shrink-0" style={{ background: 'rgba(255,255,255,0.12)', margin: '10px 0' }} />
 
               {/* ── Block 2: Locations ── */}
-              <div className="flex items-center gap-3 px-6 py-3.5">
-                {/* Bare map-pin — no badge wrapper */}
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e4e4e7" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+              <div className="flex items-center gap-2 md:gap-3 px-3 sm:px-5 md:px-6 py-3 md:py-3.5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e4e4e7" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 hidden xs:block sm:block">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                   <circle cx="12" cy="9" r="2.5" fill="#e4e4e7" stroke="none"/>
                 </svg>
                 <div className="flex flex-col gap-1">
-                  <span className="text-white font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '21px', letterSpacing: '-0.02em' }}>9+</span>
-                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', fontWeight: 600 }}>
-                    Locations · Australia
+                  <span className="text-white font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '18px', letterSpacing: '-0.02em' }}>9+</span>
+                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600 }}>
+                    Locations
                   </p>
                 </div>
               </div>
 
-              {/* divider */}
-              <span className="hidden sm:block w-px self-stretch" style={{ background: 'rgba(255,255,255,0.12)', margin: '10px 0' }} />
-              <span className="sm:hidden h-px" style={{ background: 'rgba(255,255,255,0.12)', margin: '0 24px', alignSelf: 'stretch' }} />
+              {/* vertical divider */}
+              <span className="w-px self-stretch flex-shrink-0" style={{ background: 'rgba(255,255,255,0.12)', margin: '10px 0' }} />
 
-              {/* ── Block 3: Major Brands — tyre tread silhouette ── */}
-              <div className="flex items-center gap-3 px-6 py-3.5">
-                {/* Stylised tyre cross-section: outer ring + tread blocks + hub */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" aria-label="Major tyre brands">
-                  {/* outer tyre ring */}
+              {/* ── Block 3: Major Brands ── */}
+              <div className="flex items-center gap-2 md:gap-3 px-3 sm:px-5 md:px-6 py-3 md:py-3.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 hidden xs:block sm:block" aria-label="Major tyre brands">
                   <circle cx="12" cy="12" r="11" stroke="#FF5A1F" strokeWidth="2"/>
-                  {/* inner rim */}
                   <circle cx="12" cy="12" r="5.5" stroke="#FF5A1F" strokeWidth="1.5"/>
-                  {/* hub dot */}
                   <circle cx="12" cy="12" r="1.8" fill="#FF5A1F"/>
-                  {/* tread blocks — 4 rectangular segments in the sidewall band */}
                   <rect x="10.2" y="1.4" width="3.6" height="3.2" rx="0.8" fill="#FF5A1F"/>
                   <rect x="10.2" y="19.4" width="3.6" height="3.2" rx="0.8" fill="#FF5A1F"/>
                   <rect x="1.4" y="10.2" width="3.2" height="3.6" rx="0.8" fill="#FF5A1F"/>
                   <rect x="19.4" y="10.2" width="3.2" height="3.6" rx="0.8" fill="#FF5A1F"/>
-                  {/* diagonal tread nubs at 45° */}
                   <rect x="3.8" y="3.2" width="3" height="1.8" rx="0.6" fill="#FF5A1F" transform="rotate(45 5.3 4.1)"/>
                   <rect x="16.5" y="3.2" width="3" height="1.8" rx="0.6" fill="#FF5A1F" transform="rotate(-45 18 4.1)"/>
                   <rect x="3.8" y="17.8" width="3" height="1.8" rx="0.6" fill="#FF5A1F" transform="rotate(-45 5.3 18.7)"/>
                   <rect x="16.5" y="17.8" width="3" height="1.8" rx="0.6" fill="#FF5A1F" transform="rotate(45 18 18.7)"/>
                 </svg>
                 <div className="flex flex-col gap-1">
-                  <span className="font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '21px', letterSpacing: '-0.02em', color: '#FF5A1F' }}>80+</span>
-                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', fontWeight: 600 }}>
+                  <span className="font-black leading-none" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '18px', letterSpacing: '-0.02em', color: '#FF5A1F' }}>80+</span>
+                  <p className="m-0 leading-none text-zinc-200" style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '10px', fontWeight: 600 }}>
                     Major Brands
                   </p>
                 </div>
