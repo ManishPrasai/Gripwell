@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 15 * 60            })
+    response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 30 * 60            })
     response.cookies.set('admin_refresh_token', refreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60  })
 
     return response

@@ -57,6 +57,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
+    /* Inactivity check — same 30-min rule as the /refresh endpoint */
+    const IDLE_TIMEOUT_MS = 30 * 60 * 1000
+    if (Date.now() - session.lastUsedAt.getTime() > IDLE_TIMEOUT_MS) {
+      await prisma.adminSession.update({
+        where: { id: session.id },
+        data:  { isActive: false, revokedAt: new Date() },
+      })
+      return NextResponse.redirect(loginUrl)
+    }
+
     const newAccessToken = generateAccessToken({
       id: session.admin.id,
       email: session.admin.email,

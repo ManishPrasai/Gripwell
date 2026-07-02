@@ -29,7 +29,7 @@ export const generateAccessToken = (payload: {
   storeId?: string
 }): string => {
   return jwt.sign(payload, process.env.NEXTAUTH_SECRET!, {
-    expiresIn: '15m'
+    expiresIn: '30m'
   })
 }
 

@@ -84,6 +84,14 @@ function RoleSwitcherV2({ role, open, setOpen, onSwitch, R }: any) {
   );
 }
 
+const IDLE_WARN_MS   = 25 * 60 * 1000  // warn at 25 min
+const IDLE_LOGOUT_MS = 30 * 60 * 1000  // logout at 30 min
+
+async function doLogout() {
+  await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  window.location.href = '/login?reason=idle';
+}
+
 export default function AppV2() {
   const [theme, setTheme] = useState("light");
   const [role, setRole] = useState("admin");
@@ -93,6 +101,7 @@ export default function AppV2() {
   const [notifs, setNotifs] = useState<any[]>(NOVA.notifications);
   const [globalQ, setGlobalQ] = useState("");
   const [sessionAdmin, setSessionAdmin] = useState<any>(null);
+  const [idleWarning, setIdleWarning] = useState(false);
 
   /* Load real identity from cookie-based session on mount */
   useEffect(() => {
@@ -109,6 +118,30 @@ export default function AppV2() {
         setRole(a.role === 'SUPER_ADMIN' ? 'admin' : 'manager');
       })
       .catch(() => { window.location.href = '/login'; });
+  }, []);
+
+  /* 30-min inactivity logout — resets on any mouse/keyboard/touch event */
+  useEffect(() => {
+    let warnTimer:   ReturnType<typeof setTimeout>;
+    let logoutTimer: ReturnType<typeof setTimeout>;
+
+    function reset() {
+      setIdleWarning(false);
+      clearTimeout(warnTimer);
+      clearTimeout(logoutTimer);
+      warnTimer   = setTimeout(() => setIdleWarning(true),  IDLE_WARN_MS);
+      logoutTimer = setTimeout(() => doLogout(),            IDLE_LOGOUT_MS);
+    }
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
+    reset(); // start the timer on mount
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, reset));
+      clearTimeout(warnTimer);
+      clearTimeout(logoutTimer);
+    };
   }, []);
 
   /* Theme + persisted preference (client only) */
@@ -204,6 +237,26 @@ export default function AppV2() {
           <RoleSwitcherV2 role={role} open={roleMenu} setOpen={setRoleMenu} onSwitch={switchRole} R={R} />
         </div>
       </header>
+
+      {/* IDLE WARNING BANNER — appears at 25 min, dismissed on any activity */}
+      {idleWarning && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 99999,
+          background: "color-mix(in oklab, var(--warn, #f59e0b) 12%, transparent)",
+          borderBottom: "1px solid color-mix(in oklab, var(--warn, #f59e0b) 30%, transparent)",
+          backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          padding: "10px 20px", fontSize: 13.5, fontWeight: 600,
+          color: "var(--ink, #111)",
+        }}>
+          <Icon name="clock" style={{ width: 16, height: 16, color: "var(--warn, #f59e0b)", flexShrink: 0 }} />
+          <span>You'll be signed out in <b>5 minutes</b> due to inactivity. Move your mouse or press a key to stay signed in.</span>
+          <button onClick={() => setIdleWarning(false)}
+            style={{ marginLeft: 8, padding: "4px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--glass-solid)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            Stay signed in
+          </button>
+        </div>
+      )}
 
       {/* MAIN CONTENT */}
       <main className="content scroll">

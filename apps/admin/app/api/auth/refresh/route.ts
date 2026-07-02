@@ -46,6 +46,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    /* 5c — Inactivity check: if the session was last used more than 30 min
+       ago the admin has been idle. Revoke the session and force re-login
+       instead of silently extending their access. */
+    const IDLE_TIMEOUT_MS = 30 * 60 * 1000
+    const idleSince = Date.now() - session.lastUsedAt.getTime()
+    if (idleSince > IDLE_TIMEOUT_MS) {
+      await prisma.adminSession.update({
+        where: { id: session.id },
+        data:  { isActive: false, revokedAt: new Date() }
+      })
+      const clearOpts = {
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: 'strict' as const,
+        maxAge:   0,
+        path:     '/'
+      }
+      const res = NextResponse.json({ error: 'Session expired due to inactivity' }, { status: 401 })
+      res.cookies.set('admin_access_token',  '', clearOpts)
+      res.cookies.set('admin_refresh_token', '', clearOpts)
+      return res
+    }
+
     const newAccessToken = generateAccessToken({
       id: session.admin.id,
       email: session.admin.email,
@@ -87,7 +110,7 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set('admin_access_token', newAccessToken, {
       ...cookieOpts,
-      maxAge: 15 * 60,
+      maxAge: 30 * 60,
     })
 
     response.cookies.set('admin_refresh_token', newRefreshToken, {

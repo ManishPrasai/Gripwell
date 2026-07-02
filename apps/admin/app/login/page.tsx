@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
+  const idleSignedOut = searchParams.get("reason") === "idle";
 
   /* If already authenticated, go straight to dashboard */
   useEffect(() => {
@@ -286,6 +287,15 @@ export default function LoginPage() {
             </div>
 
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
+
+              {idleSignedOut && !error && (
+                <div className="a-error" style={{ background: "color-mix(in oklab, #f59e0b 10%, transparent)", borderColor: "color-mix(in oklab, #f59e0b 25%, transparent)", color: "#92400e" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>
+                  </svg>
+                  You were signed out due to 30 minutes of inactivity.
+                </div>
+              )}
 
               {error && (
                 <div className="a-error">
