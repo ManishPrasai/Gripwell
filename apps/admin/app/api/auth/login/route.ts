@@ -8,6 +8,7 @@ import {
 } from '@nova/database'
 import { checkLoginRateLimit, clearLoginRateLimit } from '../../../../lib/rateLimit'
 import { sendLoginLockoutAlert } from '../../../../lib/email'
+import { signTotpPendingToken } from '../../../../lib/totp'
 
 export async function POST(req: NextRequest) {
   try {
@@ -92,7 +93,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    /* ── Success — clear rate-limit state, issue session ──────────────── */
+    /* ── Password verified — check if TOTP is required ──────────────── */
+    if (admin.totpEnabled) {
+      // Don't issue a full session yet. Return a short-lived temp token
+      // (2 min) that the frontend uses to call /api/auth/totp/verify.
+      await clearLoginRateLimit(ip)
+      const tempToken = signTotpPendingToken(admin.id, admin.email)
+      return NextResponse.json({ requiresTotp: true, tempToken })
+    }
+
+    /* ── No TOTP — clear rate-limit state, issue full session ─────────── */
     await clearLoginRateLimit(ip)
 
     const accessToken      = generateAccessToken({

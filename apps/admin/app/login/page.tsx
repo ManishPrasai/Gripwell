@@ -15,6 +15,13 @@ export default function LoginPage() {
   const [shake, setShake] = useState(false);
   const idleSignedOut = searchParams.get("reason") === "idle";
 
+  /* TOTP step */
+  const [totpStep, setTotpStep] = useState(false);         // true = show 6-digit prompt
+  const [totpCode, setTotpCode] = useState("");
+  const [tempToken, setTempToken] = useState("");
+  const [isRecovery, setIsRecovery] = useState(false);     // toggle to recovery code input
+  const [needsReenroll, setNeedsReenroll] = useState(false); // shown after recovery code login
+
   /* If already authenticated, go straight to dashboard */
   useEffect(() => {
     fetch("/api/auth/me").then(r => {
@@ -22,39 +29,73 @@ export default function LoginPage() {
     }).catch(() => {});
   }, []);
 
+  function triggerShake(msg: string) {
+    setError(msg);
+    setShake(true);
+    setTimeout(() => setShake(false), 450);
+    setLoading(false);
+  }
+
+  /* Step 1 — password */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (!email.trim() || !password) {
-      setShake(true);
-      setTimeout(() => setShake(false), 450);
-      return;
-    }
+    if (!email.trim() || !password) { triggerShake(""); return; }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
+      const res  = await fetch("/api/auth/login", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body:    JSON.stringify({ email: email.trim(), password }),
       });
-
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Invalid email or password.");
-        setShake(true);
-        setTimeout(() => setShake(false), 450);
+      if (!res.ok) { triggerShake(data.error || "Invalid email or password."); return; }
+
+      if (data.requiresTotp) {
+        /* Password correct but TOTP required — show code input */
+        setTempToken(data.tempToken);
+        setTotpStep(true);
         setLoading(false);
         return;
       }
 
-      /* Tokens are in httpOnly cookies — just redirect */
       router.replace(searchParams.get("from") || "/");
     } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
+      triggerShake("Something went wrong. Please try again.");
+    }
+  }
+
+  /* Step 2 — TOTP code */
+  async function handleTotpSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    const codeVal = totpCode.trim();
+    if (!codeVal) { triggerShake("Enter the code from your authenticator app."); return; }
+
+    setLoading(true);
+    try {
+      const res  = await fetch("/api/auth/totp/verify", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ tempToken, code: codeVal, isRecovery }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) { triggerShake(data.error || "Invalid code."); return; }
+
+      if (res.headers.get("x-totp-recovery-used")) {
+        /* Recovery code was consumed — tell user to re-enroll */
+        setNeedsReenroll(true);
+        setLoading(false);
+        setTimeout(() => router.replace(searchParams.get("from") || "/"), 4000);
+        return;
+      }
+
+      router.replace(searchParams.get("from") || "/");
+    } catch {
+      triggerShake("Something went wrong. Please try again.");
     }
   }
 
@@ -281,6 +322,68 @@ export default function LoginPage() {
         {/* Form panel */}
         <section className="auth-form-wrap">
           <div className={`auth-card${shake ? " err-shake" : ""}`}>
+
+            {/* ── TOTP step ────────────────────────────────────────────── */}
+            {totpStep ? (
+              <>
+                <div className="auth-head">
+                  <h2>Two-factor check</h2>
+                  <p>{isRecovery ? "Enter one of your 8 recovery codes." : "Open Google Authenticator and enter the 6-digit code for Nova Tyres."}</p>
+                </div>
+
+                {needsReenroll && (
+                  <div className="a-error" style={{ background: "color-mix(in oklab,#f59e0b 10%,transparent)", borderColor: "color-mix(in oklab,#f59e0b 25%,transparent)", color: "#92400e" }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                    Recovery code used. TOTP has been disabled — you'll need to re-enroll in Settings after sign-in. Redirecting…
+                  </div>
+                )}
+
+                {error && (
+                  <div className="a-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                    {error}
+                  </div>
+                )}
+
+                <form className="auth-form" onSubmit={handleTotpSubmit} noValidate>
+                  <div className="a-field">
+                    <label htmlFor="totpCode">{isRecovery ? "Recovery code" : "Authenticator code"}</label>
+                    <div className="a-input">
+                      <svg className="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+                      </svg>
+                      <input
+                        id="totpCode" type="text"
+                        placeholder={isRecovery ? "XXXX-XXXX" : "000 000"}
+                        value={totpCode}
+                        onChange={e => setTotpCode(e.target.value)}
+                        autoComplete="one-time-code"
+                        inputMode="numeric"
+                        maxLength={isRecovery ? 9 : 7}
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <button className="a-submit" type="submit" disabled={loading || needsReenroll}>
+                    {loading ? <span className="spin" /> : <><span>Verify</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></>}
+                  </button>
+
+                  <div style={{ textAlign: "center", marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <button type="button" onClick={() => { setIsRecovery(v => !v); setTotpCode(""); setError(""); }}
+                      style={{ background: "none", border: "none", color: "var(--brand-2)", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                      {isRecovery ? "← Back to authenticator code" : "Lost your phone? Use a recovery code"}
+                    </button>
+                    <button type="button" onClick={() => { setTotpStep(false); setTotpCode(""); setError(""); }}
+                      style={{ background: "none", border: "none", color: "var(--ink-3)", fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" }}>
+                      ← Back to sign in
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+            /* ── Password step ─────────────────────────────────────────── */
+            <>
             <div className="auth-head">
               <h2>Welcome back</h2>
               <p>Sign in to your Nova Tyres console.</p>
@@ -378,6 +481,8 @@ export default function LoginPage() {
               </button>
 
             </form>
+            </>
+            )} {/* end password/TOTP conditional */}
           </div>
         </section>
       </div>

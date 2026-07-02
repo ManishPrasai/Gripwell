@@ -799,6 +799,10 @@ model AdminUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // TOTP / MFA
+  totpSecret   String?           // AES-256-GCM encrypted TOTP secret
+  totpEnabled  Boolean   @default(false)
+
   store              Store?               @relation(fields: [storeId], references: [id])
   sessions           AdminSession[]
   actionLogs         AdminActionLog[]
@@ -807,10 +811,24 @@ model AdminUser {
   assignedEnquiries  Enquiry[]            @relation("EnquiryAssignee")
   chatAgents         ChatAgent[]
   chatConversations  ChatConversation[]
+  recoveryCodes      AdminRecoveryCode[]
 
   @@index([email])
   @@index([role])
   @@index([storeId])
+}
+
+// One-time recovery codes — SHA-256 hash stored, plaintext shown only at enrolment
+model AdminRecoveryCode {
+  id        String    @id @default(uuid())
+  adminId   String
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
 }
 
 model AdminSession {
