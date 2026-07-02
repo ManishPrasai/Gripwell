@@ -56,7 +56,7 @@ export function generateTotpSecret(): { secret: string; uri: string } {
     algorithm: 'SHA1',
     digits:    6,
     period:    30,
-    secret:    OTPAuth.Secret.generate(20),
+    secret:    new OTPAuth.Secret({ size: 20 }),
   })
   return {
     secret: totp.secret.base32,
@@ -72,7 +72,7 @@ export function verifyTotpCode(encryptedSecret: string, code: string): boolean {
       algorithm: 'SHA1',
       digits:    6,
       period:    30,
-      secret:    OTPAuth.Secret.fromBase32(plainSecret),
+      secret:    OTPAuth.Secret.fromBase32(plainSecret),   // fromBase32 exists ✓
     })
     // window: 1 = allow ±30 sec clock drift
     const delta = totp.validate({ token: code.replace(/\s/g, ''), window: 1 })

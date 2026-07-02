@@ -9,6 +9,17 @@ import "./nova-css/dashboard-v3.css";
 import "./nova-css/dashboard-v4.css";
 import "./nova-css/dashboard-v5.css";
 
+/* Suppress the unhandled ioredis 'error' event emitted when the shared
+   @nova/database redis client can't connect to localhost:6379 in dev.
+   Without this listener Node throws an uncaught exception that crashes
+   the dev server after a few requests. */
+if (typeof process !== 'undefined') {
+  process.on('uncaughtException', (err: any) => {
+    if (err?.name === 'AggregateError' || err?.code === 'ECONNREFUSED') return
+    throw err
+  })
+}
+
 export const metadata: Metadata = {
   title: "Nova Tyres — Admin",
   description: "Nova Tyres store operations & content console.",
