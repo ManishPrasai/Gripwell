@@ -127,7 +127,6 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       success: true,
-      accessToken,
       admin: {
         id: admin.id,
         firstName: admin.firstName,
@@ -139,12 +138,22 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    response.cookies.set('admin_refresh_token', refreshToken, {
+    const cookieOpts = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
+      sameSite: 'strict' as const,
       path: '/'
+    }
+
+    // Access token in httpOnly cookie — JS cannot read or steal it
+    response.cookies.set('admin_access_token', accessToken, {
+      ...cookieOpts,
+      maxAge: 15 * 60,               // 15 minutes
+    })
+
+    response.cookies.set('admin_refresh_token', refreshToken, {
+      ...cookieOpts,
+      maxAge: 7 * 24 * 60 * 60,     // 7 days
     })
 
     return response

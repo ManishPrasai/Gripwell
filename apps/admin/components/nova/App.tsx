@@ -73,7 +73,11 @@ function RoleSwitcherV2({ role, open, setOpen, onSwitch, R }: any) {
             </button>
           ))}
           <div className="menu-sep"></div>
-          <button className="menu-item danger" onClick={() => { setOpen(false); toast({ kind: "info", title: "Signed out" }); }}><Icon name="logout" />Sign out</button>
+          <button className="menu-item danger" onClick={async () => {
+            setOpen(false);
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+          }}><Icon name="logout" />Sign out</button>
         </div>
       )}
     </div>
@@ -88,6 +92,24 @@ export default function AppV2() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<any[]>(NOVA.notifications);
   const [globalQ, setGlobalQ] = useState("");
+  const [sessionAdmin, setSessionAdmin] = useState<any>(null);
+
+  /* Load real identity from cookie-based session on mount */
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.admin) {
+          window.location.href = '/login';
+          return;
+        }
+        const a = data.admin;
+        setSessionAdmin(a);
+        /* Map DB role to shell role key */
+        setRole(a.role === 'SUPER_ADMIN' ? 'admin' : 'manager');
+      })
+      .catch(() => { window.location.href = '/login'; });
+  }, []);
 
   /* Theme + persisted preference (client only) */
   useEffect(() => {
@@ -110,7 +132,17 @@ export default function AppV2() {
 
   useEffect(() => { document.querySelector(".content")?.scrollTo(0, 0); }, [page]);
 
-  const R = ROLES_V2[role];
+  /* Use real session identity when available, fall back to mock during load */
+  const R_mock = ROLES_V2[role];
+  const realName = sessionAdmin
+    ? `${sessionAdmin.firstName} ${sessionAdmin.lastName}`
+    : R_mock.name;
+  const realInitials = sessionAdmin
+    ? `${sessionAdmin.firstName[0]}${sessionAdmin.lastName[0]}`
+    : R_mock.initials;
+  const realStore = sessionAdmin?.store?.name || R_mock.store;
+
+  const R = { ...R_mock, name: realName, initials: realInitials, store: realStore };
   const D = NOVA;
   const unread = notifs.filter((n) => n.unread).length;
 

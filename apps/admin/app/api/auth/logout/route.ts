@@ -19,13 +19,16 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ success: true })
 
-    response.cookies.set('admin_refresh_token', '', {
+    const clearOpts = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict' as const,
       maxAge: 0,
       path: '/'
-    })
+    }
+
+    response.cookies.set('admin_access_token', '', clearOpts)
+    response.cookies.set('admin_refresh_token', '', clearOpts)
 
     return response
 

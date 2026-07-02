@@ -76,17 +76,23 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const response = NextResponse.json({
-      success: true,
-      accessToken: newAccessToken
+    const response = NextResponse.json({ success: true })
+
+    const cookieOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      path: '/'
+    }
+
+    response.cookies.set('admin_access_token', newAccessToken, {
+      ...cookieOpts,
+      maxAge: 15 * 60,
     })
 
     response.cookies.set('admin_refresh_token', newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieOpts,
       maxAge: 7 * 24 * 60 * 60,
-      path: '/'
     })
 
     return response

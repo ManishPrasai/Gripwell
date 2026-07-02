@@ -1,35 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-/* Edge-safe JWT verification.
-   NOTE: the previous version imported verifyAccessToken from '@nova/database',
-   which transitively pulls in ioredis — incompatible with the Edge runtime and
-   crashed the middleware on every request. `jose` verifies the same HS256 token
-   (signed with NEXTAUTH_SECRET) without any Node-only dependencies. */
-
-const protectedRoutes = [
-  '/dashboard',
-  '/orders',
-  '/appointments',
-  '/enquiries',
-  '/customers',
-  '/inventory',
-  '/stores',
-  '/analytics',
-  '/settings'
-]
-
-const superAdminOnlyRoutes = [
-  '/products',
-  '/discounts',
-  '/admin-accounts',
-  '/seo'
-]
+/* Paths that never require authentication */
+const PUBLIC_PATHS = ['/login', '/api/auth/']
 
 const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || '')
 
-async function verify(token?: string): Promise<Record<string, unknown> | null> {
-  if (!token) return null
+async function verifyAccessToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, secret)
     return payload as Record<string, unknown>
@@ -41,38 +18,43 @@ async function verify(token?: string): Promise<Record<string, unknown> | null> {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const authHeader = req.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
-
-  const payload = await verify(token)
-  const isAuthenticated = !!payload && payload.type === 'admin'
-  const isSuperAdmin = payload?.role === 'SUPER_ADMIN'
-
-  // Redirect unauthenticated users to login
+  /* Always allow public paths, API routes (they handle their own auth),
+     and Next.js internals */
   if (
-    protectedRoutes.some(route => pathname.startsWith(route)) ||
-    superAdminOnlyRoutes.some(route => pathname.startsWith(route))
+    PUBLIC_PATHS.some(p => pathname.startsWith(p)) ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon')
   ) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL('/login', req.url))
+    return NextResponse.next()
+  }
+
+  const accessToken  = req.cookies.get('admin_access_token')?.value
+  const refreshToken = req.cookies.get('admin_refresh_token')?.value
+
+  /* Access token present and valid → proceed */
+  if (accessToken) {
+    const payload = await verifyAccessToken(accessToken)
+    if (payload && payload.type === 'admin') {
+      return NextResponse.next()
     }
   }
 
-  // Block Store Managers from Super Admin only routes
-  if (superAdminOnlyRoutes.some(route => pathname.startsWith(route))) {
-    if (!isSuperAdmin) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
+  /* Access token missing or expired — if a refresh token exists, redirect
+     through the refresh-redirect route which will issue a new access token
+     cookie and return the user to their original destination. */
+  if (refreshToken) {
+    const refreshUrl = new URL('/api/auth/refresh-redirect', req.url)
+    refreshUrl.searchParams.set('next', pathname)
+    return NextResponse.redirect(refreshUrl)
   }
 
-  // Redirect authenticated admins away from login
-  if (pathname === '/login' && isAuthenticated) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
-  }
-
-  return NextResponse.next()
+  /* No valid session at all → login */
+  const loginUrl = new URL('/login', req.url)
+  loginUrl.searchParams.set('from', pathname)
+  return NextResponse.redirect(loginUrl)
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 }
