@@ -4,15 +4,17 @@ import {
   verifyPassword,
   generateAccessToken,
   generateRefreshToken,
-  hashRefreshToken
+  hashRefreshToken,
 } from '@nova/database'
+import { checkLoginRateLimit, clearLoginRateLimit } from '../../../../lib/rateLimit'
+import { sendLoginLockoutAlert } from '../../../../lib/email'
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json()
 
-    const ipAddress =
-      req.headers.get('x-forwarded-for') ||
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('x-real-ip') ||
       'unknown'
 
@@ -23,38 +25,46 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check rate limiting — 5 failed attempts in 15 minutes
-    const recentFailedAttempts = await prisma.loginAttempt.count({
-      where: {
-        email: email.toLowerCase(),
-        success: false,
-        attemptedAt: {
-          gte: new Date(Date.now() - 15 * 60 * 1000)
-        }
-      }
-    })
+    /* ── Redis sliding-window rate limit (per IP) ────────────────────── */
+    const rateLimit = await checkLoginRateLimit(ip)
 
-    if (recentFailedAttempts >= 5) {
+    if (!rateLimit.allowed) {
+      /* First time we hit the limit — send security alert email */
+      if (rateLimit.locked) {
+        sendLoginLockoutAlert({
+          ip,
+          attemptedEmail: email.toLowerCase(),
+          lockedUntil:    rateLimit.resetAt,
+        }).catch(() => {}) // fire-and-forget, never block the response
+      }
+
+      const retryAfterSecs = Math.ceil(
+        (rateLimit.resetAt.getTime() - Date.now()) / 1000
+      )
+
       return NextResponse.json(
-        { error: 'Too many failed attempts. Try again in 15 minutes.' },
-        { status: 429 }
+        { error: 'Too many login attempts. Please try again in 15 minutes.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(retryAfterSecs) },
+        }
       )
     }
 
-    // Find admin
+    /* ── Lookup admin account ──────────────────────────────────────────── */
     const admin = await prisma.adminUser.findUnique({
-      where: { email: email.toLowerCase() },
-      include: { store: true }
+      where:   { email: email.toLowerCase() },
+      include: { store: true },
     })
 
     if (!admin || !admin.isActive) {
       await prisma.loginAttempt.create({
         data: {
-          email: email.toLowerCase(),
-          ipAddress,
-          success: false,
-          failReason: 'account_not_found'
-        }
+          email:     email.toLowerCase(),
+          ipAddress: ip,
+          success:   false,
+          failReason: 'account_not_found',
+        },
       })
 
       return NextResponse.json(
@@ -63,17 +73,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify password
+    /* ── Verify password ───────────────────────────────────────────────── */
     const passwordValid = await verifyPassword(password, admin.passwordHash)
 
     if (!passwordValid) {
       await prisma.loginAttempt.create({
         data: {
-          email: email.toLowerCase(),
-          ipAddress,
-          success: false,
-          failReason: 'wrong_password'
-        }
+          email:     email.toLowerCase(),
+          ipAddress: ip,
+          success:   false,
+          failReason: 'wrong_password',
+        },
       })
 
       return NextResponse.json(
@@ -82,79 +92,69 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Generate tokens
-    const accessToken = generateAccessToken({
-      id: admin.id,
-      email: admin.email,
-      type: 'admin',
-      role: admin.role,
-      storeId: admin.storeId || undefined
+    /* ── Success — clear rate-limit state, issue session ──────────────── */
+    await clearLoginRateLimit(ip)
+
+    const accessToken      = generateAccessToken({
+      id:      admin.id,
+      email:   admin.email,
+      type:    'admin',
+      role:    admin.role,
+      storeId: admin.storeId || undefined,
     })
-
-    const refreshToken = generateRefreshToken()
+    const refreshToken     = generateRefreshToken()
     const refreshTokenHash = hashRefreshToken(refreshToken)
-    const userAgent = req.headers.get('user-agent') || ''
+    const userAgent        = req.headers.get('user-agent') || ''
 
-    // Create session
     await prisma.adminSession.create({
       data: {
-        adminId: admin.id,
+        adminId:          admin.id,
         refreshTokenHash,
         userAgent,
-        ipAddress,
-        deviceType: userAgent.includes('Mobile') ? 'mobile' : 'desktop',
-        isActive: true,
-        lastUsedAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
+        ipAddress:        ip,
+        deviceType:       userAgent.includes('Mobile') ? 'mobile' : 'desktop',
+        isActive:         true,
+        lastUsedAt:       new Date(),
+        expiresAt:        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     })
 
-    // Update last login
     await prisma.adminUser.update({
       where: { id: admin.id },
-      data: { lastLoginAt: new Date() }
+      data:  { lastLoginAt: new Date() },
     })
 
-    // Log attempt
     await prisma.loginAttempt.create({
       data: {
-        email: email.toLowerCase(),
-        ipAddress,
-        success: true,
-        failReason: null
-      }
-    })
-
-    const response = NextResponse.json({
-      success: true,
-      admin: {
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        role: admin.role,
-        storeId: admin.storeId,
-        store: admin.store
-      }
+        email:      email.toLowerCase(),
+        ipAddress:  ip,
+        success:    true,
+        failReason: null,
+      },
     })
 
     const cookieOpts = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure:   process.env.NODE_ENV === 'production',
       sameSite: 'strict' as const,
-      path: '/'
+      path:     '/',
     }
 
-    // Access token in httpOnly cookie — JS cannot read or steal it
-    response.cookies.set('admin_access_token', accessToken, {
-      ...cookieOpts,
-      maxAge: 15 * 60,               // 15 minutes
+    const response = NextResponse.json({
+      success: true,
+      admin: {
+        id:       admin.id,
+        firstName: admin.firstName,
+        lastName:  admin.lastName,
+        email:    admin.email,
+        role:     admin.role,
+        storeId:  admin.storeId,
+        store:    admin.store,
+      },
     })
 
-    response.cookies.set('admin_refresh_token', refreshToken, {
-      ...cookieOpts,
-      maxAge: 7 * 24 * 60 * 60,     // 7 days
-    })
+    response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 15 * 60            })
+    response.cookies.set('admin_refresh_token', refreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60  })
 
     return response
 
