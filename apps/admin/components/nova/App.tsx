@@ -102,20 +102,22 @@ export default function AppV2() {
   const [globalQ, setGlobalQ] = useState("");
   const [sessionAdmin, setSessionAdmin] = useState<any>(null);
   const [idleWarning, setIdleWarning] = useState(false);
+  const [liveData, setLiveData] = useState<any>(null);
 
-  /* Load real identity from cookie-based session on mount */
+  /* Load real identity + all dashboard data on mount */
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!data?.admin) {
-          window.location.href = '/login';
-          return;
-        }
+        if (!data?.admin) { window.location.href = '/login'; return; }
         const a = data.admin;
         setSessionAdmin(a);
-        /* Map DB role to shell role key */
         setRole(a.role === 'SUPER_ADMIN' ? 'admin' : 'manager');
+        /* Fetch all dashboard data after auth confirmed */
+        return fetch('/api/admin/data')
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d) setLiveData(d); })
+          .catch(() => {});
       })
       .catch(() => { window.location.href = '/login'; });
   }, []);
@@ -176,12 +178,18 @@ export default function AppV2() {
   const realStore = sessionAdmin?.store?.name || R_mock.store;
 
   const R = { ...R_mock, name: realName, initials: realInitials, store: realStore };
-  const D = NOVA;
+
+  /* Merge real data with NOVA mock fallback — pages do `const D = ctx.D || NOVA` */
+  const D = liveData
+    ? { ...NOVA, ...liveData }
+    : NOVA;
+
   const unread = notifs.filter((n) => n.unread).length;
 
   const ctx = {
     role, name: R.name, firstName: R.name.split(" ")[0], initials: R.initials, store: R.store,
     theme, setTheme, mini: false, setMini: () => {}, go: setPage,
+    D,  /* real data — pages use ctx.D instead of importing NOVA directly */
     scopeStores: (arr: any[]) => role === "manager" ? arr.filter((s) => s.name === R.store) : arr,
     scopeBy: (arr: any[], key: string) => role === "manager" ? arr.filter((x) => x[key] === R.store) : arr,
   };

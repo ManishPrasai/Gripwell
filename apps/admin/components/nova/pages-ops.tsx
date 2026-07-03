@@ -15,7 +15,7 @@ type Ctx = any;
 
 /* ===================== INVENTORY ===================== */
 export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [lowOnly, setLowOnly] = useState(false);
@@ -130,7 +130,7 @@ const BK_COLS = [
 const BK_NEXT: Record<string, string> = { pending: "progress", progress: "ready" };
 
 export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const storeNames = D.stores.map((s) => s.name);
   const defaultStore = ctx.store || storeNames[0];
 
@@ -371,7 +371,7 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
 /* ===================== REVIEWS ===================== */
 export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const base = ctx.scopeBy(D.reviews, "store");
   const [rows, setRows] = useState<any[]>(base);
   const [q, setQ] = useState("");

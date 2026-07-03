@@ -13,7 +13,7 @@ type Ctx = any;
 
 /* ===================== ORDERS ===================== */
 export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const all = ctx.scopeBy(D.orders, "store");
   const webOrders = all.filter((o: any) => o.source === "order");
   const [q, setQ] = useState("");

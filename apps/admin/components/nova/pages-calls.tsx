@@ -24,7 +24,7 @@ const MECHS = [
 const SERVICES = ["Log Book Service", "Free Pre-RWC Check", "Yearly Service", "Brake Replacement", "Ultimate Service", "Tyre Fit + Balance", "Wheel Alignment", "3 Year Service"];
 
 export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const allStores = D.stores.map((s) => s.name);
   const [rows, setRows] = useState<any[]>(() => ctx.scopeBy(D.calls, "store").map((c: any) => ({ ...c })));
   const [q, setQ] = useState("");
@@ -202,7 +202,7 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
 
 /* ---------- Log call modal ---------- */
 function LogCallModal({ ctx, from, onClose, onSave }: { ctx: Ctx; from?: any; onClose: () => void; onSave: (f: any) => void }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [kind, setKind] = useState(from ? "booking" : "enquiry");
   const [f, setF] = useState<any>({
     customer: from ? from.customer : "", phone: from ? from.phone : "",

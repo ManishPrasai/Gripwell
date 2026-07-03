@@ -17,7 +17,7 @@ type Ctx = any;
 
 /* ===================== OVERVIEW ===================== */
 export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const stores = ctx.scopeStores(D.stores);
   const lowStock = D.products.filter((p: any) => p.stock <= p.low).length;
   const weekRev = stores.reduce((s: number, x: any) => s + x.revenue, 0);
@@ -142,7 +142,7 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
 
 /* ===================== STORES ===================== */
 export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const all = ctx.scopeStores(D.stores);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
@@ -256,7 +256,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
 /* ===================== STAFF ===================== */
 export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const base = ctx.scopeBy(D.staff, "store");
   const [q, setQ] = useState("");
   const [role, setRole] = useState("all");

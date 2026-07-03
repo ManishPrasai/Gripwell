@@ -12,7 +12,7 @@ type Ctx = any;
 
 /* ===================== MESSAGES ===================== */
 export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [convos, setConvos] = useState<any[]>(() => ctx.scopeBy(D.conversations, "store").map((c: any) => ({ ...c, messages: [...c.messages] })));
   const [activeId, setActiveId] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -135,7 +135,7 @@ const LVL_CLS = ["", "view", "manage"];
 const ROLE_COLORS = ["#076330", "#2D6BE0", "#0EA5A5", "#7048E8", "#F76707", "#D6336C", "#E08600", "#0E9F57"];
 
 export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [roles, setRoles] = useState<any[]>(() => D.roles.map((r: any) => ({ ...r, perms: { ...r.perms } })));
   const [edit, setEdit] = useState<any>(null);
   const [del, setDel] = useState<any>(null);

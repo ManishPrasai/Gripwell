@@ -41,7 +41,7 @@ function PvSection({ type }: { type: string }) {
 
 /* ===================== PAGE BUILDER ===================== */
 function PageBuilder({ page, onClose }: { page: any; onClose: () => void }) {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [secs, setSecs] = useState<any[]>(() => ((D.pageSections as any)[page.id] || []).map((s: any) => ({ ...s })));
   const [adding, setAdding] = useState(false);
 
@@ -185,7 +185,7 @@ function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClos
 
 /* ===================== WEBSITE PAGE ===================== */
 export function WebsitePage() {
-  const D = NOVA;
+  const D = (ctx as any)?.D || NOVA;
   const [tab, setTab] = useState("pages");
   const [pages, setPages] = useState<any[]>(D.pages);
   const [blogs, setBlogs] = useState<any[]>(D.blogs);
