@@ -1,24 +1,8 @@
-/**
- * POST /api/auth/totp/verify
- *
- * Step 2 of login when TOTP is enabled.
- * Validates the 6-digit code (or recovery code) against the pending token
- * issued by /api/auth/login, then issues the full httpOnly session cookies.
- *
- * Body: { tempToken: string, code: string, isRecovery?: boolean }
- */
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  prisma,
-  generateAccessToken,
-  generateRefreshToken,
-  hashRefreshToken,
-} from '@nova/database'
-import {
-  verifyTotpPendingToken,
-  verifyTotpCode,
-  hashRecoveryCode,
-} from '../../../../../lib/totp'
+import { prisma, generateAccessToken, generateRefreshToken, hashRefreshToken } from '@nova/database'
+import { verifyTotpPendingToken, verifyTotpCode, hashRecoveryCode } from '../../../../../lib/totp'
+import { validate, TotpVerifySchema } from '../../../../../lib/validate'
+import { logAction } from '../../../../../lib/audit'
 
 const cookieOpts = {
   httpOnly: true,
@@ -29,62 +13,52 @@ const cookieOpts = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tempToken, code, isRecovery } = await req.json()
+    /* ── Zod validation ──────────────────────────────────────────────────── */
+    const { data, error } = await validate(req, TotpVerifySchema)
+    if (error) return error
+
+    const { tempToken, code, isRecovery } = data
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
 
-    if (!tempToken || !code) {
-      return NextResponse.json({ error: 'Missing token or code' }, { status: 400 })
-    }
-
-    /* 1 — Verify the pending token (proves password was already checked) */
+    /* ── Verify pending token ────────────────────────────────────────────── */
     const pending = verifyTotpPendingToken(tempToken)
     if (!pending) {
       return NextResponse.json({ error: 'Code expired — please sign in again' }, { status: 401 })
     }
 
     const admin = await prisma.adminUser.findUnique({
-      where:  { id: pending.adminId },
+      where:   { id: pending.adminId },
       include: { store: true },
     })
-
     if (!admin || !admin.isActive || !admin.totpEnabled || !admin.totpSecret) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    /* 2a — Recovery code path */
+    /* ── Recovery code path ──────────────────────────────────────────────── */
     if (isRecovery) {
       const hash = hashRecoveryCode(code)
       const recoveryRow = await prisma.adminRecoveryCode.findFirst({
         where: { adminId: admin.id, codeHash: hash, usedAt: null },
       })
-
       if (!recoveryRow) {
         return NextResponse.json({ error: 'Invalid or already-used recovery code' }, { status: 401 })
       }
-
-      /* Mark code used + disable TOTP → admin must re-enroll */
       await prisma.$transaction([
-        prisma.adminRecoveryCode.update({
-          where: { id: recoveryRow.id },
-          data:  { usedAt: new Date() },
-        }),
-        prisma.adminUser.update({
-          where: { id: admin.id },
-          data:  { totpEnabled: false, totpSecret: null },
-        }),
+        prisma.adminRecoveryCode.update({ where: { id: recoveryRow.id }, data: { usedAt: new Date() } }),
+        prisma.adminUser.update({ where: { id: admin.id }, data: { totpEnabled: false, totpSecret: null } }),
       ])
-
+      await logAction({ adminId: admin.id, action: 'TOTP_RECOVERY_USED', entityType: 'AdminUser', entityId: admin.id, ip })
       const response = await issueSession(admin, ip, req)
-      response.headers.set('x-totp-recovery-used', '1')  // hint to frontend
+      response.headers.set('x-totp-recovery-used', '1')
       return response
     }
 
-    /* 2b — Normal TOTP path */
-    const valid = verifyTotpCode(admin.totpSecret, code.replace(/\s/g, ''))
-    if (!valid) {
+    /* ── Normal TOTP path ────────────────────────────────────────────────── */
+    if (!verifyTotpCode(admin.totpSecret, code)) {
       return NextResponse.json({ error: 'Incorrect code — try again' }, { status: 401 })
     }
 
+    await logAction({ adminId: admin.id, action: 'LOGIN', entityType: 'AdminUser', entityId: admin.id, ip })
     return issueSession(admin, ip, req)
 
   } catch (err) {
@@ -94,9 +68,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function issueSession(admin: any, ip: string, req: NextRequest) {
-  const accessToken      = generateAccessToken({
-    id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined,
-  })
+  const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined })
   const refreshToken     = generateRefreshToken()
   const refreshTokenHash = hashRefreshToken(refreshToken)
   const userAgent        = req.headers.get('user-agent') || ''
@@ -113,10 +85,7 @@ async function issueSession(admin: any, ip: string, req: NextRequest) {
 
   const response = NextResponse.json({
     success: true,
-    admin: {
-      id: admin.id, firstName: admin.firstName, lastName: admin.lastName,
-      email: admin.email, role: admin.role, storeId: admin.storeId, store: admin.store,
-    },
+    admin: { id: admin.id, firstName: admin.firstName, lastName: admin.lastName, email: admin.email, role: admin.role, storeId: admin.storeId, store: admin.store },
   })
   response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 30 * 60           })
   response.cookies.set('admin_refresh_token', refreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 })
