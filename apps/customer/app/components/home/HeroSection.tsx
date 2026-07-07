@@ -486,11 +486,11 @@ export default function HeroSection() {
 
         {/* ── Background ── */}
         <div className="absolute inset-0 z-0">
-          <video autoPlay muted loop playsInline
+          <img
+            src="/images/hero-poster.jpg"
+            alt="Nova Tyres"
             className="w-full h-full object-cover"
-            poster="/images/hero-poster.jpg">
-            <source src="/videos/hero.mp4" type="video/mp4" />
-          </video>
+          />
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.22)' }} />
           <div className="absolute left-0 right-0"
             style={{ height: '310px', top: '-187px', background: 'rgba(0,0,0,0.82)', filter: 'blur(57.75px)' }} />
