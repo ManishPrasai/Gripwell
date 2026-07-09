@@ -5,6 +5,7 @@ import {
   generateRefreshToken,
   hashRefreshToken
 } from '@nova/database'
+import { IDLE_LOGOUT_ENABLED } from '../../../../lib/config'
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
        instead of silently extending their access. */
     const IDLE_TIMEOUT_MS = 30 * 60 * 1000
     const idleSince = Date.now() - session.lastUsedAt.getTime()
-    if (idleSince > IDLE_TIMEOUT_MS) {
+    if (IDLE_LOGOUT_ENABLED && idleSince > IDLE_TIMEOUT_MS) {
       await prisma.adminSession.update({
         where: { id: session.id },
         data:  { isActive: false, revokedAt: new Date() }

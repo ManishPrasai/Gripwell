@@ -5,6 +5,7 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { IDLE_LOGOUT_ENABLED } from "../../lib/config";
 import { Icon } from "./icons";
 import { Avatar, Drawer, Tooltip, toast, ToastHost, useClickAway } from "./ui";
 import { OverviewPage, StoresPage, StaffPage } from "./pages";
@@ -122,8 +123,11 @@ export default function AppV2() {
       .catch(() => { window.location.href = '/login'; });
   }, []);
 
-  /* 30-min inactivity logout — resets on any mouse/keyboard/touch event */
+  /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.
+     Gated by IDLE_LOGOUT_ENABLED (currently off); flip that flag to re-enable. */
   useEffect(() => {
+    if (!IDLE_LOGOUT_ENABLED) return;
+
     let warnTimer:   ReturnType<typeof setTimeout>;
     let logoutTimer: ReturnType<typeof setTimeout>;
 

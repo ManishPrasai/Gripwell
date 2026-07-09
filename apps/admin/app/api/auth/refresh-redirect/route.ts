@@ -5,6 +5,7 @@ import {
   generateRefreshToken,
   hashRefreshToken,
 } from '@nova/database'
+import { IDLE_LOGOUT_ENABLED } from '../../../../lib/config'
 
 /**
  * Called by middleware when the access token has expired but a refresh token
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
 
     /* Inactivity check — same 30-min rule as the /refresh endpoint */
     const IDLE_TIMEOUT_MS = 30 * 60 * 1000
-    if (Date.now() - session.lastUsedAt.getTime() > IDLE_TIMEOUT_MS) {
+    if (IDLE_LOGOUT_ENABLED && Date.now() - session.lastUsedAt.getTime() > IDLE_TIMEOUT_MS) {
       await prisma.adminSession.update({
         where: { id: session.id },
         data:  { isActive: false, revokedAt: new Date() },
