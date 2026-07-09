@@ -34,10 +34,12 @@ function getPrisma(): PrismaClient {
   try {
     const { env, ctx } = getCloudflareContext()
     if (ctx) {
+      // Workers forbid reusing a DB socket across requests (even a Hyperdrive one),
+      // so build one client per request, GC'd when the request's ctx ends. Route
+      // it through the Hyperdrive binding when present — that pools connections at
+      // the edge, so per-request clients don't exhaust connections under load.
       let client = requestClients.get(ctx as object)
       if (!client) {
-        // Prefer a Hyperdrive binding if configured; otherwise the DATABASE_URL
-        // secret (Supabase transaction pooler) works for per-request connections.
         const hyperdrive = (env as any)?.HYPERDRIVE?.connectionString
         client = createPrismaClient(hyperdrive || process.env.DATABASE_URL)
         requestClients.set(ctx as object, client)
