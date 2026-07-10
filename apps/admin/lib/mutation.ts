@@ -19,14 +19,17 @@ import { ZodSchema } from 'zod'
 import { prisma, verifyAccessToken, type Prisma } from '@nova/database'
 import { validate } from './validate'
 import { logAction, type AuditAction } from './audit'
+import { accessFromToken, can, type PermArea, type PermLevel, type Perms, type Scope } from './rbac'
 
 /* ── Identity ────────────────────────────────────────────────────────────── */
 
 export interface AdminIdentity {
   id:      string
   email:   string
-  role:    string                 // 'SUPER_ADMIN' | 'STORE_MANAGER'
-  storeId: string | undefined     // set for STORE_MANAGER
+  role:    string                 // 'SUPER_ADMIN' | 'STORE_MANAGER' (coarse backstop)
+  storeId: string | undefined     // set for store-scoped roles
+  scope:   Scope                  // 'all' | 'store'
+  perms:   Perms                  // area → level, from the role
 }
 
 /** A controlled failure with an HTTP status — turned into a clean JSON response. */
@@ -56,11 +59,14 @@ export async function requireAdmin(req: NextRequest): Promise<AdminIdentity> {
   if (!payload || payload.type !== 'admin') {
     throw new AdminError(401, 'Not authenticated')
   }
+  const access = accessFromToken(payload as any)
   return {
     id:      payload.id,
     email:   payload.email,
     role:    (payload.role as string) ?? 'STORE_MANAGER',
     storeId: payload.storeId as string | undefined,
+    scope:   access.scope,
+    perms:   access.perms,
   }
 }
 
@@ -69,16 +75,23 @@ export async function requireAdmin(req: NextRequest): Promise<AdminIdentity> {
  * belong to their own store. SUPER_ADMIN is unrestricted.
  */
 export function assertStoreScope(admin: AdminIdentity, storeId: string | null | undefined): void {
-  if (admin.role === 'SUPER_ADMIN') return
+  if (admin.scope === 'all') return
   if (!admin.storeId || storeId !== admin.storeId) {
     throw forbidden('This record belongs to another store')
   }
 }
 
-/** Restrict an action to SUPER_ADMIN (e.g. the shared product catalog). */
+/** Restrict an action to all-stores (global) roles — e.g. the shared catalog. */
 export function assertSuperAdmin(admin: AdminIdentity): void {
-  if (admin.role !== 'SUPER_ADMIN') {
-    throw forbidden('Only a super admin can perform this action')
+  if (admin.scope !== 'all') {
+    throw forbidden('Only an all-stores role can perform this action')
+  }
+}
+
+/** Require a specific permission level for an area (fine-grained RBAC). */
+export function assertPermission(admin: AdminIdentity, area: PermArea, level: PermLevel = 2): void {
+  if (!can({ scope: admin.scope, perms: admin.perms }, area, level)) {
+    throw forbidden(`You don't have permission to ${level === 2 ? 'manage' : 'view'} ${area}`)
   }
 }
 

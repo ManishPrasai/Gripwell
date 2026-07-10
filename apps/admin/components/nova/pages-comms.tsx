@@ -162,13 +162,38 @@ export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [del, setDel] = useState<any>(null);
   const blank = () => ({ id: "new" + Date.now(), name: "", desc: "", color: ROLE_COLORS[2], scope: "store", members: 0, locked: false, perms: Object.fromEntries(D.permAreas.map((a: any) => [a[0], 0])) });
 
-  function save() {
+  async function save() {
     if (!edit.name.trim()) { toast({ kind: "err", title: "Name required" }); return; }
-    setRoles((prev) => prev.some((r) => r.id === edit.id) ? prev.map((r) => r.id === edit.id ? edit : r) : [...prev, edit]);
-    toast({ kind: "ok", title: "Role saved", body: edit.name + " permissions updated." });
+    const target = edit; const prevRoles = roles;
+    const isNew = String(target.id).startsWith("new") || !roles.some((r) => r.id === target.id);
+    // Optimistic
+    setRoles((prev) => prev.some((r) => r.id === target.id) ? prev.map((r) => r.id === target.id ? target : r) : [...prev, target]);
     setEdit(null);
+
+    const payload = { name: target.name, description: target.desc, color: target.color, scope: target.scope, permissions: target.perms };
+    try {
+      if (isNew) await adminFetch("/api/admin/roles", "POST", payload);
+      else       await adminFetch(`/api/admin/roles/${target.id}`, "PATCH", payload);
+      toast({ kind: "ok", title: "Role saved", body: target.name + " permissions updated." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRoles(prevRoles);
+      toast({ kind: "err", title: "Couldn't save role", body: e?.message || "Please try again." });
+    }
   }
-  function doDelete() { setRoles((prev) => prev.filter((r) => r.id !== del.id)); toast({ kind: "ok", title: "Role deleted", body: del.name + " removed." }); setDel(null); }
+  async function doDelete() {
+    const target = del; const prevRoles = roles;
+    setRoles((prev) => prev.filter((r) => r.id !== target.id));
+    setDel(null);
+    try {
+      await adminFetch(`/api/admin/roles/${target.id}`, "DELETE");
+      toast({ kind: "ok", title: "Role deleted", body: target.name + " removed." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRoles(prevRoles);
+      toast({ kind: "err", title: "Couldn't delete role", body: e?.message || "Please try again." });
+    }
+  }
 
   return (
     <div className="page page-enter">

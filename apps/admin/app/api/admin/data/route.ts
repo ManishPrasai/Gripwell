@@ -253,6 +253,17 @@ export async function GET(req: NextRequest) {
       })
     }
 
+    /* ── Roles (with live member counts) ── */
+    const rolesRaw = await prisma.role.findMany({
+      include: { _count: { select: { admins: true } } },
+      orderBy: [{ isBuiltIn: 'desc' }, { createdAt: 'asc' }],
+    })
+    const roles = rolesRaw.map(r => ({
+      id: r.id, name: r.name, desc: r.description ?? '', color: r.color ?? '#0EA5A5',
+      scope: r.scope, members: r._count.admins, locked: r.isBuiltIn,
+      perms: (r.permissions ?? {}) as Record<string, number>,
+    }))
+
     /* ── Activity feed ── */
     const activity = [
       ...(bookings.slice(0, 2).map(b => ({ type: 'booking', who: b.customer, what: `booked ${b.service}`, store: b.store, time: 'recently' }))),
@@ -264,7 +275,7 @@ export async function GET(req: NextRequest) {
       stores, staff, products, orders, bookings, reviews,
       conversations, calls, pages, revenue7, activity,
       notifications: [],
-      roles: [], blogs: [], sectionTypes: {}, pageSections: {},
+      roles, blogs: [], sectionTypes: {}, pageSections: {},
       permAreas: [], pageSEO: seoRaw,
     })
 

@@ -788,14 +788,32 @@ model RegoLookupCache {
 // ADMIN
 // ─────────────────────────────────────
 
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  color       String?
+  scope       String   @default("store")   // 'all' | 'store'
+  isBuiltIn   Boolean  @default(false)      // built-in roles cannot be deleted
+  permissions Json     @default("{}")       // { stores|bookings|messages|inventory|staff|reviews|website|finance|roles : 0|1|2 }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  admins AdminUser[]
+
+  @@index([scope])
+}
+
 model AdminUser {
   id           String    @id @default(uuid())
   storeId      String?
+  roleId       String?           // custom role (fine-grained perms); null → derive from `role` enum
   firstName    String
   lastName     String
   email        String    @unique
   passwordHash String
-  role         AdminRole
+  role         AdminRole         // coarse scope backstop: SUPER_ADMIN=all, STORE_MANAGER=store
+  mustChangePassword Boolean @default(false)
   isActive     Boolean   @default(true)
   deletedAt    DateTime?
   lastLoginAt  DateTime?
@@ -806,6 +824,7 @@ model AdminUser {
   totpSecret   String?           // AES-256-GCM encrypted TOTP secret
   totpEnabled  Boolean   @default(false)
 
+  customRole         Role?                @relation(fields: [roleId], references: [id])
   store              Store?               @relation(fields: [storeId], references: [id])
   sessions           AdminSession[]
   actionLogs         AdminActionLog[]

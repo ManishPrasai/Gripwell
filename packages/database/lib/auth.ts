@@ -85,6 +85,8 @@ export const generateAccessToken = (payload: {
   type: 'customer' | 'admin'
   role?: string
   storeId?: string
+  scope?: string                          // 'all' | 'store' (admin RBAC)
+  perms?: Record<string, number>          // area → level (admin RBAC)
 }): string => {
   return jwt.sign(payload, process.env.NEXTAUTH_SECRET!, {
     expiresIn: '30m'
