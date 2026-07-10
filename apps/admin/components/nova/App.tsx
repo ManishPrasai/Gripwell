@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { NOVA } from "../../lib/nova/data";
 import { IDLE_LOGOUT_ENABLED } from "../../lib/config";
-import { swrFetcher } from "../../lib/adminFetch";
+import { swrFetcher, adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import { Avatar, Drawer, Tooltip, toast, ToastHost, useClickAway } from "./ui";
 import { OverviewPage, StoresPage, StaffPage } from "./pages";
@@ -93,6 +93,39 @@ const IDLE_LOGOUT_MS = 30 * 60 * 1000  // logout at 30 min
 async function doLogout() {
   await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   window.location.href = '/login?reason=idle';
+}
+
+function ForcePasswordChange({ onDone }: { onDone: () => void }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function submit() {
+    if (pw.length < 8) { setErr("Use at least 8 characters."); return; }
+    if (pw !== pw2) { setErr("Passwords don't match."); return; }
+    setBusy(true); setErr("");
+    try {
+      await adminFetch("/api/auth/change-password", "POST", { newPassword: pw });
+      toast({ kind: "ok", title: "Password updated", body: "Welcome to Nova Tyres Admin." });
+      onDone();
+    } catch (e: any) {
+      setErr(e?.message || "Couldn't update password."); setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg, #0a0a0a)", padding: 20 }}>
+      <div className="panel" style={{ width: "100%", maxWidth: 420, padding: 28 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Set a new password</h2>
+        <p className="muted" style={{ fontSize: 13.5, marginBottom: 20 }}>Your account was created with a temporary password. Choose a new one to continue.</p>
+        <div className="field"><label>New password</label><input type="password" value={pw} autoFocus onChange={(e) => setPw(e.target.value)} placeholder="At least 8 characters" /></div>
+        <div className="field"><label>Confirm password</label><input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") submit(); }} placeholder="Re-enter password" /></div>
+        {err && <div style={{ color: "var(--danger, #e5484d)", fontSize: 13, marginBottom: 10 }}>{err}</div>}
+        <button className="btn block" disabled={busy} onClick={submit} style={{ marginTop: 8 }}><Icon name="check" />{busy ? "Saving…" : "Set password & continue"}</button>
+      </div>
+    </div>
+  );
 }
 
 export default function AppV2() {
@@ -213,6 +246,11 @@ export default function AppV2() {
   const [, section] = TITLES_V2[page] || ["", ""];
 
   function switchRole(r: string) { setRole(r); setRoleMenu(false); setPage("overview"); toast({ kind: "info", title: "Switched to " + ROLES_V2[r].label, body: ROLES_V2[r].sub }); }
+
+  /* Force a password change on first login before the dashboard is reachable. */
+  if (sessionAdmin?.mustChangePassword) {
+    return <ForcePasswordChange onDone={() => setSessionAdmin({ ...sessionAdmin, mustChangePassword: false })} />;
+  }
 
   return (
     <div className="app">

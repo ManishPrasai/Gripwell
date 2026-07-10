@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
         role: true,
         storeId: true,
         isActive: true,
+        mustChangePassword: true,
         lastLoginAt: true,
         store: {
           select: {

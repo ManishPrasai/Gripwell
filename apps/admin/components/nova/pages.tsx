@@ -7,6 +7,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, Tooltip, Drawer, Modal, ConfirmModal, toast,
@@ -278,20 +279,40 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (s.name + s.email + s.role).toLowerCase().includes(q.toLowerCase())
   );
 
-  function doAdd() {
+  async function doAdd() {
     if (!form.name.trim()) { toast({ kind: "err", title: "Name required", body: "Please enter the team member's name." }); return; }
-    const loginId = form.loginId.trim() || genId(form.name, form.store);
-    const init = form.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
-    setRows((prev) => [{ id: Date.now(), name: form.name, email: form.email, role: form.role, store: form.store, loginId, status: "offline", init, av: "#0E9F57", since: "Jun 2026", phone: "—" }, ...prev]);
-    setAdd(false);
-    setCreds({ name: form.name, loginId, tempPass: form.tempPass || genPass(), isNew: true });
-    toast({ kind: "ok", title: "Login issued", body: form.name + " can now sign in with their Login ID." });
+    if (!form.email.trim()) { toast({ kind: "err", title: "Email required", body: "They'll sign in with this email." }); return; }
+    const [firstName, ...rest] = form.name.trim().split(" ");
+    const lastName = rest.join(" ") || firstName;
+    const storeId = (D.stores.find((x: any) => x.name === form.store) || {}).id;
+    const roleObj = (D.roles || []).find((r: any) => r.name === form.role);
+    try {
+      const res: any = await adminFetch("/api/admin/staff", "POST", {
+        firstName, lastName, email: form.email.trim().toLowerCase(),
+        ...(storeId ? { storeId } : {}), ...(roleObj?.id ? { roleId: roleObj.id } : {}),
+      });
+      setAdd(false);
+      setCreds({ name: form.name, loginId: res.email, tempPass: res.tempPassword, isNew: true });
+      toast({ kind: "ok", title: "Login issued", body: form.name + " can now sign in with their email." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't create staff", body: e?.message || "Please try again." });
+    }
   }
-  function resetLogin(s: any) { setCreds({ name: s.name, loginId: s.loginId || genId(s.name, s.store), tempPass: genPass(), isNew: false }); }
-  function doDelete() {
-    setRows((prev) => prev.filter((r) => r.id !== del.id));
-    toast({ kind: "ok", title: "Removed", body: del.name + " no longer has access." });
+  function resetLogin(s: any) { setCreds({ name: s.name, loginId: s.email || genId(s.name, s.store), tempPass: genPass(), isNew: false }); }
+  async function doDelete() {
+    const target = del; const prevRows = rows;
+    setRows((prev) => prev.filter((r) => r.id !== target.id));
     setDel(null);
+    if (!target.id || typeof target.id === "number") { toast({ kind: "ok", title: "Removed", body: target.name + " no longer has access." }); return; }
+    try {
+      await adminFetch(`/api/admin/staff/${target.id}`, "DELETE");
+      toast({ kind: "ok", title: "Removed", body: target.name + " no longer has access." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);
+      toast({ kind: "err", title: "Couldn't remove", body: e?.message || "Please try again." });
+    }
   }
 
   return (

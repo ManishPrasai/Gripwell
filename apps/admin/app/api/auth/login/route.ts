@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
     const cookieOpts = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/' }
     const response = NextResponse.json({
       success: true,
+      mustChangePassword: admin.mustChangePassword,
       admin: { id: admin.id, firstName: admin.firstName, lastName: admin.lastName, email: admin.email, role: admin.role, storeId: admin.storeId, store: admin.store },
     })
     response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 30 * 60           })
