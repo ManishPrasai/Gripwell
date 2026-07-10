@@ -264,6 +264,20 @@ export async function GET(req: NextRequest) {
       perms: (r.permissions ?? {}) as Record<string, number>,
     }))
 
+    /* ── Discount codes ── */
+    const discountsRaw = await prisma.discount.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    })
+    const discounts = discountsRaw.map(d => ({
+      id: d.id, code: d.code, type: d.type, value: Number(d.value),
+      minOrderAmount: d.minOrderAmount ? Number(d.minOrderAmount) : null,
+      maxUses: d.maxUses, currentUses: d.currentUses,
+      expiresAt: d.expiresAt ? d.expiresAt.toISOString() : null,
+      active: d.isActive,
+    }))
+
     /* ── Activity feed ── */
     const activity = [
       ...(bookings.slice(0, 2).map(b => ({ type: 'booking', who: b.customer, what: `booked ${b.service}`, store: b.store, time: 'recently' }))),
@@ -275,7 +289,7 @@ export async function GET(req: NextRequest) {
       stores, staff, products, orders, bookings, reviews,
       conversations, calls, pages, revenue7, activity,
       notifications: [],
-      roles, blogs: [], sectionTypes: {}, pageSections: {},
+      roles, discounts, blogs: [], sectionTypes: {}, pageSections: {},
       permAreas: [], pageSEO: seoRaw,
     })
 

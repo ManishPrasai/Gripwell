@@ -150,6 +150,19 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [active, setActive] = useState<any>(null);
   const [confirmClose, setConfirmClose] = useState<any>(null);
 
+  async function setStoreOpen(store: any, open: boolean) {
+    setActive((a: any) => a ? { ...a, status: open ? "open" : "closed" } : a);
+    toast({ kind: "ok", title: store.name + (open ? " reopened" : " closed"), body: open ? "Now accepting online bookings." : "Store is now offline for bookings." });
+    if (!store.id) return;
+    try {
+      await adminFetch(`/api/admin/stores/${store.id}`, "PATCH", { isActive: open });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setActive((a: any) => a ? { ...a, status: open ? "closed" : "open" } : a);   // rollback
+      toast({ kind: "err", title: "Couldn't update store", body: e?.message || "Please try again." });
+    }
+  }
+
   const list = all.filter((s: any) =>
     (filter === "all" || s.status === filter) &&
     (s.name + s.manager + s.suburb).toLowerCase().includes(q.toLowerCase())
@@ -215,7 +228,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <button className="btn ghost" style={{ flex: 1 }} onClick={() => { toast({ kind: "info", title: "Editing " + active.name }); }}><Icon name="edit" />Edit store</button>
             {active.status === "open"
               ? <button className="btn danger" style={{ flex: 1 }} onClick={() => setConfirmClose(active)}><Icon name="lock" />Close store</button>
-              : <button className="btn" style={{ flex: 1 }} onClick={() => { toast({ kind: "ok", title: active.name + " reopened" }); setActive({ ...active, status: "open" }); }}><Icon name="checkCircle" />Reopen</button>}
+              : <button className="btn" style={{ flex: 1 }} onClick={() => setStoreOpen(active, true)}><Icon name="checkCircle" />Reopen</button>}
           </React.Fragment>}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <StatusBadge status={active.status} live={active.status === "open"} />
@@ -248,7 +261,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
         <ConfirmModal danger title={"Close " + confirmClose.name + "?"}
           body="Customers won't be able to book online and the store will show as Closed until reopened."
           confirmLabel="Close store" icon="lock"
-          onConfirm={() => { toast({ kind: "ok", title: confirmClose.name + " closed", body: "Store is now offline for bookings." }); setActive((a: any) => a ? { ...a, status: "closed" } : a); setConfirmClose(null); }}
+          onConfirm={() => { setStoreOpen(confirmClose, false); setConfirmClose(null); }}
           onClose={() => setConfirmClose(null)} />
       )}
     </div>
