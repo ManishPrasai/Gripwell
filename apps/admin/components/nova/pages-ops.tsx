@@ -32,10 +32,36 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (p.name + p.brand + p.spec).toLowerCase().includes(q.toLowerCase())
   );
 
-  function saveEdit() {
-    setRows((prev) => prev.map((p) => p.id === edit.id ? edit : p));
-    toast({ kind: "ok", title: "Saved", body: edit.name + " updated." });
+  async function saveEdit() {
+    const target = edit; const prevRows = rows;
+    setRows((prev) => prev.map((p) => p.id === target.id ? target : p));  // optimistic
     setEdit(null);
+    if (!target.id) { toast({ kind: "ok", title: "Saved", body: target.name + " updated." }); return; }
+    try {
+      await adminFetch(`/api/admin/products/${target.id}`, "PATCH", {
+        price: +target.price, stock: +target.stock, status: target.status,
+      });
+      toast({ kind: "ok", title: "Saved", body: target.name + " updated." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);  // rollback
+      toast({ kind: "err", title: "Couldn't save", body: e?.message || "Please try again." });
+    }
+  }
+
+  async function deleteProduct(p: any) {
+    const prevRows = rows;
+    setRows((prev) => prev.filter((x) => x.id !== p.id));  // optimistic
+    setDel(null);
+    if (!p.id) { toast({ kind: "ok", title: "Deleted", body: p.name + " removed." }); return; }
+    try {
+      await adminFetch(`/api/admin/products/${p.id}`, "DELETE");
+      toast({ kind: "ok", title: "Deleted", body: p.name + " removed." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);  // rollback
+      toast({ kind: "err", title: "Couldn't delete", body: e?.message || "Please try again." });
+    }
   }
 
   return (
@@ -116,7 +142,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
       )}
 
       {del && <ConfirmModal danger title={"Delete " + del.name + "?"} body="This removes the product from inventory and your website. This can't be undone."
-        confirmLabel="Delete product" onConfirm={() => { setRows((prev) => prev.filter((p) => p.id !== del.id)); toast({ kind: "ok", title: "Deleted", body: del.name + " removed." }); setDel(null); }} onClose={() => setDel(null)} />}
+        confirmLabel="Delete product" onConfirm={() => deleteProduct(del)} onClose={() => setDel(null)} />}
     </div>
   );
 }
@@ -146,11 +172,36 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
   const filtered = rows.filter((b) => (b.customer + b.vehicle + b.service + b.ref).toLowerCase().includes(q.toLowerCase()));
 
-  function advance(b: any) {
+  async function advance(b: any) {
     const nx = BK_NEXT[b.status]; if (!nx) return;
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: nx } : r));
     setActive((a: any) => a && a.ref === b.ref ? { ...a, status: nx } : a);
     toast({ kind: "ok", title: b.ref + " moved", body: "Now " + BK_COLS.find((c) => c.key === nx)?.label + "." });
+    if (!b.id) return;
+    try {
+      // The "Complete" column maps to COMPLETED in the DB.
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", { status: "COMPLETED" });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);
+      toast({ kind: "err", title: "Couldn't update booking", body: e?.message || "Please try again." });
+    }
+  }
+
+  async function persistReschedule(b: any): Promise<boolean> {
+    if (!b.id) return true;   // mock row — nothing to persist
+    const body: any = {};
+    if (rdDate) body.date = new Date(rdDate).toISOString();
+    if (rdTime) body.timeSlot = rdTime;
+    try {
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", body);
+      ctx.refetch?.();
+      return true;
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't reschedule", body: e?.message || "Please try again." });
+      return false;
+    }
   }
 
   async function cancelBooking(b: any) {
@@ -180,19 +231,25 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     if (rdTime) { const [h, m] = rdTime.split(":"); const ap = +h >= 12 ? "pm" : "am"; parts.push(((+h % 12) || 12) + ":" + m + ap); }
     return parts.join(" · ");
   }
-  function saveReschedule(b: any) {
+  async function saveReschedule(b: any) {
     if (!rdDate && !rdTime) { toast({ kind: "warn", title: "No date set", body: "Pick a new date or time first." }); return; }
     const label = makeLabel();
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, time: label } : r));
     setActive((a: any) => a && a.ref === b.ref ? { ...a, time: label } : a);
-    toast({ kind: "ok", title: "Rescheduled", body: b.ref + " updated to " + label + "." });
+    const ok = await persistReschedule(b);
+    if (ok) toast({ kind: "ok", title: "Rescheduled", body: b.ref + " updated to " + label + "." });
+    else setRows(prevRows);
   }
-  function rescheduleAndMove(b: any) {
+  async function rescheduleAndMove(b: any) {
     if (!rdDate && !rdTime) { toast({ kind: "warn", title: "No date set", body: "Pick a new date or time first." }); return; }
     const label = makeLabel();
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: "ready", time: label } : r));
     setActive(null);
-    toast({ kind: "ok", title: b.ref + " rescheduled", body: "Moved to Rescheduled · " + label + "." });
+    const ok = await persistReschedule(b);
+    if (ok) toast({ kind: "ok", title: b.ref + " rescheduled", body: "Moved to Rescheduled · " + label + "." });
+    else setRows(prevRows);
   }
 
   function openBooking(b: any) {
@@ -404,10 +461,22 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const maxd = Math.max(...dist.map((d) => d.c), 1);
   const unanswered = rows.filter((r) => !r.reply).length;
 
-  function sendReply() {
-    setRows((prev) => prev.map((r) => r === reply ? { ...r, reply: replyText } : r));
-    toast({ kind: "ok", title: "Reply posted", body: "Your response to " + reply.author + " is live." });
+  async function sendReply() {
+    const target = reply; const text = replyText;
+    const key = target.id;
+    // Optimistic — show the reply immediately.
+    setRows((prev) => prev.map((r) => (key ? r.id === key : r === target) ? { ...r, reply: text } : r));
     setReply(null); setReplyText("");
+
+    if (!key) { toast({ kind: "ok", title: "Reply posted", body: "Your response to " + target.author + " is live." }); return; }
+    try {
+      await adminFetch(`/api/admin/reviews/${key}`, "PATCH", { reply: text });
+      toast({ kind: "ok", title: "Reply posted", body: "Your response to " + target.author + " is live." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows((prev) => prev.map((r) => r.id === key ? { ...r, reply: null } : r));  // rollback
+      toast({ kind: "err", title: "Couldn't post reply", body: e?.message || "Please try again." });
+    }
   }
 
   return (

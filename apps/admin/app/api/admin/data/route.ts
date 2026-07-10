@@ -154,6 +154,8 @@ export async function GET(req: NextRequest) {
       take: 20,
     })
     const reviews = reviewsRaw.map(r => ({
+      id: r.id,
+      storeId: r.storeId,
       author: `${r.customer.firstName} ${r.customer.lastName.slice(0, 1)}.`,
       init: `${r.customer.firstName[0]}${r.customer.lastName[0]}`,
       av: '#FF6817',
@@ -161,7 +163,7 @@ export async function GET(req: NextRequest) {
       rating: r.rating,
       time: r.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
       text: r.body ?? '',
-      reply: null as string | null,
+      reply: r.reply ?? null,
       verified: r.isVerifiedPurchase,
     }))
 

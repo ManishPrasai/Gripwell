@@ -5,6 +5,7 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import { Avatar, Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState } from "./ui";
 
@@ -30,15 +31,35 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [activeId, active && active.messages.length]);
 
   function open(c: any) { setActiveId(c.id); setConvos((prev) => prev.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }
-  function send() {
+  async function send() {
     if (!draft.trim()) return;
+    const text = draft; const convoId = activeId;
     const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    setConvos((prev) => prev.map((x) => x.id === activeId ? { ...x, agent: ctx.name, status: "open", messages: [...x.messages, { from: "store", text: draft, time: now, agent: ctx.name }] } : x));
+    // Optimistic — show the outgoing message immediately.
+    setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, agent: ctx.name, status: "open", messages: [...x.messages, { from: "store", text, time: now, agent: ctx.name }] } : x));
     setDraft("");
+
+    if (!convoId) return;
+    try {
+      await adminFetch("/api/admin/messages", "POST", { conversationId: convoId, body: text });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Message not sent", body: e?.message || "Please try again." });
+    }
   }
-  function closeConvo() {
-    setConvos((prev) => prev.map((x) => x.id === activeId ? { ...x, status: x.status === "open" ? "closed" : "open" } : x));
-    toast({ kind: "ok", title: active.status === "open" ? "Conversation closed" : "Conversation reopened" });
+  async function closeConvo() {
+    const convoId = activeId; const wasOpen = active.status === "open";
+    setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, status: wasOpen ? "closed" : "open" } : x));
+    toast({ kind: "ok", title: wasOpen ? "Conversation closed" : "Conversation reopened" });
+
+    if (!convoId) return;
+    try {
+      await adminFetch(`/api/admin/conversations/${convoId}`, "PATCH", { status: wasOpen ? "closed" : "active" });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, status: wasOpen ? "open" : "closed" } : x));  // rollback
+      toast({ kind: "err", title: "Couldn't update conversation", body: e?.message || "Please try again." });
+    }
   }
 
   return (

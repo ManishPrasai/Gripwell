@@ -75,6 +75,13 @@ export function assertStoreScope(admin: AdminIdentity, storeId: string | null | 
   }
 }
 
+/** Restrict an action to SUPER_ADMIN (e.g. the shared product catalog). */
+export function assertSuperAdmin(admin: AdminIdentity): void {
+  if (admin.role !== 'SUPER_ADMIN') {
+    throw forbidden('Only a super admin can perform this action')
+  }
+}
+
 /* ── Mutation wrapper ────────────────────────────────────────────────────── */
 
 interface MutationContext<TData> {
@@ -96,7 +103,8 @@ interface MutationResult {
 }
 
 interface MutationConfig<TData> {
-  schema:     ZodSchema<TData>
+  /** Zod schema for the JSON body. Omit for body-less requests (e.g. DELETE). */
+  schema?:    ZodSchema<TData>
   action:     AuditAction
   entityType: string
   run:        (ctx: MutationContext<TData>) => Promise<MutationResult>
@@ -110,8 +118,12 @@ export function defineMutation<TData>(cfg: MutationConfig<TData>) {
     try {
       const admin = await requireAdmin(req)
 
-      const { data, error } = await validate(req, cfg.schema)
-      if (error) return error
+      let data: TData = undefined as TData
+      if (cfg.schema) {
+        const parsed = await validate(req, cfg.schema)
+        if (parsed.error) return parsed.error
+        data = parsed.data as TData
+      }
 
       const params = ctx?.params ? await ctx.params : {}
       const ip = getIp(req)
