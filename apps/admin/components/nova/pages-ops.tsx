@@ -5,6 +5,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, StockBadge, Stars, Tooltip, Drawer, Modal, ConfirmModal,
@@ -152,10 +153,25 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     toast({ kind: "ok", title: b.ref + " moved", body: "Now " + BK_COLS.find((c) => c.key === nx)?.label + "." });
   }
 
-  function cancelBooking(b: any) {
+  async function cancelBooking(b: any) {
+    const prevRows = rows;
+    // Optimistic — move to the Cancelled column immediately.
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: "done" } : r));
     setActive(null);
-    toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+
+    // Mock rows (fallback data) have no real id — nothing to persist.
+    if (!b.id) {
+      toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+      return;
+    }
+    try {
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", { status: "CANCELLED" });
+      toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+      ctx.refetch?.();  // revalidate ctx.D from the server so it survives refresh
+    } catch (e: any) {
+      setRows(prevRows);  // rollback on failure
+      toast({ kind: "err", title: "Couldn't cancel booking", body: e?.message || "Please try again." });
+    }
   }
 
   function makeLabel() {

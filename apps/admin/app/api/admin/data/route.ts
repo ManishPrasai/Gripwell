@@ -130,6 +130,7 @@ export async function GET(req: NextRequest) {
       take: 30,
     })
     const bookings = apptRaw.map(a => ({
+      id: a.id,
       ref: `NV-${a.id.slice(0, 4).toUpperCase()}`,
       customer: `${a.customer.firstName} ${a.customer.lastName}`,
       vehicle: a.notes ?? '—',

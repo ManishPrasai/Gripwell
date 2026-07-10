@@ -4,8 +4,10 @@
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { NOVA } from "../../lib/nova/data";
 import { IDLE_LOGOUT_ENABLED } from "../../lib/config";
+import { swrFetcher } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import { Avatar, Drawer, Tooltip, toast, ToastHost, useClickAway } from "./ui";
 import { OverviewPage, StoresPage, StaffPage } from "./pages";
@@ -103,9 +105,8 @@ export default function AppV2() {
   const [globalQ, setGlobalQ] = useState("");
   const [sessionAdmin, setSessionAdmin] = useState<any>(null);
   const [idleWarning, setIdleWarning] = useState(false);
-  const [liveData, setLiveData] = useState<any>(null);
 
-  /* Load real identity + all dashboard data on mount */
+  /* Load real identity on mount, then let SWR own the dashboard data. */
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.ok ? r.json() : null)
@@ -114,14 +115,17 @@ export default function AppV2() {
         const a = data.admin;
         setSessionAdmin(a);
         setRole(a.role === 'SUPER_ADMIN' ? 'admin' : 'manager');
-        /* Fetch all dashboard data after auth confirmed */
-        return fetch('/api/admin/data')
-          .then(r => r.ok ? r.json() : null)
-          .then(d => { if (d) setLiveData(d); })
-          .catch(() => {});
       })
       .catch(() => { window.location.href = '/login'; });
   }, []);
+
+  /* SWR owns all dashboard data. `refetch()` (exposed on ctx) revalidates after
+     any write so the UI reflects server truth and survives a refresh. */
+  const { data: liveData, mutate: refetch } = useSWR(
+    sessionAdmin ? '/api/admin/data' : null,
+    swrFetcher,
+    { revalidateOnFocus: false },
+  );
 
   /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.
      Gated by IDLE_LOGOUT_ENABLED (currently off); flip that flag to re-enable. */
@@ -194,6 +198,7 @@ export default function AppV2() {
     role, name: R.name, firstName: R.name.split(" ")[0], initials: R.initials, store: R.store,
     theme, setTheme, mini: false, setMini: () => {}, go: setPage,
     D,  /* real data — pages use ctx.D instead of importing NOVA directly */
+    refetch,  /* call after any write to revalidate ctx.D from the server */
     scopeStores: (arr: any[]) => role === "manager" ? arr.filter((s) => s.name === R.store) : arr,
     scopeBy: (arr: any[], key: string) => role === "manager" ? arr.filter((x) => x[key] === R.store) : arr,
   };
