@@ -124,13 +124,16 @@ export async function GET(req: NextRequest) {
       take: 200,
     })
     const orders = ordersRaw.map(o => ({
-      ref: `#${o.orderNumber ?? o.id.slice(0, 6).toUpperCase()}`,
+      id: o.id,
+      ref: `#${o.id.slice(0, 6).toUpperCase()}`,
       customer: `${o.customer.firstName} ${o.customer.lastName}`,
       email: o.customer.email,
       items: o.items.map(i => i.tyre ? `${i.tyre.brand} ${i.tyre.model} ×${i.quantity}` : i.wheel ? `${i.wheel.brand} ${i.wheel.model} ×${i.quantity}` : `Item ×${i.quantity}`).join(', '),
       total: Number(o.total),
       source: 'order',
       status: o.status.toLowerCase(),
+      paymentStatus: o.paymentStatus.toLowerCase(),
+      hasStripe: !!o.stripePaymentIntentId,
       store: o.store?.name ?? '—',
       date: o.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
     }))
