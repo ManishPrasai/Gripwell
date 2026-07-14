@@ -79,11 +79,13 @@ export async function GET(req: NextRequest) {
 
     /* ── Inventory (tyres + wheels) ── */
     const tyresRaw = await prisma.tyre.findMany({
+      where: { deletedAt: null },
       include: { tyreSize: true, images: { take: 1 } },
       orderBy: { brand: 'asc' },
       take: 500,
     })
     const wheelsRaw = await prisma.wheel.findMany({
+      where: { deletedAt: null },
       include: { images: { take: 1 } },
       orderBy: { brand: 'asc' },
       take: 500,
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
       })),
       ...wheelsRaw.map(w => ({
         id: w.id, name: `${w.brand} ${w.model}`, cat: 'Wheels',
-        spec: `${w.diameter}×${w.width} ${w.pcd} +${w.offset}`,
+        spec: `${w.diameter}×${w.width} ${w.pcd}${w.offset != null ? ` ET${w.offset}` : ''}`,
         brand: w.brand, price: Number(w.price),
         stock: w.stockQuantity, low: 4,
         status: w.isActive ? 'active' : 'draft', icon: 'wheel',
