@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
+import { computeDiscount } from '../../../../lib/discount'
 
 // ── Stripe server client (lazy) ───────────────────────────────────────────────
 // Initialised on first request, not at module load, so the build phase never
@@ -10,7 +11,9 @@ function getStripe(): Stripe {
   if (_stripe) return _stripe
   const key = process.env.STRIPE_SECRET_KEY
   if (!key) throw new Error('STRIPE_SECRET_KEY environment variable is not set')
-  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia' })
+  // Cloudflare Workers: the SDK must use the fetch HTTP client, not Node http
+  // (which hangs on workerd).
+  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia', httpClient: Stripe.createFetchHttpClient() })
   return _stripe
 }
 
@@ -42,9 +45,11 @@ async function devUserId(): Promise<string> {
 // 2. Look up authoritative prices from Tyre / Wheel tables (never trust client).
 // 3. Add fitting fee, convert to cents, create Stripe PaymentIntent.
 // 4. Return { clientSecret } to the browser.
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const userId = await devUserId()
+    const body = await req.json().catch(() => ({} as any))
+    const discountCode = String(body?.discountCode || '').trim()
 
     // ── 1. Fetch cart rows ────────────────────────────────────────────────────
     const cartItems = await prisma.cartItem.findMany({
@@ -86,12 +91,20 @@ export async function POST() {
       return sum + Math.round(unitPrice * 100) * item.quantity
     }, 0)
 
-    const totalCents = subtotalCents + FITTING_CENTS
-
-    if (totalCents < 50) {
-      // Stripe minimum is $0.50 AUD
-      return NextResponse.json({ error: 'Order total too low' }, { status: 400 })
+    // ── 3b. Apply discount code (server-authoritative) ────────────────────────
+    let discountCents = 0
+    let appliedCode = ''
+    let discountId = ''
+    if (discountCode) {
+      const d = await computeDiscount(discountCode, subtotalCents / 100)
+      if (d.valid && d.discountAmount) {
+        discountCents = Math.round(d.discountAmount * 100)
+        appliedCode = d.code ?? ''
+        discountId = d.discountId ?? ''
+      }
     }
+
+    const totalCents = Math.max(50, subtotalCents + FITTING_CENTS - discountCents)
 
     // ── 4. Create Stripe PaymentIntent ────────────────────────────────────────
     const intent = await getStripe().paymentIntents.create({
@@ -102,10 +115,18 @@ export async function POST() {
         customerId:  userId,
         environment: 'dev-local',
         itemCount:   cartItems.length,
+        discountCode: appliedCode,
+        discountId,
+        discountCents: String(discountCents),
       },
     })
 
-    return NextResponse.json({ clientSecret: intent.client_secret })
+    return NextResponse.json({
+      clientSecret: intent.client_secret,
+      discountApplied: discountCents > 0,
+      discountAmount: discountCents / 100,
+      code: appliedCode,
+    })
   } catch (err) {
     console.error('[create-payment-intent]', err)
     return NextResponse.json({ error: 'Failed to create payment intent' }, { status: 500 })

@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 
 const FITTING_FEE = 25.00   // A$25.00 — must match FITTING_COST on the frontend
+
+let _stripe: Stripe | null = null
+function getStripe(): Stripe | null {
+  if (_stripe) return _stripe
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) return null
+  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia', httpClient: Stripe.createFetchHttpClient() })
+  return _stripe
+}
 
 // ── Dev user (same pattern as /api/cart) ─────────────────────────────────────
 let _devUserId: string | null = null
@@ -121,7 +131,18 @@ export async function POST(req: NextRequest) {
       return sum + Number(row?.price ?? 0) * item.quantity
     }, 0)
 
-    const total = subtotal + FITTING_FEE
+    // ── 4b. Recover any applied discount from the PaymentIntent metadata ──────
+    let discountAmount = 0
+    let discountId = ''
+    if (paymentIntentId) {
+      try {
+        const intent = await getStripe()?.paymentIntents.retrieve(paymentIntentId)
+        const cents = Number(intent?.metadata?.discountCents || 0)
+        if (cents > 0) { discountAmount = cents / 100; discountId = intent?.metadata?.discountId || '' }
+      } catch { /* fall back to no discount */ }
+    }
+
+    const total = Math.max(0, subtotal + FITTING_FEE - discountAmount)
 
     // ── 5. Create Order + clear cart atomically ───────────────────────────────
     const order = await prisma.$transaction(async tx => {
@@ -134,7 +155,7 @@ export async function POST(req: NextRequest) {
           status:                'CONFIRMED' as const,
           paymentStatus:         'PAID'      as const,
           subtotal,
-          discountAmount:        0,
+          discountAmount,
           total,
           paymentMethod:         'stripe',
           stripePaymentIntentId: paymentIntentId,
@@ -166,6 +187,12 @@ export async function POST(req: NextRequest) {
         },
         select: { id: true },
       })
+
+      // Record discount usage (increment counter + usage row) atomically.
+      if (discountId && discountAmount > 0) {
+        await tx.discount.update({ where: { id: discountId }, data: { currentUses: { increment: 1 } } })
+        await tx.discountUsage.create({ data: { discountId, customerId: userId, orderId: newOrder.id } })
+      }
 
       // Clear cart now that the order is safely persisted in the same transaction
       await tx.cartItem.deleteMany({ where: { customerId: userId } })
