@@ -191,7 +191,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
         <p style={{
           color:      '#1A1A1A',
           fontFamily: "'DM Sans', sans-serif",
-          fontSize:   '14px',
+          fontSize:   '15px',
           fontWeight:  700,
           lineHeight:  1.3,
           marginBottom:'2px',
@@ -215,7 +215,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
           <p style={{
             color:      '#1A1A1A',
             fontFamily: "'DM Sans', sans-serif",
-            fontSize:   '17px',
+            fontSize:   '19px',
             fontWeight:  800,
           }}>
             A${product.price.toFixed(2)}

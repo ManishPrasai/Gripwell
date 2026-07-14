@@ -168,7 +168,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
             <BrandLogoImg src={product.brandLogo} brand={product.brand} />
           </div>
 
-          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, lineHeight: 1.3, marginBottom: '3px' }}>
+          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, lineHeight: 1.3, marginBottom: '3px' }}>
             {product.brand} {product.model}
           </p>
 
@@ -176,7 +176,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
             {product.size}&nbsp;&nbsp;{product.spec}
           </p>
 
-          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', fontWeight: 800 }}>
+          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '19px', fontWeight: 800 }}>
             A${product.price.toFixed(2)}
           </p>
         </div>
