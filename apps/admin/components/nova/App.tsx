@@ -3,7 +3,7 @@
    NOVA TYRES — Admin v2 · bottom-nav app shell (ported from app-v2.jsx)
    ============================================================ */
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import { NOVA } from "../../lib/nova/data";
 import { IDLE_LOGOUT_ENABLED } from "../../lib/config";
@@ -62,8 +62,29 @@ const notifIco: Record<string, [string, string, string]> = {
   booking: ["calendar", "var(--brand-2)", "color-mix(in oklab,var(--brand) 13%,transparent)"],
   review: ["star", "var(--warn)", "color-mix(in oklab,var(--warn) 15%,transparent)"],
   order: ["cart", "var(--info)", "color-mix(in oklab,var(--info) 13%,transparent)"],
+  message: ["chat", "var(--brand-2)", "color-mix(in oklab,var(--brand) 13%,transparent)"],
+  enquiry: ["phone", "var(--info)", "color-mix(in oklab,var(--info) 13%,transparent)"],
   staff: ["user", "var(--ink-3)", "var(--chip)"],
 };
+
+/* Build the live notification feed from dashboard data (scoped to the viewer).
+   Each item has a STABLE id so read-state survives 20s polls. */
+function buildNotifs(D: any, scopeBy: (arr: any[], key: string) => any[]) {
+  const out: { id: string; type: string; title: string; body: string; time: string }[] = [];
+  for (const c of scopeBy(D.conversations || [], "store")) {
+    if (c.unread > 0) out.push({ id: `msg-${c.id}-${c.unread}`, type: "message", title: `New message from ${c.customer}`, body: c.topic, time: `${c.time} ago` });
+  }
+  for (const b of scopeBy(D.bookings || [], "store")) {
+    if (b.status === "pending") out.push({ id: `bk-${b.id}`, type: "booking", title: `New booking · ${b.customer}`, body: `${b.service} · ${b.time}`, time: b.time });
+  }
+  for (const r of scopeBy(D.reviews || [], "store")) {
+    if (!r.reply) out.push({ id: `rev-${r.id ?? r.author}`, type: "review", title: `${r.rating}★ review from ${r.author}`, body: r.text?.slice(0, 60) ?? "", time: r.time });
+  }
+  for (const e of scopeBy(D.calls || [], "store")) {
+    if (e.outcome === "callback") out.push({ id: `enq-${e.id}`, type: "enquiry", title: `New enquiry · ${e.customer}`, body: e.topic, time: e.time });
+  }
+  return out;
+}
 
 function RoleSwitcherV2({ role, open, setOpen, onSwitch, R }: any) {
   const ref = useClickAway(() => setOpen(false));
@@ -141,7 +162,11 @@ export default function AppV2() {
   const [page, setPage] = useState("overview");
   const [roleMenu, setRoleMenu] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifs, setNotifs] = useState<any[]>(NOVA.notifications);
+  /* Ids of notifications the user has read. Persisted so a poll/refresh doesn't
+     resurface things they've already seen. */
+  const [readNotifIds, setReadNotifIds] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("nova-read-notifs") || "[]")); } catch { return new Set(); }
+  });
   const [globalQ, setGlobalQ] = useState("");
   const [sessionAdmin, setSessionAdmin] = useState<any>(null);
   const [idleWarning, setIdleWarning] = useState(false);
@@ -160,11 +185,13 @@ export default function AppV2() {
   }, []);
 
   /* SWR owns all dashboard data. `refetch()` (exposed on ctx) revalidates after
-     any write so the UI reflects server truth and survives a refresh. */
+     any write so the UI reflects server truth and survives a refresh.
+     Polls every 20s (and on tab focus / reconnect) so bookings, messages and
+     notifications stay live without a manual refresh. */
   const { data: liveData, mutate: refetch } = useSWR(
     sessionAdmin ? '/api/admin/data' : null,
     swrFetcher,
-    { revalidateOnFocus: false },
+    { refreshInterval: 20000, revalidateOnFocus: true, revalidateOnReconnect: true },
   );
 
   /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.
@@ -232,8 +259,6 @@ export default function AppV2() {
     ? { ...NOVA, ...liveData }
     : NOVA;
 
-  const unread = notifs.filter((n) => n.unread).length;
-
   const ctx = {
     role, name: R.name, firstName: R.name.split(" ")[0], initials: R.initials, store: R.store,
     theme, setTheme, mini: false, setMini: () => {}, go: setPage,
@@ -247,6 +272,31 @@ export default function AppV2() {
     messages: ctx.scopeBy(D.conversations, "store").reduce((s: number, c: any) => s + c.unread, 0),
     reviews: ctx.scopeBy(D.reviews, "store").filter((r: any) => !r.reply).length,
   };
+
+  /* Live notification feed, derived from polled data. Read-state persists. */
+  const notifs = useMemo(() => {
+    return buildNotifs(D, ctx.scopeBy).map((n) => ({ ...n, unread: !readNotifIds.has(n.id) }));
+  }, [D, role, R.store, readNotifIds]);
+  const unread = notifs.filter((n) => n.unread).length;
+
+  function markRead(ids: string[]) {
+    setReadNotifIds((prev) => {
+      const next = new Set(prev); ids.forEach((id) => next.add(id));
+      try { localStorage.setItem("nova-read-notifs", JSON.stringify([...next].slice(-200))); } catch {}
+      return next;
+    });
+  }
+
+  /* Toast when genuinely new items arrive between polls (not on first load). */
+  const seenIds = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const current = new Set(notifs.map((n) => n.id));
+    if (seenIds.current === null) { seenIds.current = current; return; }  // skip first render
+    const fresh = notifs.filter((n) => !seenIds.current!.has(n.id) && n.unread);
+    if (fresh.length === 1) toast({ kind: "info", title: fresh[0].title, body: fresh[0].body });
+    else if (fresh.length > 1) toast({ kind: "info", title: `${fresh.length} new notifications`, body: "Bookings, messages and enquiries just came in." });
+    seenIds.current = current;
+  }, [notifs]);
 
   const Page = PAGES_V2[page];
   const [title] = TITLES_V2[page] || [page, ""];
@@ -352,11 +402,16 @@ export default function AppV2() {
       {/* NOTIFICATIONS DRAWER */}
       {notifOpen && (
         <Drawer title="Notifications" sub={unread + " unread"} onClose={() => setNotifOpen(false)}
-          foot={<button className="btn ghost block" onClick={() => { setNotifs((n) => n.map((x) => ({ ...x, unread: false }))); toast({ kind: "ok", title: "All caught up" }); }}><Icon name="check" />Mark all as read</button>}>
-          {notifs.map((n, i) => {
+          foot={<button className="btn ghost block" onClick={() => { markRead(notifs.map((n) => n.id)); toast({ kind: "ok", title: "All caught up" }); }}><Icon name="check" />Mark all as read</button>}>
+          {notifs.length === 0 ? (
+            <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--ink-3)" }}>
+              <Icon name="bell" style={{ width: 30, height: 30, opacity: 0.5 }} />
+              <p style={{ marginTop: 10, fontSize: 13.5 }}>You're all caught up.</p>
+            </div>
+          ) : notifs.map((n) => {
             const [ic, c, bg] = notifIco[n.type] || notifIco.staff;
             return (
-              <div key={i} className={"notif" + (n.unread ? " unread" : "")} onClick={() => setNotifs((prev) => prev.map((x, j) => j === i ? { ...x, unread: false } : x))}>
+              <div key={n.id} className={"notif" + (n.unread ? " unread" : "")} onClick={() => markRead([n.id])}>
                 <span className="notif-ico" style={{ background: bg, color: c }}><Icon name={ic} /></span>
                 <div className="notif-txt"><b>{n.title}</b><div>{n.body}</div><div className="notif-time">{n.time}</div></div>
                 {n.unread && <span className="notif-unreaddot"></span>}
