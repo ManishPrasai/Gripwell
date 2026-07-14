@@ -197,3 +197,99 @@ export function DiscountsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     </div>
   );
 }
+
+/* ===================== AUDIT LOG VIEWER ===================== */
+const ACTION_TINT: Record<string, string> = {
+  LOGIN: "ok", LOGOUT: "", LOGIN_FAILED: "danger", PASSWORD_CHANGED: "warn",
+  PRODUCT_UPDATED: "info", PRODUCT_DELETED: "danger", BOOKING_STATUS_CHANGED: "info",
+  REVIEW_REPLIED: "ok", MESSAGE_SENT: "", ENQUIRY_LOGGED: "", ADMIN_CREATED: "ok",
+  STAFF_REMOVED: "danger", ROLE_CREATED: "ok", ROLE_UPDATED: "info", ROLE_DELETED: "danger",
+  DISCOUNT_CREATED: "ok", DISCOUNT_UPDATED: "info", DISCOUNT_DELETED: "danger",
+  STORE_UPDATED: "info", SEO_UPDATED: "info", CONVERSATION_CLOSED: "",
+};
+
+export function AuditLogPage({ ctx }: { ctx: Ctx; nav?: any }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [actions, setActions] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [q, setQ] = useState("");
+  const [action, setAction] = useState("");
+  const [open, setOpen] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const url = `/api/admin/audit?page=${page}${action ? "&action=" + action : ""}${q ? "&q=" + encodeURIComponent(q) : ""}`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((d) => { if (!cancelled) { setRows(d.entries); setPages(d.pagination.totalPages || 1); setTotal(d.pagination.total); if (d.actions?.length) setActions(d.actions); } })
+      .catch(() => { if (!cancelled) toast({ kind: "err", title: "Couldn't load audit log" }); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [page, q, action]);
+
+  return (
+    <div className="page page-enter">
+      <div className="pagehead">
+        <div className="ph-txt"><h2>Audit Log</h2><p>Every change made in the console — who did what, when and from where.</p></div>
+        <div className="ph-actions"><span className="badge brand dotless"><Icon name="shield" style={{ width: 14, height: 14 }} />{total} events</span></div>
+      </div>
+
+      <div className="toolbar">
+        <SearchBox value={q} onChange={(v: string) => { setPage(1); setQ(v); }} placeholder="Search entity type or id…" grow />
+        <select value={action} onChange={(e) => { setPage(1); setAction(e.target.value); }}
+          style={{ height: 38, borderRadius: 10, border: "1px solid var(--border)", background: "var(--chip)", color: "var(--ink)", fontSize: 13, fontWeight: 600, padding: "0 12px", flexShrink: 0 }}>
+          <option value="">All actions</option>
+          {actions.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+      </div>
+
+      <div className="panel">
+        {loading ? (
+          <div style={{ padding: 40, textAlign: "center", color: "var(--ink-3)" }}>Loading…</div>
+        ) : rows.length === 0 ? (
+          <EmptyState icon="shield" title="No events" text="Nothing matches your filter." />
+        ) : (
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Entity</th><th>IP</th><th></th></tr></thead>
+              <tbody>
+                {rows.map((r) => (
+                  <React.Fragment key={r.id}>
+                    <tr style={{ cursor: (r.before || r.after) ? "pointer" : "default" }} onClick={() => (r.before || r.after) && setOpen(open === r.id ? null : r.id)}>
+                      <td className="muted nowrap">{r.when}</td>
+                      <td><div className="cell-main">{r.who}</div><div className="cell-sub">{r.email}</div></td>
+                      <td><span className={"badge dotless " + (ACTION_TINT[r.action] || "")}>{r.action}</span></td>
+                      <td className="muted nowrap">{r.entityType}{r.entityId ? " · " + String(r.entityId).slice(0, 8) : ""}</td>
+                      <td className="muted mono" style={{ fontSize: 12 }}>{r.ip}</td>
+                      <td>{(r.before || r.after) && <Icon name={open === r.id ? "chevU" : "chevD"} />}</td>
+                    </tr>
+                    {open === r.id && (r.before || r.after) && (
+                      <tr><td colSpan={6} style={{ background: "var(--chip)", padding: "12px 16px" }}>
+                        <div className="form-grid">
+                          <div><div className="cell-sub" style={{ marginBottom: 4 }}>Before</div><pre style={{ margin: 0, fontSize: 12, whiteSpace: "pre-wrap", color: "var(--ink-2)" }}>{r.before ? JSON.stringify(r.before, null, 2) : "—"}</pre></div>
+                          <div><div className="cell-sub" style={{ marginBottom: 4 }}>After</div><pre style={{ margin: 0, fontSize: 12, whiteSpace: "pre-wrap", color: "var(--ink-2)" }}>{r.after ? JSON.stringify(r.after, null, 2) : "—"}</pre></div>
+                        </div>
+                      </td></tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {pages > 1 && (
+        <div className="hstack" style={{ justifyContent: "center", gap: 10, marginTop: 16 }}>
+          <button className="btn ghost sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><Icon name="chevL" />Prev</button>
+          <span className="muted" style={{ fontSize: 13 }}>Page {page} of {pages}</span>
+          <button className="btn ghost sm" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>Next<Icon name="chevR" /></button>
+        </div>
+      )}
+    </div>
+  );
+}

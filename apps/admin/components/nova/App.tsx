@@ -17,7 +17,7 @@ import { OrdersPage, SettingsPage } from "./pages-more";
 import { WebsitePage } from "./pages-website";
 import { CallsPage } from "./pages-calls";
 import { ImportPage } from "./pages-import";
-import { CustomersPage, DiscountsPage } from "./pages-admin";
+import { CustomersPage, DiscountsPage, AuditLogPage } from "./pages-admin";
 
 const BB_TABS = [
   { key: "overview", label: "Home", icon: "home" },
@@ -31,6 +31,7 @@ const BB_TABS = [
   { key: "roles", label: "Roles & Access", icon: "shield" },
   { key: "customers", label: "Customers", icon: "users" },
   { key: "discounts", label: "Discount Codes", icon: "tag" },
+  { key: "audit", label: "Audit Log", icon: "file" },
 ];
 
 const TITLES_V2: Record<string, [string, string]> = {
@@ -41,13 +42,14 @@ const TITLES_V2: Record<string, [string, string]> = {
   settings: ["Settings", "Account"], bookings: ["Bookings & Service jobs", "Operations"],
   calls: ["Calls & Enquiries", "Operations"], stores: ["Stores", "Operations"], staff: ["Staff & Users", "Operations"],
   customers: ["Customers", "Operations"], discounts: ["Discount Codes", "Sales"],
+  audit: ["Audit Log", "Account"],
 };
 
 const PAGES_V2: Record<string, any> = {
   overview: OverviewPage, messages: MessagesPage, inventory: InventoryPage, reviews: ReviewsPage,
   orders: OrdersPage, content: WebsitePage, import: ImportPage, roles: RolesPage, settings: SettingsPage,
   bookings: BookingsPage, calls: CallsPage, stores: StoresPage, staff: StaffPage,
-  customers: CustomersPage, discounts: DiscountsPage,
+  customers: CustomersPage, discounts: DiscountsPage, audit: AuditLogPage,
 };
 
 const ROLES_V2: Record<string, any> = {
