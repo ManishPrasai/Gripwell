@@ -81,10 +81,12 @@ export async function GET(req: NextRequest) {
     const tyresRaw = await prisma.tyre.findMany({
       include: { tyreSize: true, images: { take: 1 } },
       orderBy: { brand: 'asc' },
+      take: 500,
     })
     const wheelsRaw = await prisma.wheel.findMany({
       include: { images: { take: 1 } },
       orderBy: { brand: 'asc' },
+      take: 500,
     })
     const LOW_THRESHOLD = 8
     const products = [
@@ -117,14 +119,14 @@ export async function GET(req: NextRequest) {
         store: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 50,
+      take: 200,
     })
     const orders = ordersRaw.map(o => ({
       ref: `#${o.orderNumber ?? o.id.slice(0, 6).toUpperCase()}`,
       customer: `${o.customer.firstName} ${o.customer.lastName}`,
       email: o.customer.email,
       items: o.items.map(i => i.tyre ? `${i.tyre.brand} ${i.tyre.model} ×${i.quantity}` : i.wheel ? `${i.wheel.brand} ${i.wheel.model} ×${i.quantity}` : `Item ×${i.quantity}`).join(', '),
-      total: Number(o.totalAmount),
+      total: Number(o.total),
       source: 'order',
       status: o.status.toLowerCase(),
       store: o.store?.name ?? '—',
@@ -140,7 +142,7 @@ export async function GET(req: NextRequest) {
         customer: { select: { firstName: true, lastName: true, phone: true } },
       },
       orderBy: { date: 'desc' },
-      take: 30,
+      take: 200,
     })
     const bookings = apptRaw.map(a => ({
       id: a.id,
@@ -164,7 +166,7 @@ export async function GET(req: NextRequest) {
         store: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      take: 200,
     })
     const reviews = reviewsRaw.map(r => ({
       id: r.id,

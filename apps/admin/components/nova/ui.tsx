@@ -225,6 +225,42 @@ export function SearchBox({ value, onChange, placeholder, grow }: any) {
   );
 }
 
+/* ---------- Client-side pagination ----------
+   Slices an already-filtered array into pages. Search/filters run over the
+   FULL list (client-side, as before); this only limits what renders at once.
+   Resets to page 1 whenever the filtered length changes (i.e. on new search). */
+export function usePager<T>(items: T[], perPage = 12) {
+  const [page, setPage] = useState(1);
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const current = Math.min(page, totalPages);
+  const lenRef = useRef(total);
+  useEffect(() => {
+    if (lenRef.current !== total) { lenRef.current = total; setPage(1); }
+  }, [total]);
+  const start = (current - 1) * perPage;
+  const slice = items.slice(start, start + perPage);
+  return {
+    slice, page: current, totalPages, total, perPage,
+    from: total === 0 ? 0 : start + 1, to: Math.min(start + perPage, total),
+    setPage, next: () => setPage((p) => Math.min(totalPages, p + 1)), prev: () => setPage((p) => Math.max(1, p - 1)),
+  };
+}
+
+export function Pager({ pager, unit = "items" }: { pager: ReturnType<typeof usePager<any>>; unit?: string }) {
+  if (pager.total <= pager.perPage) return null;
+  return (
+    <div className="pager">
+      <span className="pager-info muted">Showing <b>{pager.from}–{pager.to}</b> of {pager.total} {unit}</span>
+      <div className="pager-ctrls">
+        <button className="btn ghost sm" disabled={pager.page <= 1} onClick={pager.prev}><Icon name="chevL" />Prev</button>
+        <span className="pager-page">Page {pager.page} of {pager.totalPages}</span>
+        <button className="btn ghost sm" disabled={pager.page >= pager.totalPages} onClick={pager.next}>Next<Icon name="chevR" /></button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Panel header ---------- */
 export function PanelHead({ title, sub, right }: any) {
   return (

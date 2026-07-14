@@ -7,7 +7,7 @@ import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { Icon } from "./icons";
-import { Avatar, Switch, Tooltip, toast, SearchBox, EmptyState } from "./ui";
+import { Avatar, Switch, Tooltip, toast, SearchBox, EmptyState, usePager, Pager } from "./ui";
 
 type Ctx = any;
 
@@ -19,6 +19,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [q, setQ] = useState("");
 
   const list = webOrders.filter((o: any) => (o.customer + o.items + o.ref).toLowerCase().includes(q.toLowerCase()));
+  const pager = usePager(list, 15);
   const oTotal = webOrders.length;
   const oRevenue = webOrders.reduce((s: number, o: any) => s + o.total, 0);
 
@@ -48,7 +49,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <table className="tbl">
               <thead><tr><th>Order</th><th>Customer</th><th>Products</th><th>Store</th><th>Date</th><th>Total</th></tr></thead>
               <tbody>
-                {list.map((o: any) => (
+                {pager.slice.map((o: any) => (
                   <tr key={o.ref}>
                     <td><span className="mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{o.ref}</span></td>
                     <td><div className="cell-main">{o.customer}</div><div className="cell-sub">{o.email}</div></td>
@@ -63,6 +64,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
           </div>
         )}
       </div>
+      <Pager pager={pager} unit="orders" />
     </div>
   );
 }

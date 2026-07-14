@@ -9,7 +9,7 @@ import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, StockBadge, Stars, Tooltip, Drawer, Modal, ConfirmModal,
-  toast, SearchBox, EmptyState, PanelHead,
+  toast, SearchBox, EmptyState, PanelHead, usePager, Pager,
 } from "./ui";
 
 type Ctx = any;
@@ -31,6 +31,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (!lowOnly || p.stock <= p.low) &&
     (p.name + p.brand + p.spec).toLowerCase().includes(q.toLowerCase())
   );
+  const pager = usePager(list, 12);
 
   async function saveEdit() {
     const target = edit; const prevRows = rows;
@@ -99,7 +100,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <table className="tbl">
               <thead><tr><th>Product</th><th>Brand</th><th>Price</th><th>Stock</th><th>Availability</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                {list.map((p) => (
+                {pager.slice.map((p) => (
                   <tr key={p.id}>
                     <td><div className="cell-flex"><span className="prod-thumb"><Icon name={p.icon} /></span><div><div className="cell-main">{p.name}</div><div className="cell-sub mono">{p.spec}</div></div></div></td>
                     <td className="nowrap">{p.brand}</td>
@@ -123,6 +124,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
           </div>
         )}
       </div>
+      <Pager pager={pager} unit="products" />
 
       {edit && (
         <Drawer title={edit.name} sub={edit.brand + " · " + edit.cat} onClose={() => setEdit(null)}
@@ -456,6 +458,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (rating === "all" || r.rating === +rating) &&
     (r.author + r.text + r.store).toLowerCase().includes(q.toLowerCase())
   );
+  const pager = usePager(list, 8);
   const avg = (rows.reduce((s, r) => s + r.rating, 0) / (rows.length || 1)).toFixed(1);
   const dist = [5, 4, 3, 2, 1].map((n) => ({ n, c: rows.filter((r) => r.rating === n).length }));
   const maxd = Math.max(...dist.map((d) => d.c), 1);
@@ -512,7 +515,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
       {list.length === 0 ? <div className="panel"><EmptyState icon="star" title="No reviews" text="Nothing matches that filter." /></div> : (
         <div className="grid-2" style={{ gridTemplateColumns: "1fr 1fr", alignItems: "start" }}>
-          {list.map((r, i) => (
+          {pager.slice.map((r, i) => (
             <div className="panel rev-card" key={i}>
               <div className="rev-card-top">
                 <Avatar init={r.init} color={r.av} />
@@ -529,6 +532,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
           ))}
         </div>
       )}
+      <Pager pager={pager} unit="reviews" />
 
       {reply && (
         <Modal wide onClose={() => setReply(null)}>
