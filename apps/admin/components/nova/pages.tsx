@@ -173,6 +173,28 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [filter, setFilter] = useState("all");
   const [active, setActive] = useState<any>(null);
   const [confirmClose, setConfirmClose] = useState<any>(null);
+  const emptyStore = { name: "", address: "", suburb: "", state: "SA", postcode: "", phone: "", email: "", latitude: "", longitude: "" };
+  const [creating, setCreating] = useState<any>(null);
+  const [savingNew, setSavingNew] = useState(false);
+
+  async function createStore() {
+    const s = creating;
+    for (const [k, label] of [["name", "Name"], ["address", "Address"], ["suburb", "Suburb"], ["postcode", "Postcode"], ["phone", "Phone"], ["email", "Email"], ["latitude", "Latitude"], ["longitude", "Longitude"]] as const) {
+      if (!String(s[k]).trim()) { toast({ kind: "err", title: `${label} required`, body: "Fill in all fields to add the store." }); return; }
+    }
+    setSavingNew(true);
+    try {
+      await adminFetch("/api/admin/stores", "POST", {
+        name: s.name, address: s.address, suburb: s.suburb, state: s.state, postcode: s.postcode,
+        phone: s.phone, email: s.email, latitude: parseFloat(s.latitude), longitude: parseFloat(s.longitude),
+      });
+      toast({ kind: "ok", title: "Store added", body: `${s.name} is now live. Set its hours from the store editor.` });
+      await ctx.refetch?.();
+      setCreating(null);
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't add store", body: e?.message || "Please try again." });
+    } finally { setSavingNew(false); }
+  }
 
   async function setStoreOpen(store: any, open: boolean) {
     setActive((a: any) => a ? { ...a, status: open ? "open" : "closed" } : a);
@@ -201,7 +223,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
         </div>
         {ctx.role !== "manager" && (
           <div className="ph-actions">
-            <button className="btn" onClick={() => toast({ kind: "info", title: "Add a store", body: "Store onboarding wizard would open here." })}><Icon name="plus" />Add store</button>
+            <button className="btn" onClick={() => setCreating({ ...emptyStore })}><Icon name="plus" />Add store</button>
           </div>
         )}
       </div>
@@ -287,6 +309,35 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
           confirmLabel="Close store" icon="lock"
           onConfirm={() => { setStoreOpen(confirmClose, false); setConfirmClose(null); }}
           onClose={() => setConfirmClose(null)} />
+      )}
+
+      {creating && (
+        <Drawer title="Add a store" sub="Create a new Nova Tyres location" onClose={() => setCreating(null)}
+          foot={<React.Fragment>
+            <button className="btn ghost" style={{ flex: 1 }} onClick={() => setCreating(null)}>Cancel</button>
+            <button className="btn" style={{ flex: 1 }} disabled={savingNew} onClick={createStore}><Icon name="check" />{savingNew ? "Adding…" : "Add store"}</button>
+          </React.Fragment>}>
+          <div className="field"><label>Store name</label><input value={creating.name} onChange={(e) => setCreating({ ...creating, name: e.target.value })} placeholder="Nova Tyres Adelaide" /></div>
+          <div className="field"><label>Street address</label><input value={creating.address} onChange={(e) => setCreating({ ...creating, address: e.target.value })} placeholder="123 Main St" /></div>
+          <div className="form-grid">
+            <div className="field"><label>Suburb</label><input value={creating.suburb} onChange={(e) => setCreating({ ...creating, suburb: e.target.value })} placeholder="Adelaide" /></div>
+            <div className="field"><label>State</label>
+              <select value={creating.state} onChange={(e) => setCreating({ ...creating, state: e.target.value })}>
+                {["SA", "VIC", "NSW", "QLD", "WA", "TAS", "NT", "ACT"].map((s) => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-grid">
+            <div className="field"><label>Postcode</label><input value={creating.postcode} onChange={(e) => setCreating({ ...creating, postcode: e.target.value })} placeholder="5000" /></div>
+            <div className="field"><label>Phone</label><input value={creating.phone} onChange={(e) => setCreating({ ...creating, phone: e.target.value })} placeholder="08 8000 0000" /></div>
+          </div>
+          <div className="field"><label>Email</label><input value={creating.email} onChange={(e) => setCreating({ ...creating, email: e.target.value })} placeholder="adelaide@novatyres.com.au" /></div>
+          <div className="form-grid">
+            <div className="field"><label>Latitude</label><input value={creating.latitude} onChange={(e) => setCreating({ ...creating, latitude: e.target.value })} placeholder="-34.9285" /></div>
+            <div className="field"><label>Longitude</label><input value={creating.longitude} onChange={(e) => setCreating({ ...creating, longitude: e.target.value })} placeholder="138.6007" /></div>
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 2 }}><Icon name="info" style={{ width: 13, height: 13, verticalAlign: "-2px" }} /> Copy coordinates from Google Maps (right-click the location → the lat/long is at the top). Opening hours are set from the store editor afterwards.</p>
+        </Drawer>
       )}
     </div>
   );

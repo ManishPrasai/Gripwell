@@ -817,6 +817,8 @@ model AdminUser {
   isActive     Boolean   @default(true)
   deletedAt    DateTime?
   lastLoginAt  DateTime?
+  phone        String?
+  notificationPrefs Json?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

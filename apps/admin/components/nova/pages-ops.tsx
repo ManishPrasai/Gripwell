@@ -11,6 +11,7 @@ import {
   Avatar, StatusBadge, StockBadge, Stars, Tooltip, Drawer, Modal, ConfirmModal,
   toast, SearchBox, EmptyState, PanelHead, usePager, Pager,
 } from "./ui";
+import { downloadCSV } from "../../lib/csv";
 
 type Ctx = any;
 
@@ -32,6 +33,13 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (p.name + p.brand + p.spec).toLowerCase().includes(q.toLowerCase())
   );
   const pager = usePager(list, 12);
+
+  function exportCSV() {
+    if (!rows.length) { toast({ kind: "info", title: "Nothing to export", body: "No products in inventory yet." }); return; }
+    downloadCSV("nova-inventory", ["Product", "Brand", "Category", "Spec", "Price", "Stock", "Status"],
+      rows.map((p) => [p.name, p.brand, p.cat, p.spec ?? "", Number(p.price).toFixed(2), p.stock, p.status]));
+    toast({ kind: "ok", title: "Exported", body: `${rows.length} products downloaded as CSV.` });
+  }
 
   async function saveEdit() {
     const target = edit; const prevRows = rows;
@@ -70,8 +78,9 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
       <div className="pagehead">
         <div className="ph-txt"><h2>Products &amp; Inventory</h2><p>Tyres, wheels, oils and parts across all stores.</p></div>
         <div className="ph-actions">
-          <button className="btn ghost" onClick={() => toast({ kind: "info", title: "Import", body: "Upload a CSV of products." })}><Icon name="download" />Import</button>
-          <button className="btn" onClick={() => toast({ kind: "info", title: "New product", body: "Product editor would open here." })}><Icon name="plus" />Add product</button>
+          <button className="btn ghost" onClick={exportCSV}><Icon name="download" />Export</button>
+          <button className="btn ghost" onClick={() => ctx.go?.("import")}><Icon name="box" />Import</button>
+          <button className="btn" onClick={() => ctx.go?.("import")}><Icon name="plus" />Add product</button>
         </div>
       </div>
 

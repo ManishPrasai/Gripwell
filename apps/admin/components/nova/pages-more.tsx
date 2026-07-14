@@ -4,7 +4,7 @@
    (ContentPage from the prototype is superseded by WebsitePage)
    ============================================================ */
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
@@ -174,9 +174,51 @@ const SET_NAV: [string, string, string][] = [
   ["roles", "Roles & access", "shield"], ["notifications", "Notifications", "bell"],
   ["billing", "Billing", "card"],
 ];
+const DEFAULT_NOTIF = { bookings: true, reviews: true, stock: true, marketing: false, weekly: true };
+
 export function SettingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [tab, setTab] = useState("appearance");
-  const [notif, setNotif] = useState<Record<string, boolean>>({ bookings: true, reviews: true, stock: true, marketing: false, weekly: true });
+  const [notif, setNotif] = useState<Record<string, boolean>>(DEFAULT_NOTIF);
+  const [profile, setProfile] = useState<{ firstName: string; lastName: string; phone: string; email: string; role: string }>({ firstName: "", lastName: "", phone: "", email: "", role: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Load the real profile + saved notification prefs.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me").then((r) => (r.ok ? r.json() : null)).then((d) => {
+      if (cancelled || !d?.admin) return;
+      const a = d.admin;
+      setProfile({ firstName: a.firstName || "", lastName: a.lastName || "", phone: a.phone || "", email: a.email || "", role: a.role || "" });
+      if (a.notificationPrefs && typeof a.notificationPrefs === "object") setNotif({ ...DEFAULT_NOTIF, ...a.notificationPrefs });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  async function saveProfile() {
+    if (savingProfile) return;
+    if (!profile.firstName.trim() || !profile.lastName.trim()) { toast({ kind: "err", title: "Name required", body: "Enter your first and last name." }); return; }
+    setSavingProfile(true);
+    try {
+      await adminFetch("/api/admin/profile", "PATCH", { firstName: profile.firstName.trim(), lastName: profile.lastName.trim(), phone: profile.phone.trim() });
+      toast({ kind: "ok", title: "Profile saved", body: "Your details have been updated." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't save profile", body: e?.message || "Please try again." });
+    } finally { setSavingProfile(false); }
+  }
+
+  async function saveNotif(next: Record<string, boolean>) {
+    const prev = notif;
+    setNotif(next);   // optimistic
+    try {
+      await adminFetch("/api/admin/profile", "PATCH", { notificationPrefs: next });
+    } catch (e: any) {
+      setNotif(prev);   // rollback
+      toast({ kind: "err", title: "Couldn't save preference", body: e?.message || "Please try again." });
+    }
+  }
+
+  const roleLabel = profile.role === "SUPER_ADMIN" ? "Super Administrator" : profile.role === "STORE_MANAGER" ? "Store Manager" : ctx.role === "admin" ? "Super Administrator" : "Store Manager";
 
   return (
     <div className="page page-enter">
@@ -192,19 +234,21 @@ export function SettingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <div className="panel" style={{ padding: 24 }}>
               <div className="hstack" style={{ gap: 16, marginBottom: 22 }}>
                 <Avatar init={ctx.initials} color="var(--brand)" size="xl" />
-                <div><div style={{ fontSize: 18, fontWeight: 800 }}>{ctx.name}</div><div className="muted" style={{ fontSize: 13.5 }}>{ctx.role === "admin" ? "Super Administrator" : "Store Manager · " + ctx.store}</div></div>
-                <span className="spacer"></span>
-                <button className="btn ghost sm" onClick={() => toast({ kind: "info", title: "Upload photo" })}><Icon name="user" />Change</button>
+                <div><div style={{ fontSize: 18, fontWeight: 800 }}>{(profile.firstName + " " + profile.lastName).trim() || ctx.name}</div><div className="muted" style={{ fontSize: 13.5 }}>{roleLabel}{ctx.role === "manager" ? " · " + ctx.store : ""}</div></div>
               </div>
               <div className="form-grid">
-                <div className="field"><label>Full name</label><input defaultValue={ctx.name} /></div>
-                <div className="field"><label>Email</label><input defaultValue={ctx.role === "admin" ? "admin@novatyres.au" : "daniel.m@novatyres.au"} /></div>
+                <div className="field"><label>First name</label><input value={profile.firstName} onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} /></div>
+                <div className="field"><label>Last name</label><input value={profile.lastName} onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} /></div>
               </div>
               <div className="form-grid">
-                <div className="field"><label>Phone</label><input defaultValue="0412 000 000" /></div>
-                <div className="field"><label>Role</label><input defaultValue={ctx.role === "admin" ? "Super Administrator" : "Store Manager"} disabled /></div>
+                <div className="field"><label>Email</label><input value={profile.email} disabled title="Email is your login — contact an administrator to change it." /></div>
+                <div className="field"><label>Phone</label><input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="0412 000 000" /></div>
               </div>
-              <div className="hstack" style={{ justifyContent: "flex-end", marginTop: 8 }}><button className="btn" onClick={() => toast({ kind: "ok", title: "Profile saved" })}><Icon name="check" />Save changes</button></div>
+              <div className="form-grid">
+                <div className="field"><label>Role</label><input value={roleLabel} disabled /></div>
+                <div className="field"></div>
+              </div>
+              <div className="hstack" style={{ justifyContent: "flex-end", marginTop: 8 }}><button className="btn" disabled={savingProfile} onClick={saveProfile}><Icon name="check" />{savingProfile ? "Saving…" : "Save changes"}</button></div>
             </div>
           )}
 
@@ -255,7 +299,7 @@ export function SettingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
               <div style={{ padding: "16px 20px 4px" }}><h3 style={{ fontSize: 15.5, fontWeight: 800 }}>Notifications</h3><p className="muted" style={{ fontSize: 12.5, marginTop: 2 }}>Choose what we ping you about.</p></div>
               <div style={{ padding: "6px 20px 18px" }}>
                 {[["bookings", "New bookings & call-backs", "When a customer requests a service."], ["reviews", "New reviews", "Especially anything under 4 stars."], ["stock", "Low-stock alerts", "When a product drops below its threshold."], ["weekly", "Weekly summary", "A Monday digest of last week's numbers."], ["marketing", "Product & marketing tips", "Occasional ideas to grow your stores."]].map(([k, t, s]) => (
-                  <div className="set-row" key={k}><div className="set-txt"><b>{t}</b><span>{s}</span></div><Switch on={notif[k]} onChange={(v) => { setNotif({ ...notif, [k]: v }); toast({ kind: "ok", title: v ? "Turned on" : "Turned off", body: t }); }} /></div>
+                  <div className="set-row" key={k}><div className="set-txt"><b>{t}</b><span>{s}</span></div><Switch on={notif[k as string]} onChange={(v) => saveNotif({ ...notif, [k as string]: v })} /></div>
                 ))}
               </div>
             </div>

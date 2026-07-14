@@ -228,7 +228,7 @@ export function WebsitePage({ ctx }: { ctx?: any; nav?: any }) {
       <div className="pagehead">
         <div className="ph-txt"><h2>Website &amp; Content</h2><p>Pages, blog posts and SEO for your public Nova Tyres site.</p></div>
         <div className="ph-actions">
-          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "New page" : "New blog post", body: "Editor would open here." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
+          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "Pages are fixed routes" : "Blog not enabled yet", body: tab === "pages" ? "Edit any existing page's content and SEO from the list below — new routes are added in code." : "Publishing blog posts needs a content model that isn't set up yet." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
         </div>
       </div>
 
