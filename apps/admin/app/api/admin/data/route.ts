@@ -26,24 +26,37 @@ export async function GET(req: NextRequest) {
     const storeId = payload.storeId as string | undefined
     const isManager = role === 'STORE_MANAGER'
 
-    /* ── Stores ── */
+    /* ── Stores (with real revenue / staff / today's bookings) ── */
     const storesRaw = await prisma.store.findMany({
       where: isManager ? { id: storeId } : undefined,
       include: { hours: true },
       orderBy: { name: 'asc' },
     })
-    const stores = storesRaw.map(s => ({
-      id: s.id, name: s.name, suburb: s.suburb, state: s.state,
-      status: s.isActive ? 'open' : 'closed',
-      phone: s.phone, manager: s.name,
-      mgrInit: s.name.split(' ').map(w => w[0]).join('').slice(0, 2),
-      mgrAv: '#076330', rating: 4.8, reviews: 250,
-      today: Math.floor(Math.random() * 15) + 3,
-      capacity: Math.floor(Math.random() * 40) + 40,
-      bays: 4, staff: 6,
-      revenue: Math.floor(Math.random() * 20000) + 20000,
-      opens: '08:00', closes: '17:30',
-    }))
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
+    const todayEnd = new Date(todayStart); todayEnd.setDate(todayStart.getDate() + 1)
+    const [revByStore, staffByStore, todayByStore] = await Promise.all([
+      prisma.order.groupBy({ by: ['storeId'], _sum: { total: true } }),
+      prisma.adminUser.groupBy({ by: ['storeId'], where: { isActive: true, deletedAt: null }, _count: { _all: true } }),
+      prisma.appointment.groupBy({ by: ['storeId'], where: { date: { gte: todayStart, lt: todayEnd } }, _count: { _all: true } }),
+    ])
+    const revMap = new Map(revByStore.map(r => [r.storeId, Number(r._sum.total ?? 0)]))
+    const staffMap = new Map(staffByStore.filter(r => r.storeId).map(r => [r.storeId as string, r._count._all]))
+    const todayMap = new Map(todayByStore.map(r => [r.storeId, r._count._all]))
+    const stores = storesRaw.map(s => {
+      const mon = s.hours.find(h => h.dayOfWeek === 'Monday')
+      return {
+        id: s.id, name: s.name, suburb: s.suburb, state: s.state,
+        status: s.isActive ? 'open' : 'closed',
+        phone: s.phone, manager: s.name,
+        mgrInit: s.name.split(' ').map(w => w[0]).join('').slice(0, 2),
+        mgrAv: '#076330', rating: 4.8, reviews: 250,
+        today: todayMap.get(s.id) ?? 0,
+        capacity: Math.min(100, Math.round(((todayMap.get(s.id) ?? 0) / 16) * 100)),
+        bays: 4, staff: staffMap.get(s.id) ?? 0,
+        revenue: Math.round(revMap.get(s.id) ?? 0),
+        opens: mon?.openTime ?? '08:00', closes: mon?.closeTime ?? '17:30',
+      }
+    })
 
     /* ── Staff (AdminUsers) ── */
     const staffRaw = await prisma.adminUser.findMany({
@@ -246,11 +259,11 @@ export async function GET(req: NextRequest) {
         const od = new Date(o.createdAt)
         return od.getDate() === day.getDate() && od.getMonth() === day.getMonth()
       })
-      const total = dayOrders.reduce((s, o) => s + Number(o.totalAmount), 0)
+      const total = dayOrders.reduce((s, o) => s + Number(o.total), 0)
       revenue7.push({
         d: day.toLocaleDateString('en-AU', { weekday: 'short' }),
-        a: Math.round(total / 100),
-        b: Math.round(total * 0.4 / 100),
+        a: Math.round(total),
+        b: dayOrders.length,
       })
     }
 

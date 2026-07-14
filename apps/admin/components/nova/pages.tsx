@@ -5,7 +5,7 @@
    Placeholder: the remaining 10 tabs (ported progressively)
    ============================================================ */
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
@@ -26,7 +26,14 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
   const totalRevenue = D.orders ? D.orders.reduce((s: number, o: any) => s + (o.total || 0), 0) : 400;
   const unreadMsgs = ctx.scopeBy(D.conversations, "store").reduce((s: number, c: any) => s + c.unread, 0);
 
-  const maxBar = Math.max(...D.revenue7.map((d: any) => d.a + d.b));
+  /* Real analytics (30-day) — revenue, conversion, top products */
+  const [an, setAn] = useState<any>(null);
+  useEffect(() => {
+    fetch("/api/admin/analytics?range=30").then((r) => (r.ok ? r.json() : null)).then((d) => d && setAn(d)).catch(() => {});
+  }, []);
+  const k = an?.kpis;
+
+  const maxBar = Math.max(...D.revenue7.map((d: any) => d.a + d.b), 1);
   const fmt = (n: number) => "$" + (n / 1000).toFixed(1) + "K";
 
   return (
@@ -47,11 +54,11 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
         <div className="dash-col">
           <div className="hero-row">
             <div className="hero-card primary">
-              <div className="hc-top"><span className="hc-label">Revenue this week</span><Icon name="dollar" /></div>
-              <div className="hc-val">{fmt(weekRev)}</div>
+              <div className="hc-top"><span className="hc-label">Revenue (30 days)</span><Icon name="dollar" /></div>
+              <div className="hc-val">{fmt(k?.revenue ?? weekRev)}</div>
               <div className="hc-foot">
                 <span>{ctx.role === "manager" ? ctx.store : stores.length + " stores"}</span>
-                <span className="hc-pill"><Icon name="arrowUp" />This week</span>
+                <span className="hc-pill"><Icon name={(k?.revenueDelta ?? 0) >= 0 ? "arrowUp" : "arrowDown"} />{k ? (k.revenueDelta >= 0 ? "+" : "") + k.revenueDelta + "% vs prev" : "This week"}</span>
               </div>
             </div>
 
@@ -129,12 +136,29 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
               {stores.map((s: any) => (
                 <div className="lrow" key={s.id} onClick={() => nav("stores")}>
                   <Avatar init={s.mgrInit} color={s.mgrAv} />
-                  <div className="lrow-main"><b>{s.name}</b><span>{s.manager} · {s.today} Sold today</span></div>
+                  <div className="lrow-main"><b>{s.name}</b><span>{s.manager} · {s.today} booked today</span></div>
                   <StatusBadge status={s.status} live={s.status === "open"} />
                 </div>
               ))}
             </div>
           </div>
+
+          {k && (
+            <div className="panel feed-panel">
+              <PanelHead title="Top products (30 days)" right={<span className="badge accent dotless">${(k.avgOrder || 0).toLocaleString()} avg order</span>} />
+              <div style={{ padding: "4px 0 12px" }}>
+                {(an.topProducts || []).length === 0 ? (
+                  <div style={{ padding: "14px 4px", color: "var(--ink-3)", fontSize: 13 }}>No sales in this period yet.</div>
+                ) : (an.topProducts || []).slice(0, 5).map((p: any, i: number) => (
+                  <div className="lrow" key={i}>
+                    <span className="sc-ico orange" style={{ width: 34, height: 34 }}><Icon name="tyre" /></span>
+                    <div className="lrow-main"><b>{p.name}</b><span>{p.units} units sold</span></div>
+                    <span className="mono" style={{ fontWeight: 700 }}>${p.revenue.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
