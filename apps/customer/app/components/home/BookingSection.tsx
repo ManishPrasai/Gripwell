@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 /* ── Static data ─────────────────────────────────────────────────────────── */
 
@@ -80,19 +80,63 @@ function fmt12(slot: string): string {
 
 /* ── Component ───────────────────────────────────────────────────────────── */
 
+type Store   = { id: string; name: string }
+type Service = { id: string; name: string; priceFrom: number }
+
 export default function BookingSection() {
-  const [store,          setStore]          = useState('')
-  const [service,        setService]        = useState('')
+  const [store,          setStore]          = useState('')   // store id
+  const [service,        setService]        = useState('')   // service id
   const [time,           setTime]           = useState('')
   const [pickerOpen,     setPickerOpen]     = useState(false)
   const [selectedDate,   setSelectedDate]   = useState('')
   const [selectedSlot,   setSelectedSlot]   = useState('')
 
+  /* Live data from the admin-managed backend */
+  const [stores,   setStores]   = useState<Store[]>([])
+  const [services, setServices] = useState<Service[]>([])
+  const [slotMap,  setSlotMap]  = useState<Record<string, string>>({})   // time -> slotId (available only)
+  const [loading,  setLoading]  = useState(false)
+
+  /* Booking submission */
+  const [name,      setName]      = useState('')
+  const [phone,     setPhone]     = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [bookedRef, setBookedRef] = useState('')
+  const [error,     setError]     = useState('')
+
   const days   = getNext7Days()
   const locked = !store || !service
 
+  /* Load stores once */
+  useEffect(() => {
+    fetch('/api/stores')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { const list = d?.stores ?? d; if (Array.isArray(list)) setStores(list.map((s: any) => ({ id: s.id, name: s.name }))) })
+      .catch(() => {})
+  }, [])
+
+  /* Load real availability whenever store + date are chosen */
+  useEffect(() => {
+    if (!store || !selectedDate) { setSlotMap({}); return }
+    let cancelled = false
+    setLoading(true)
+    fetch(`/api/booking/availability?storeId=${store}&date=${selectedDate}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (cancelled || !d) return
+        const map: Record<string, string> = {}
+        for (const s of (d.slots ?? [])) map[s.time] = s.id
+        setSlotMap(map)
+        if (d.services?.length) setServices(d.services)
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [store, selectedDate])
+
   /* Open picker: default to today if no date chosen yet */
   function handleTimeClick() {
+    if (locked) return
     if (!pickerOpen && !selectedDate) setSelectedDate(days[0].dateStr)
     setPickerOpen(v => !v)
   }
@@ -113,9 +157,36 @@ export default function BookingSection() {
     setSelectedSlot(slot)   // highlight chosen chip; picker stays open
   }
 
-  /* Current day's booked set */
-  const dayObj      = days.find(d => d.dateStr === selectedDate)
-  const bookedSlots = dayObj ? getMockBooked(dayObj.weekday) : new Set<string>()
+  async function submitBooking() {
+    setError('')
+    const slotId = slotMap[selectedSlot]
+    if (!slotId) { setError('Please pick an available time.'); return }
+    if (!name.trim() || !phone.trim()) { setError('Please enter your name and phone.'); return }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId, serviceId: service, name: name.trim(), phone: phone.trim() }),
+      })
+      const d = await res.json()
+      if (!res.ok) { setError(d?.error || 'Booking failed. Please try again.'); return }
+      setBookedRef(d.ref || 'confirmed')
+      setPickerOpen(false)
+    } catch {
+      setError('Booking failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  /* A slot is unavailable if it's not in the live availability map (admin-blocked
+     or full) — falls back to showing all 9–5 slots as bookable before a store/date
+     is chosen so the widget still previews. */
+  const hasAvailability = Object.keys(slotMap).length > 0
+  const bookedSlots = new Set<string>(
+    hasAvailability ? ALL_SLOTS.filter(t => !(t in slotMap)) : []
+  )
 
   return (
     <section
@@ -178,8 +249,8 @@ export default function BookingSection() {
                 style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: store ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '15px', fontWeight: 400 }}
               >
                 <option value="" style={{ background: '#1a1a1a' }}>Select store...</option>
-                {STORES.map(s => (
-                  <option key={s} value={s} style={{ background: '#1a1a1a', color: 'white' }}>{s}</option>
+                {(stores.length ? stores : STORES.map((n, i) => ({ id: String(i), name: n }))).map(s => (
+                  <option key={s.id} value={s.id} style={{ background: '#1a1a1a', color: 'white' }}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -197,8 +268,8 @@ export default function BookingSection() {
                 style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: service ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '15px', fontWeight: 400 }}
               >
                 <option value="" style={{ background: '#1a1a1a' }}>Select service...</option>
-                {SERVICES.map(s => (
-                  <option key={s} value={s} style={{ background: '#1a1a1a', color: 'white' }}>{s}</option>
+                {(services.length ? services : SERVICES.map((n, i) => ({ id: String(i), name: n, priceFrom: 0 }))).map(s => (
+                  <option key={s.id} value={s.id} style={{ background: '#1a1a1a', color: 'white' }}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -440,19 +511,41 @@ export default function BookingSection() {
           {/* CTA footer — mobile: always visible at card bottom; desktop: normal flow */}
           <div className="px-4 pb-4 pt-3 md:px-6 md:pb-6 md:pt-0 border-t border-white/[0.08] md:border-t-0 bg-[#0a0a0a] md:bg-transparent">
 
-          {/* CTA */}
-          <button
-            className="w-full text-white py-4 rounded-xl uppercase tracking-wide transition-opacity hover:opacity-90"
-            style={{ background: '#E8572A', letterSpacing: '0.08em', fontSize: '14px', fontWeight: 600 }}
-          >
-            Call to Book
-          </button>
-
-          <p className="mt-3" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', fontWeight: 500 }}>
-            Or call us directly on{' '}
-            <a href="tel:1300897337" style={{ color: '#E8572A' }}>1300 TYRES</a>
-            {' '}— Mon–Sat 8am–6pm AEST
-          </p>
+          {/* CTA / booking submission */}
+          {bookedRef ? (
+            <div className="rounded-xl text-center" style={{ background: 'rgba(46,160,67,0.12)', border: '1px solid rgba(46,160,67,0.3)', padding: '16px' }}>
+              <i className="ti ti-circle-check" style={{ color: '#2ea043', fontSize: '22px' }} aria-hidden="true" />
+              <div style={{ color: 'white', fontWeight: 700, fontSize: '15px', marginTop: 6 }}>Booking confirmed</div>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12.5px', marginTop: 2 }}>Ref {bookedRef} · {time}. We'll call to confirm.</div>
+            </div>
+          ) : (
+            <>
+              {selectedSlot && slotMap[selectedSlot] && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
+                    className="w-full rounded-lg px-3 py-3 outline-none"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '15px' }} />
+                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" type="tel"
+                    className="w-full rounded-lg px-3 py-3 outline-none"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '15px' }} />
+                </div>
+              )}
+              {error && <p className="mb-2" style={{ color: '#ff6b6b', fontSize: '12.5px' }}>{error}</p>}
+              <button
+                onClick={submitBooking}
+                disabled={submitting || !selectedSlot || !slotMap[selectedSlot]}
+                className="w-full text-white py-4 rounded-xl uppercase tracking-wide transition-opacity hover:opacity-90"
+                style={{ background: '#E8572A', letterSpacing: '0.08em', fontSize: '14px', fontWeight: 600, opacity: (submitting || !selectedSlot || !slotMap[selectedSlot]) ? 0.55 : 1, cursor: (!selectedSlot || !slotMap[selectedSlot]) ? 'not-allowed' : 'pointer' }}
+              >
+                {submitting ? 'Booking…' : selectedSlot ? 'Confirm booking' : 'Select a time to book'}
+              </button>
+              <p className="mt-3" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', fontWeight: 500 }}>
+                Or call us directly on{' '}
+                <a href="tel:1300897337" style={{ color: '#E8572A' }}>1300 TYRES</a>
+                {' '}— Mon–Sat 8am–6pm AEST
+              </p>
+            </>
+          )}
           </div>{/* /CTA footer */}
         </div>
 
