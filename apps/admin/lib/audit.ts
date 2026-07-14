@@ -45,6 +45,7 @@ export type AuditAction =
   | 'PAGE_PUBLISHED'
   | 'PAGE_UNPUBLISHED'
   | 'PAGE_DELETED'
+  | 'SEO_UPDATED'
   | 'STAFF_LOGIN_ISSUED'
   | 'STAFF_LOGIN_RESET'
   | 'STAFF_REMOVED'

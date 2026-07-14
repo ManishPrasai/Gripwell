@@ -221,11 +221,11 @@ export async function GET(req: NextRequest) {
 
     /* ── Website pages (PageSEO) ── */
     const seoRaw = await prisma.pageSEO.findMany({ orderBy: { createdAt: 'asc' } })
-    const pages = seoRaw.map((p, i) => ({
-      id: i + 1,
+    const pages = seoRaw.map((p) => ({
+      id: p.id,                          // real PageSEO id — used by PATCH /api/admin/seo/[id]
       title: p.entityId ?? p.entityType,
-      url: `/${p.entityId}`,
-      status: p.isIndexed ? 'published' : 'draft',
+      url: p.entityId === 'home' ? '/' : `/${p.entityId}`,
+      status: 'published',
       edited: p.updatedAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
       by: 'Admin',
       views: '—',
@@ -233,7 +233,8 @@ export async function GET(req: NextRequest) {
       seo: 80,
       metaTitle: p.metaTitle,
       metaDesc: p.metaDesc ?? '',
-      kw: p.focusKeyword ?? '',
+      ogImage: p.ogImage ?? '',
+      kw: '',
     }))
 
     /* ── Revenue (last 7 days from orders) ── */
