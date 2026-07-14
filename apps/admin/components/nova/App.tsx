@@ -9,7 +9,7 @@ import { NOVA } from "../../lib/nova/data";
 import { IDLE_LOGOUT_ENABLED } from "../../lib/config";
 import { swrFetcher, adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
-import { Avatar, Drawer, Tooltip, toast, ToastHost, useClickAway } from "./ui";
+import { Avatar, Drawer, Tooltip, toast, ToastHost, useClickAway, PageErrorBoundary, PageSkeleton, DataErrorState } from "./ui";
 import { OverviewPage, StoresPage, StaffPage } from "./pages";
 import { MessagesPage, RolesPage } from "./pages-comms";
 import { InventoryPage, BookingsPage, ReviewsPage } from "./pages-ops";
@@ -188,7 +188,7 @@ export default function AppV2() {
      any write so the UI reflects server truth and survives a refresh.
      Polls every 20s (and on tab focus / reconnect) so bookings, messages and
      notifications stay live without a manual refresh. */
-  const { data: liveData, mutate: refetch } = useSWR(
+  const { data: liveData, error: dataError, mutate: refetch } = useSWR(
     sessionAdmin ? '/api/admin/data' : null,
     swrFetcher,
     { refreshInterval: 20000, revalidateOnFocus: true, revalidateOnReconnect: true },
@@ -373,7 +373,15 @@ export default function AppV2() {
       {/* MAIN CONTENT */}
       <main className="content scroll">
         <div className="page-anim" key={page}>
-          <Page ctx={ctx} nav={setPage} />
+          {dataError && !liveData ? (
+            <DataErrorState onRetry={() => refetch()} />
+          ) : !liveData ? (
+            <PageSkeleton />
+          ) : (
+            <PageErrorBoundary resetKey={page}>
+              <Page ctx={ctx} nav={setPage} />
+            </PageErrorBoundary>
+          )}
         </div>
       </main>
 

@@ -6,6 +6,81 @@ import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "./icons";
 
+/* ---------- Error boundary ----------
+   Catches render errors in a page so one broken screen never blanks the whole
+   console. Resets when `resetKey` changes (i.e. the user navigates away). */
+export class PageErrorBoundary extends React.Component<
+  { children: React.ReactNode; resetKey: string; onReset?: () => void },
+  { error: Error | null }
+> {
+  constructor(props: any) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: any) { console.error("[page error]", error, info); }
+  componentDidUpdate(prev: { resetKey: string }) {
+    if (prev.resetKey !== this.props.resetKey && this.state.error) this.setState({ error: null });
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="page page-enter">
+          <div className="panel" style={{ padding: 48, textAlign: "center", maxWidth: 520, margin: "40px auto" }}>
+            <div style={{ width: 60, height: 60, borderRadius: "50%", background: "color-mix(in oklab,var(--danger) 12%,transparent)", color: "var(--danger)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Icon name="alert" style={{ width: 30, height: 30 }} />
+            </div>
+            <h3 style={{ fontSize: 19, fontWeight: 800 }}>This page hit a snag</h3>
+            <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 13.5 }}>Something went wrong while rendering. Your data is safe — try reloading this screen.</p>
+            <p className="mono" style={{ color: "var(--ink-3)", fontSize: 11.5, marginTop: 10, wordBreak: "break-word" }}>{this.state.error.message}</p>
+            <button className="btn" style={{ marginTop: 20 }} onClick={() => { this.setState({ error: null }); this.props.onReset?.(); }}><Icon name="refresh" />Reload page</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ---------- Loading skeleton ----------
+   Shimmer placeholder shown on first data load so the console never flashes
+   empty. Mirrors the common page shape: header, stat row, table. */
+export function PageSkeleton() {
+  return (
+    <div className="page page-enter" aria-busy="true">
+      <div className="sk-line" style={{ width: 220, height: 26, marginBottom: 8 }} />
+      <div className="sk-line" style={{ width: 320, height: 14, marginBottom: 22 }} />
+      <div className="summary-row" style={{ marginBottom: 18 }}>
+        {[0, 1, 2, 3].map((i) => <div key={i} className="panel" style={{ height: 84 }}><div className="sk-line" style={{ width: "50%", height: 12, margin: "16px 0 12px 16px" }} /><div className="sk-line" style={{ width: "35%", height: 22, marginLeft: 16 }} /></div>)}
+      </div>
+      <div className="panel" style={{ padding: 0 }}>
+        <div style={{ padding: 16 }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="hstack" style={{ gap: 14, padding: "12px 4px", borderBottom: i < 5 ? "1px solid var(--border)" : "none" }}>
+              <div className="sk-line sk-circle" style={{ width: 34, height: 34, borderRadius: 10 }} />
+              <div style={{ flex: 1 }}><div className="sk-line" style={{ width: "40%", height: 12, marginBottom: 7 }} /><div className="sk-line" style={{ width: "22%", height: 10 }} /></div>
+              <div className="sk-line" style={{ width: 70, height: 12 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Data error state ---------- */
+export function DataErrorState({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <div className="page page-enter">
+      <div className="panel" style={{ padding: 48, textAlign: "center", maxWidth: 520, margin: "40px auto" }}>
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "color-mix(in oklab,var(--danger) 12%,transparent)", color: "var(--danger)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+          <Icon name="alert" style={{ width: 30, height: 30 }} />
+        </div>
+        <h3 style={{ fontSize: 19, fontWeight: 800 }}>Couldn't load your data</h3>
+        <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 13.5 }}>We had trouble reaching the server. Check your connection and try again.</p>
+        <button className="btn" style={{ marginTop: 20 }} onClick={onRetry}><Icon name="refresh" />Try again</button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Avatar ---------- */
 export function Avatar({ name, init, color, size, img }: any) {
   const cls = "avatar" + (size ? " " + size : "");
