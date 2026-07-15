@@ -7,7 +7,7 @@ import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
-import { Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState } from "./ui";
+import { Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState, OverlayPortal } from "./ui";
 
 function seoBadge(score: number) {
   const cls = score >= 80 ? "good" : score >= 65 ? "mid" : "low";
@@ -52,6 +52,7 @@ function PageBuilder({ ctx, page, onClose }: { ctx?: any; page: any; onClose: ()
   const add = (type: string) => { setSecs([...secs, { id: "s" + Date.now(), type, visible: true }]); setAdding(false); toast({ kind: "ok", title: (D.sectionTypes as any)[type].name + " added" }); };
 
   return (
+    <OverlayPortal>
     <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="panel" style={{ width: "94vw", maxWidth: 1080, height: "88vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div className="panel-head" style={{ borderBottom: "1px solid var(--border)", padding: "16px 20px" }}>
@@ -117,6 +118,7 @@ function PageBuilder({ ctx, page, onClose }: { ctx?: any; page: any; onClose: ()
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

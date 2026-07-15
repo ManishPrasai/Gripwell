@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCart } from '../../context/CartContext'
 
 // ─── Brand logo map ────────────────────────────────────────────────────────
 const BRAND_LOGOS: Record<string, string> = {
@@ -130,11 +129,9 @@ function SkeletonCard() {
 export default function BestDeals() {
   const [tab,          setTab]          = useState<'tyres' | 'wheels'>('tyres')
   const [hoveredCard,  setHoveredCard]  = useState<number | null>(null)
-  const [addedId,      setAddedId]      = useState<string | null>(null)
   const [tyreProducts, setTyreProducts] = useState<Product[]>([])
   const [wheelProducts,setWheelProducts]= useState<Product[]>([])
   const [loading,      setLoading]      = useState(true)
-  const { addToCart } = useCart()
 
   /* Sliding pill behind the active Tyres/Wheels toggle button — measured from
      the actual button rects so it tracks perfectly regardless of label width. */
@@ -163,24 +160,6 @@ export default function BestDeals() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
-
-  function handleAddToCart(e: React.MouseEvent, product: Product) {
-    e.preventDefault()
-    e.stopPropagation()
-    addToCart({
-      id:          product.id,   // raw slug, matches Tyre/Wheel.slug in DB
-      productType: product.tab === 'tyres' ? 'tyre' : 'wheel',
-      brand:       product.brand,
-      brandLogo:   product.brandLogo,
-      model:       product.model,
-      size:        product.size,
-      spec:        product.spec,
-      price:       product.price,
-      image:       product.image,
-    })
-    setAddedId(product.id)
-    setTimeout(() => setAddedId(null), 1400)
-  }
 
   const visible = tab === 'tyres' ? tyreProducts : wheelProducts
 
@@ -393,7 +372,10 @@ export default function BestDeals() {
                         </p>
                       </div>
 
-                      {/* ── Layer 3: SHOP NOW button — grows upward from card bottom ── */}
+                      {/* ── Layer 3: VIEW MORE — grows upward from card bottom.
+                          A <span>, not a <button>: the whole card is already a
+                          <Link>, so the click bubbles up and navigates to the
+                          product page (and a button inside an anchor is invalid). */}
                       <div
                         style={{
                           position:      'absolute',
@@ -403,39 +385,31 @@ export default function BestDeals() {
                           overflow:      'hidden',
                           maxHeight:     isHovered ? '68px' : '0px',
                           transition:    'max-height 0.38s cubic-bezier(0.25,0.46,0.45,0.94)',
-                          pointerEvents: isHovered ? 'auto' : 'none',
+                          pointerEvents: 'none',
                         }}
                       >
                         <div style={{ padding: '8px 16px 16px', background: '#fff' }}>
-                        <button
-                          onClick={e => handleAddToCart(e, product)}
+                        <span
                           style={{
                             width:          '100%',
                             padding:        '11px 16px',
-                            background:     addedId === product.id ? '#22c55e' : '#1A1A1A',
+                            background:     '#1A1A1A',
                             color:          '#fff',
                             borderRadius:   '8px',
-                            border:         'none',
-                            cursor:         'pointer',
                             fontFamily:     "'DM Sans', sans-serif",
                             fontSize:       '13px',
                             fontWeight:      700,
                             letterSpacing:  '0.06em',
                             textAlign:      'center',
-                            transition:     'background 0.2s ease',
                             display:        'flex',
                             alignItems:     'center',
                             justifyContent: 'center',
                             gap:            '6px',
                           }}
                         >
-                          <i
-                            className={addedId === product.id ? 'ti ti-check' : 'ti ti-shopping-cart'}
-                            style={{ fontSize: '14px' }}
-                            aria-hidden="true"
-                          />
-                          {addedId === product.id ? 'Added!' : 'SHOP NOW'}
-                        </button>
+                          VIEW MORE
+                          <i className="ti ti-arrow-right" style={{ fontSize: '14px' }} aria-hidden="true" />
+                        </span>
                         </div>
                       </div>
 

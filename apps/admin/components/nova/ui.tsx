@@ -4,7 +4,32 @@
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./icons";
+
+/* ---------- Overlay portal ----------
+   Every page sits inside `.page-enter`, whose `pageIn` animation applies a
+   transform — and a transformed ancestor becomes the containing block for
+   `position: fixed` children. That made drawers/modals size against the (tall)
+   page instead of the viewport, stranding their footer far below the fold.
+   Portalling to <body> escapes any such ancestor for good. */
+export function OverlayPortal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  /* Lock the page scroller while an overlay is open so the background
+     doesn't drift under the dialog. */
+  useEffect(() => {
+    const el = document.querySelector(".content") as HTMLElement | null;
+    if (!el) return;
+    const prev = el.style.overflow;
+    el.style.overflow = "hidden";
+    return () => { el.style.overflow = prev; };
+  }, []);
+
+  if (!mounted) return null;
+  return createPortal(children, document.body);
+}
 
 /* ---------- Error boundary ----------
    Catches render errors in a page so one broken screen never blanks the whole
@@ -146,9 +171,11 @@ export function Modal({ onClose, wide, children }: any) {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
   return (
-    <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={"modal" + (wide ? " wide" : "")} role="dialog" aria-modal="true">{children}</div>
-    </div>
+    <OverlayPortal>
+      <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div className={"modal" + (wide ? " wide" : "")} role="dialog" aria-modal="true">{children}</div>
+      </div>
+    </OverlayPortal>
   );
 }
 
@@ -183,20 +210,22 @@ export function Drawer({ title, sub, onClose, foot, children }: any) {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
   return (
-    <div className="drawer-wrap">
-      <div className="drawer-bg" onClick={onClose}></div>
-      <div className="drawer" role="dialog" aria-modal="true">
-        <div className="drawer-head">
-          <div style={{ minWidth: 0 }}>
-            <h3>{title}</h3>
-            {sub && <div className="sub">{sub}</div>}
+    <OverlayPortal>
+      <div className="drawer-wrap">
+        <div className="drawer-bg" onClick={onClose}></div>
+        <div className="drawer" role="dialog" aria-modal="true">
+          <div className="drawer-head">
+            <div style={{ minWidth: 0 }}>
+              <h3>{title}</h3>
+              {sub && <div className="sub">{sub}</div>}
+            </div>
+            <button className="iconbtn x" onClick={onClose}><Icon name="x" /></button>
           </div>
-          <button className="iconbtn x" onClick={onClose}><Icon name="x" /></button>
+          <div className="drawer-body scroll">{children}</div>
+          {foot && <div className="drawer-foot">{foot}</div>}
         </div>
-        <div className="drawer-body scroll">{children}</div>
-        {foot && <div className="drawer-foot">{foot}</div>}
       </div>
-    </div>
+    </OverlayPortal>
   );
 }
 
