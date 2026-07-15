@@ -4,19 +4,21 @@
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 
-/* ---------- Overlay portal ----------
-   Every page sits inside `.page-enter`, whose `pageIn` animation applies a
-   transform — and a transformed ancestor becomes the containing block for
-   `position: fixed` children. That made drawers/modals size against the (tall)
-   page instead of the viewport, stranding their footer far below the fold.
-   Portalling to <body> escapes any such ancestor for good. */
-export function OverlayPortal({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+/* ---------- Overlay wrapper ----------
+   Drawers/modals used to size against the whole page instead of the viewport:
+   every page sits inside `.page-enter`, whose `pageIn` animation applies a
+   transform, and a transformed ancestor becomes the containing block for
+   `position: fixed` children. The fix lives in CSS — `.page-enter` is in the
+   `transform: none !important` rule in dashboard-v5.css, which removes the
+   containing block at its source.
 
+   NOTE: do NOT portal these to <body> via react-dom's createPortal. ui.tsx is
+   imported by nearly every admin page (including /login), so that import pulls
+   react-dom into the server bundle and the Worker throws 1101 on every SSR
+   route. Learned the hard way — see the c442b04e rollback. */
+export function OverlayPortal({ children }: { children: React.ReactNode }) {
   /* Lock the page scroller while an overlay is open so the background
      doesn't drift under the dialog. */
   useEffect(() => {
@@ -27,8 +29,7 @@ export function OverlayPortal({ children }: { children: React.ReactNode }) {
     return () => { el.style.overflow = prev; };
   }, []);
 
-  if (!mounted) return null;
-  return createPortal(children, document.body);
+  return <>{children}</>;
 }
 
 /* ---------- Error boundary ----------

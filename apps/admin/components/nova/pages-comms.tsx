@@ -3,7 +3,7 @@
    NOVA TYRES — Admin · Messages (chat) + Roles & Access (ported)
    ============================================================ */
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
@@ -20,6 +20,27 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [filter, setFilter] = useState("all");
   const [draft, setDraft] = useState("");
   const bodyRef = useRef<any>(null);
+
+  /* Pull new customer messages in from the 20s poll.
+     `useState` above only seeds on mount, so without this the inbox went stale
+     until a hard refresh. Keyed on a message-count signature so we only rebuild
+     when something actually arrived — and we keep the open thread marked read
+     so incoming polls don't make it flash unread under the reader. */
+  const sig = useMemo(
+    () => ctx.scopeBy(D.conversations, "store").map((c: any) => `${c.id}:${c.messages.length}:${c.status}`).join("|"),
+    [D.conversations, ctx.role, ctx.store],
+  );
+  useEffect(() => {
+    setConvos((prev) =>
+      ctx.scopeBy(D.conversations, "store").map((c: any) => ({
+        ...c,
+        messages: [...c.messages],
+        unread: c.id === activeId ? 0 : c.unread,
+        agent: prev.find((p) => p.id === c.id)?.agent ?? c.agent,
+      })),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
 
   const list = convos.filter((c) =>
     (filter === "all" || (filter === "unread" ? c.unread > 0 : c.status === filter)) &&
