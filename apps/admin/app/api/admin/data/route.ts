@@ -26,18 +26,130 @@ export async function GET(req: NextRequest) {
     const storeId = payload.storeId as string | undefined
     const isManager = role === 'STORE_MANAGER'
 
-    /* ── Stores (with real revenue / staff / today's bookings) ── */
-    const storesRaw = await prisma.store.findMany({
-      where: isManager ? { id: storeId } : undefined,
-      include: { hours: true },
-      orderBy: { name: 'asc' },
-    })
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
     const todayEnd = new Date(todayStart); todayEnd.setDate(todayStart.getDate() + 1)
-    const [revByStore, staffByStore, todayByStore] = await Promise.all([
+
+    /* ── Fetch everything at once ────────────────────────────────────────────
+       These queries are all independent — only the mapping below depends on
+       their results. Running them sequentially cost ~13 round trips to
+       Postgres (~5.7s); one Promise.all collapses that to roughly the slowest
+       single query. Selects are explicit rather than `include: true` so we
+       don't drag every column across the wire on each 20s poll. */
+    const [
+      storesRaw, revByStore, staffByStore, todayByStore, staffRaw,
+      tyresRaw, wheelsRaw, ordersRaw, apptRaw, reviewsRaw,
+      convsRaw, enquiriesRaw, seoRaw, rolesRaw, discountsRaw,
+    ] = await Promise.all([
+      prisma.store.findMany({
+        where: isManager ? { id: storeId } : undefined,
+        select: {
+          id: true, name: true, suburb: true, state: true, isActive: true, phone: true,
+          hours: { where: { dayOfWeek: 'Monday' }, select: { dayOfWeek: true, openTime: true, closeTime: true } },
+        },
+        orderBy: { name: 'asc' },
+      }),
       prisma.order.groupBy({ by: ['storeId'], _sum: { total: true } }),
       prisma.adminUser.groupBy({ by: ['storeId'], where: { isActive: true, deletedAt: null }, _count: { _all: true } }),
       prisma.appointment.groupBy({ by: ['storeId'], where: { date: { gte: todayStart, lt: todayEnd } }, _count: { _all: true } }),
+      prisma.adminUser.findMany({
+        where: isManager ? { storeId } : undefined,
+        select: {
+          id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true,
+          store: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.tyre.findMany({
+        where: { deletedAt: null },
+        select: {
+          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true,
+          tyreSize: { select: { width: true, profile: true, rimDiameter: true } },
+          images: { select: { url: true }, take: 1 },
+        },
+        orderBy: { brand: 'asc' },
+        take: 500,
+      }),
+      prisma.wheel.findMany({
+        where: { deletedAt: null },
+        select: {
+          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true,
+          diameter: true, width: true, pcd: true, offset: true,
+          images: { select: { url: true }, take: 1 },
+        },
+        orderBy: { brand: 'asc' },
+        take: 500,
+      }),
+      prisma.order.findMany({
+        where: isManager ? { storeId } : undefined,
+        select: {
+          id: true, total: true, status: true, paymentStatus: true, stripePaymentIntentId: true, createdAt: true,
+          // Skip the 'fitting' service line — it has no tyre/wheel, and when it
+          // sorted first the Orders page rendered a useless "Item ×1".
+          items: {
+            where: { itemType: { not: 'fitting' } },
+            select: { quantity: true, tyre: { select: { brand: true, model: true } }, wheel: { select: { brand: true, model: true } } },
+            take: 3,
+          },
+          customer: { select: { firstName: true, lastName: true, email: true } },
+          store: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+      prisma.appointment.findMany({
+        where: isManager ? { storeId } : undefined,
+        select: {
+          id: true, notes: true, status: true, date: true, timeSlot: true,
+          service: { select: { name: true, priceFrom: true } },
+          store: { select: { name: true } },
+          customer: { select: { firstName: true, lastName: true, phone: true } },
+        },
+        orderBy: { date: 'desc' },
+        take: 200,
+      }),
+      prisma.review.findMany({
+        where: isManager ? { storeId } : undefined,
+        select: {
+          id: true, storeId: true, rating: true, body: true, reply: true, isVerifiedPurchase: true, createdAt: true,
+          customer: { select: { firstName: true, lastName: true } },
+          store: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 200,
+      }),
+      prisma.chatConversation.findMany({
+        where: isManager ? { storeId } : undefined,
+        select: {
+          id: true, status: true, createdAt: true,
+          messages: { select: { body: true, senderType: true, isRead: true, createdAt: true }, orderBy: { createdAt: 'asc' } },
+          store: { select: { name: true } },
+          customer: { select: { firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      prisma.enquiry.findMany({
+        where: isManager ? { source: storeId } : undefined,
+        select: {
+          id: true, name: true, phone: true, type: true, message: true, status: true, createdAt: true,
+          store: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      }),
+      prisma.pageSEO.findMany({ orderBy: { createdAt: 'asc' } }),
+      prisma.role.findMany({
+        select: {
+          id: true, name: true, description: true, color: true, scope: true, permissions: true, isBuiltIn: true,
+          _count: { select: { admins: true } },
+        },
+        orderBy: [{ isBuiltIn: 'desc' }, { createdAt: 'asc' }],
+      }),
+      prisma.discount.findMany({
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }),
     ])
     const revMap = new Map(revByStore.map(r => [r.storeId, Number(r._sum.total ?? 0)]))
     const staffMap = new Map(staffByStore.filter(r => r.storeId).map(r => [r.storeId as string, r._count._all]))
@@ -59,11 +171,6 @@ export async function GET(req: NextRequest) {
     })
 
     /* ── Staff (AdminUsers) ── */
-    const staffRaw = await prisma.adminUser.findMany({
-      where: isManager ? { storeId } : undefined,
-      include: { store: true },
-      orderBy: { createdAt: 'asc' },
-    })
     const staff = staffRaw.map(u => ({
       id: u.id,
       name: `${u.firstName} ${u.lastName}`,
@@ -78,18 +185,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Inventory (tyres + wheels) ── */
-    const tyresRaw = await prisma.tyre.findMany({
-      where: { deletedAt: null },
-      include: { tyreSize: true, images: { take: 1 } },
-      orderBy: { brand: 'asc' },
-      take: 500,
-    })
-    const wheelsRaw = await prisma.wheel.findMany({
-      where: { deletedAt: null },
-      include: { images: { take: 1 } },
-      orderBy: { brand: 'asc' },
-      take: 500,
-    })
     const LOW_THRESHOLD = 8
     const products = [
       ...tyresRaw.map(t => ({
@@ -113,16 +208,6 @@ export async function GET(req: NextRequest) {
     ]
 
     /* ── Orders ── */
-    const ordersRaw = await prisma.order.findMany({
-      where: isManager ? { storeId } : undefined,
-      include: {
-        items: { include: { tyre: true, wheel: true }, take: 1 },
-        customer: { select: { firstName: true, lastName: true, email: true } },
-        store: { select: { name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    })
     const orders = ordersRaw.map(o => ({
       id: o.id,
       ref: `#${o.id.slice(0, 6).toUpperCase()}`,
@@ -139,16 +224,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Bookings (Appointments) ── */
-    const apptRaw = await prisma.appointment.findMany({
-      where: isManager ? { storeId } : undefined,
-      include: {
-        service: true,
-        store: { select: { name: true } },
-        customer: { select: { firstName: true, lastName: true, phone: true } },
-      },
-      orderBy: { date: 'desc' },
-      take: 200,
-    })
     const bookings = apptRaw.map(a => ({
       id: a.id,
       ref: `NV-${a.id.slice(0, 4).toUpperCase()}`,
@@ -164,15 +239,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Reviews ── */
-    const reviewsRaw = await prisma.review.findMany({
-      where: isManager ? { storeId } : undefined,
-      include: {
-        customer: { select: { firstName: true, lastName: true } },
-        store: { select: { name: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
-    })
     const reviews = reviewsRaw.map(r => ({
       id: r.id,
       storeId: r.storeId,
@@ -188,16 +254,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Messages (ChatConversations) ── */
-    const convsRaw = await prisma.chatConversation.findMany({
-      where: isManager ? { storeId } : undefined,
-      include: {
-        messages: { orderBy: { createdAt: 'asc' } },
-        store: { select: { name: true } },
-        customer: { select: { firstName: true, lastName: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    })
     const conversations = convsRaw.map(c => ({
       id: c.id,
       customer: c.customer ? `${c.customer.firstName} ${c.customer.lastName}` : 'Guest',
@@ -217,12 +273,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Calls/Enquiries ── */
-    const enquiriesRaw = await prisma.enquiry.findMany({
-      where: isManager ? { source: storeId } : undefined,
-      include: { store: true },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    })
     const calls = enquiriesRaw.map((e, i) => ({
       id: e.id,
       customer: e.name,
@@ -240,7 +290,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Website pages (PageSEO) ── */
-    const seoRaw = await prisma.pageSEO.findMany({ orderBy: { createdAt: 'asc' } })
     const pages = seoRaw.map((p) => ({
       id: p.id,                          // real PageSEO id — used by PATCH /api/admin/seo/[id]
       title: p.entityId ?? p.entityType,
@@ -275,10 +324,6 @@ export async function GET(req: NextRequest) {
     }
 
     /* ── Roles (with live member counts) ── */
-    const rolesRaw = await prisma.role.findMany({
-      include: { _count: { select: { admins: true } } },
-      orderBy: [{ isBuiltIn: 'desc' }, { createdAt: 'asc' }],
-    })
     const roles = rolesRaw.map(r => ({
       id: r.id, name: r.name, desc: r.description ?? '', color: r.color ?? '#0EA5A5',
       scope: r.scope, members: r._count.admins, locked: r.isBuiltIn,
@@ -286,11 +331,6 @@ export async function GET(req: NextRequest) {
     }))
 
     /* ── Discount codes ── */
-    const discountsRaw = await prisma.discount.findMany({
-      where: { deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-    })
     const discounts = discountsRaw.map(d => ({
       id: d.id, code: d.code, type: d.type, value: Number(d.value),
       minOrderAmount: d.minOrderAmount ? Number(d.minOrderAmount) : null,
