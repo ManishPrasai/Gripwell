@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { computeDiscount } from '../../../../lib/discount'
+import { MAX_TYRES_PER_ORDER } from '../../../../lib/order-rules'
 
 // ── Stripe server client (lazy) ───────────────────────────────────────────────
 // Initialised on first request, not at module load, so the build phase never
@@ -58,6 +59,18 @@ export async function POST(req: Request) {
 
     if (cartItems.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
+    }
+
+    // Tyre limit is a business rule, so enforce it here too — the UI cap is
+    // only a convenience and can be bypassed by posting straight to this route.
+    const tyreQty = cartItems
+      .filter(i => i.productType === 'tyre')
+      .reduce((n, i) => n + i.quantity, 0)
+    if (tyreQty > MAX_TYRES_PER_ORDER) {
+      return NextResponse.json(
+        { error: `A maximum of ${MAX_TYRES_PER_ORDER} tyres can be purchased per order. Your cart has ${tyreQty}.` },
+        { status: 400 },
+      )
     }
 
     // ── 2. Look up prices by slug from product tables ─────────────────────────

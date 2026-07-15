@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { useCart } from '../../context/CartContext'
+import { useCart, DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER } from '../../context/CartContext'
 
 interface MapStore {
   id:      string
@@ -68,13 +68,14 @@ function Stars({ n, size = 14 }: { n: number; size?: number }) {
 /* ── Main component ──────────────────────────────────────────────────────── */
 export default function TyreProductDetail({ product }: { product: TyreProduct }) {
   const [activeImg,  setActiveImg]  = useState(0)
-  const [qty,        setQty]        = useState(1)
+  // A full set of 4 is what most customers want — preselect it.
+  const [qty,        setQty]        = useState(DEFAULT_TYRE_QTY)
   const [activeTab,  setActiveTab]  = useState<'description' | 'details' | 'pickup'>('details')
   const [addedMsg,   setAddedMsg]   = useState(false)
   const [stores,       setStores]       = useState<MapStore[]>([])
   const [storeSearch,  setStoreSearch]  = useState('')
   const [selectedStore, setSelectedStore] = useState<MapStore | null>(null)
-  const { addToCart } = useCart()
+  const { addToCart, tyreCount } = useCart()
 
   useEffect(() => {
     fetch('/api/stores')
@@ -101,11 +102,15 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
   const compare = product.compareAtPrice ? parseFloat(product.compareAtPrice) : null
   const inStock = product.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[product.brand]
+  const atTyreLimit = tyreCount >= MAX_TYRES_PER_ORDER
 
   function handleAddToCart() {
-    for (let i = 0; i < qty; i++) {
-      addToCart({ id: product.slug, productType: 'tyre', brand: product.brand, brandLogo: brandLogo ?? '', model: product.model, size: `${ts.width}/${ts.profile}R${ts.rimDiameter}`, spec: ts.speedRating ?? '', price, image: images[0]?.url ?? '' })
-    }
+    // One call for the whole quantity — this used to loop, firing an API
+    // request per tyre. The cart clamps to MAX_TYRES_PER_ORDER.
+    addToCart(
+      { id: product.slug, productType: 'tyre', brand: product.brand, brandLogo: brandLogo ?? '', model: product.model, size: `${ts.width}/${ts.profile}R${ts.rimDiameter}`, spec: ts.speedRating ?? '', price, image: images[0]?.url ?? '' },
+      qty,
+    )
     setAddedMsg(true)
     setTimeout(() => setAddedMsg(false), 2000)
   }
@@ -226,28 +231,41 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
                 )}
               </div>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginTop: '2px' }}>
-                Minimum 4 tyres per order
+                {DEFAULT_TYRE_QTY}–{MAX_TYRES_PER_ORDER} tyres per order
               </p>
             </div>
 
             {/* Qty + Add to Cart */}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0', border: '1px solid #D5D5D5', borderRadius: '8px', overflow: 'hidden' }}>
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                <button onClick={() => setQty(q => Math.max(DEFAULT_TYRE_QTY, q - 1))} disabled={qty <= DEFAULT_TYRE_QTY} aria-label="Decrease quantity" style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: qty <= DEFAULT_TYRE_QTY ? 'not-allowed' : 'pointer', fontSize: '20px', color: qty <= DEFAULT_TYRE_QTY ? '#BBB' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
                 <span style={{ width: '44px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '16px', color: '#1A1A1A' }}>{qty}</span>
-                <button onClick={() => setQty(q => q + 1)} style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                <button onClick={() => setQty(q => Math.min(MAX_TYRES_PER_ORDER, q + 1))} disabled={qty >= MAX_TYRES_PER_ORDER} aria-label="Increase quantity" style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: qty >= MAX_TYRES_PER_ORDER ? 'not-allowed' : 'pointer', fontSize: '20px', color: qty >= MAX_TYRES_PER_ORDER ? '#BBB' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={!inStock}
-                style={{ flex: 1, height: '48px', background: inStock ? '#E8572A' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px', cursor: inStock ? 'pointer' : 'not-allowed', transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                onMouseOver={e => { if (inStock) e.currentTarget.style.opacity = '0.88' }}
+                disabled={!inStock || atTyreLimit}
+                style={{ flex: 1, height: '48px', background: inStock && !atTyreLimit ? '#E8572A' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px', cursor: inStock && !atTyreLimit ? 'pointer' : 'not-allowed', transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                onMouseOver={e => { if (inStock && !atTyreLimit) e.currentTarget.style.opacity = '0.88' }}
                 onMouseOut={e => e.currentTarget.style.opacity = '1'}
               >
                 <i className={addedMsg ? 'ti ti-check' : 'ti ti-shopping-cart'} style={{ fontSize: '16px' }} aria-hidden="true" />
-                {addedMsg ? 'Added to Cart!' : 'Add to Cart'}
+                {atTyreLimit ? `Limit ${MAX_TYRES_PER_ORDER} tyres reached` : addedMsg ? 'Added to Cart!' : 'Add to Cart'}
               </button>
             </div>
+
+            {/* Cart already holds tyres — say what's actually addable, so the
+                button never silently clamps. */}
+            {tyreCount > 0 && !atTyreLimit && tyreCount + qty > MAX_TYRES_PER_ORDER && (
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', color: '#C0431B', marginTop: '-8px', marginBottom: '16px' }}>
+                Your cart has {tyreCount} tyre{tyreCount !== 1 ? 's' : ''} — only {MAX_TYRES_PER_ORDER - tyreCount} more can be added (max {MAX_TYRES_PER_ORDER} per order).
+              </p>
+            )}
+            {atTyreLimit && (
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', color: '#C0431B', marginTop: '-8px', marginBottom: '16px' }}>
+                You already have {MAX_TYRES_PER_ORDER} tyres in your cart — the maximum per order.
+              </p>
+            )}
 
             {/* Feature pills */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
