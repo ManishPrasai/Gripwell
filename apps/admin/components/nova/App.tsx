@@ -186,12 +186,24 @@ export default function AppV2() {
 
   /* SWR owns all dashboard data. `refetch()` (exposed on ctx) revalidates after
      any write so the UI reflects server truth and survives a refresh.
-     Polls every 20s (and on tab focus / reconnect) so bookings, messages and
-     notifications stay live without a manual refresh. */
+
+     Polling interval is deliberately conservative. Every request builds its own
+     PrismaClient + WASM query engine (Workers forbid reusing a DB socket across
+     requests), so each in-flight poll pins real memory for its whole duration.
+     A 20s interval against this endpoint pushed the Worker past its resource
+     limits (1102). 60s + revalidate-on-focus keeps the dashboard fresh without
+     stacking overlapping requests — and `refetch()` still fires instantly after
+     any write, so user actions never wait for the interval. */
   const { data: liveData, error: dataError, mutate: refetch } = useSWR(
     sessionAdmin ? '/api/admin/data' : null,
     swrFetcher,
-    { refreshInterval: 20000, revalidateOnFocus: true, revalidateOnReconnect: true },
+    {
+      refreshInterval: 60000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 10000,       // collapse duplicate in-flight requests
+      keepPreviousData: true,
+    },
   );
 
   /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.

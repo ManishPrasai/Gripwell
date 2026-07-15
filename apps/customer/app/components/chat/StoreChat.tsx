@@ -9,7 +9,6 @@
  * staff reply appears without a refresh.
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 
 interface Msg { id: string; side: 'inbound' | 'outbound'; text: string; time: string }
 
@@ -40,9 +39,12 @@ export default function StoreChat({
 
   useEffect(() => { load(true) }, [load])
 
-  // Poll for staff replies while the window is open.
+  /* Poll for staff replies while the window is open. 30s, not 10s: each request
+     spins up its own PrismaClient + WASM engine on the Worker, so a tight
+     interval stacks memory and trips the Worker's resource limits. Only polls
+     while the chat is actually open, and pauses when the tab is hidden. */
   useEffect(() => {
-    const t = setInterval(() => load(false), 10000)
+    const t = setInterval(() => { if (!document.hidden) load(false) }, 30000)
     return () => clearInterval(t)
   }, [load])
 
@@ -84,7 +86,12 @@ export default function StoreChat({
 
   const F = "'DM Sans', sans-serif"
 
-  return createPortal(
+  /* Plain fixed overlay — deliberately NOT react-dom's createPortal. Importing
+     react-dom here pulls it into the Worker's server bundle and the Worker
+     blows its resource limits (1101/1102) on SSR routes. Nothing on the
+     storefront applies a transform above this, so `position: fixed` already
+     resolves against the viewport. */
+  return (
     <div
       onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 16px 16px' }}
@@ -154,7 +161,6 @@ export default function StoreChat({
           </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
   )
 }

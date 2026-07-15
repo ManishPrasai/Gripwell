@@ -156,7 +156,12 @@ function MessagesTab({ initials, token }: { initials: string; token: string | nu
   }, [token])
 
   useEffect(() => { load(true) }, [load])
-  useEffect(() => { const t = setInterval(() => load(false), 10000); return () => clearInterval(t) }, [load])
+  /* 30s, and only while the tab is visible — each poll builds a fresh
+     PrismaClient + WASM engine server-side, so tight intervals stack memory. */
+  useEffect(() => {
+    const t = setInterval(() => { if (!document.hidden) load(false) }, 30000)
+    return () => clearInterval(t)
+  }, [load])
 
   const active = stores.find(s => s.id === activeId) || stores[0]
 
@@ -279,18 +284,23 @@ export default function AccountPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  /* Real unread count for the sidebar badge — store replies awaiting the customer. */
+  /* Real unread count for the sidebar badge — store replies awaiting the customer.
+     Only polled while the Messages tab is closed (that tab does its own, fresher
+     fetch), and paused when the tab is hidden, to keep Worker load down. */
   const [msgUnread, setMsgUnread] = useState(0)
   useEffect(() => {
-    if (!token) return
-    const poll = () => fetch('/api/chat', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => setMsgUnread((d.conversations ?? []).reduce((n: number, c: any) => n + (c.unread || 0), 0)))
-      .catch(() => {})
+    if (!token || tab === 'messages') return
+    const poll = () => {
+      if (document.hidden) return
+      fetch('/api/chat', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json())
+        .then(d => setMsgUnread((d.conversations ?? []).reduce((n: number, c: any) => n + (c.unread || 0), 0)))
+        .catch(() => {})
+    }
     poll()
-    const t = setInterval(poll, 15000)
+    const t = setInterval(poll, 60000)
     return () => clearInterval(t)
-  }, [token])
+  }, [token, tab])
 
   function showToast(msg: string) { setToast(msg); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 2800) }
 
