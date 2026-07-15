@@ -231,14 +231,14 @@ export default function TyreProductDetail({ product }: { product: TyreProduct })
                 )}
               </div>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginTop: '2px' }}>
-                {DEFAULT_TYRE_QTY}–{MAX_TYRES_PER_ORDER} tyres per order
+                Maximum {MAX_TYRES_PER_ORDER} tyres per order
               </p>
             </div>
 
             {/* Qty + Add to Cart */}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0', border: '1px solid #D5D5D5', borderRadius: '8px', overflow: 'hidden' }}>
-                <button onClick={() => setQty(q => Math.max(DEFAULT_TYRE_QTY, q - 1))} disabled={qty <= DEFAULT_TYRE_QTY} aria-label="Decrease quantity" style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: qty <= DEFAULT_TYRE_QTY ? 'not-allowed' : 'pointer', fontSize: '20px', color: qty <= DEFAULT_TYRE_QTY ? '#BBB' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: qty <= 1 ? 'not-allowed' : 'pointer', fontSize: '20px', color: qty <= 1 ? '#BBB' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
                 <span style={{ width: '44px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '16px', color: '#1A1A1A' }}>{qty}</span>
                 <button onClick={() => setQty(q => Math.min(MAX_TYRES_PER_ORDER, q + 1))} disabled={qty >= MAX_TYRES_PER_ORDER} aria-label="Increase quantity" style={{ width: '40px', height: '48px', background: '#F5F5F5', border: 'none', cursor: qty >= MAX_TYRES_PER_ORDER ? 'not-allowed' : 'pointer', fontSize: '20px', color: qty >= MAX_TYRES_PER_ORDER ? '#BBB' : '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
               </div>

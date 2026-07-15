@@ -6,8 +6,12 @@
  * only in the UI can be bypassed by posting straight to the API.
  */
 
-/** A standard fitment is a set of 4 — preselected on the product page. */
+/**
+ * Quantity the tyre product page opens with — a full set is the common case.
+ * A convenience default only: customers can still drop it to 1.
+ * Tyres only; wheels are unaffected.
+ */
 export const DEFAULT_TYRE_QTY = 4
 
-/** Two sets. The most we'll accept in a single order. */
+/** Hard limit — two sets. Enforced in the cart AND re-checked at checkout. */
 export const MAX_TYRES_PER_ORDER = 8
