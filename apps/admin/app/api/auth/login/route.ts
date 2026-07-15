@@ -96,8 +96,14 @@ export async function POST(req: NextRequest) {
     response.cookies.set('admin_refresh_token', refreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 })
     return response
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Admin login error:', error)
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Something went wrong',
+      _diag: String(error?.message || error).slice(0, 800),
+      _name: String(error?.name || ''),
+      _code: String(error?.code || ''),
+      _stack: String(error?.stack || '').split('\n').slice(0, 8).join(' || ').slice(0, 900),
+    }, { status: 500 })
   }
 }

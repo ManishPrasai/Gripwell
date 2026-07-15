@@ -35,14 +35,19 @@ function getPrisma(): PrismaClient {
     const { env, ctx } = getCloudflareContext()
     if (ctx) {
       // Workers forbid reusing a DB socket across requests (even a Hyperdrive one),
-      // so build one client per request, GC'd when the request's ctx ends. Route
-      // it through the Hyperdrive binding when present — that pools connections at
-      // the edge, so per-request clients don't exhaust connections under load.
+      // so build one client per request. Route it through the Hyperdrive binding
+      // when present — that pools connections at the edge, so per-request clients
+      // don't exhaust connections under load.
       let client = requestClients.get(ctx as object)
       if (!client) {
         const hyperdrive = (env as any)?.HYPERDRIVE?.connectionString
         client = createPrismaClient(hyperdrive || process.env.DATABASE_URL)
         requestClients.set(ctx as object, client)
+        // NOTE: no explicit $disconnect() here. ctx.waitUntil() starts its promise
+        // immediately rather than at request end, so disconnecting through it would
+        // kill the pool mid-query. The pool config (idleTimeoutMillis /
+        // allowExitOnIdle) is what lets the sockets and timers drop, which in turn
+        // lets the WeakMap entry actually be collected once the ctx dies.
       }
       return client
     }
