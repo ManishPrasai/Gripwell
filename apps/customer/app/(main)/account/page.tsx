@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, Fragment } from 'react'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import './account.css'
 
@@ -22,15 +22,6 @@ const IEmail  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 /* ── Data ── */
 interface UserData { firstName: string; lastName: string; email: string; phone: string | null; profileImage: string | null; createdAt: string }
 
-const INIT_STORES = [
-  { id: 'sefton', name: 'Sefton', online: true, unread: 0, messages: [
-    { id: 1, side: 'inbound' as const, text: 'Hi! Your fitting appointment is confirmed for tomorrow at 10 AM. Please arrive 15 minutes early.', time: '8:52 AM', day: 'Today' },
-  ]},
-  { id: 'springvale', name: 'Springvale', online: true, unread: 1, messages: [
-    { id: 1, side: 'inbound' as const, text: 'Your tyres have arrived at the store. Would you like to book a fitting appointment?', time: '10:30 AM', day: 'Today' },
-  ]},
-  { id: 'bayswater', name: 'Bayswater', online: false, unread: 0, messages: [] },
-]
 
 const ORDERS = [
   { id: 'NV-20260612', title: '2 × Hankook Kinergy', vehicle: 'Customer Vehicle', date: '12 Jun 2026', location: 'Sefton', status: 'completed', amount: '$322', iconColor: 'green' as const, lines: [
@@ -128,25 +119,72 @@ function OrdersTab() {
   return (<div><div className="acc-section-head"><h2>Recent orders</h2><span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{ORDERS.length} orders</span></div><div className="order-list">{ORDERS.map(o => <OrderItem key={o.id} order={o} />)}</div></div>)
 }
 
-/* ── Messages Tab ── */
-function MessagesTab({ initials }: { initials: string }) {
-  const [stores, setStores] = useState(INIT_STORES)
-  const [activeId, setActiveId] = useState('sefton')
+/* ── Messages Tab ──
+   Real conversations from /api/chat — messages land in the store's admin inbox
+   and staff replies come back here (polled every 10s). */
+function MessagesTab({ initials, token }: { initials: string; token: string | null }) {
+  const [stores, setStores] = useState<{ id: string; slug: string; name: string; unread: number; messages: any[] }[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const msgsRef = useRef<HTMLDivElement>(null)
+
+  const load = useCallback(async (spinner = false) => {
+    if (spinner) setLoading(true)
+    try {
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+      const [sRes, cRes] = await Promise.all([
+        fetch('/api/stores').then(r => r.json()).catch(() => ({ stores: [] })),
+        fetch('/api/chat', { headers }).then(r => r.json()).catch(() => ({ conversations: [] })),
+      ])
+      const convos: any[] = cRes.conversations ?? []
+      // Show every store so a customer can open a new chat, and merge in any
+      // existing thread. Stores they've already messaged sort first.
+      const merged = (sRes.stores ?? []).map((s: any) => {
+        const c = convos.find(x => x.storeId === s.id)
+        return { id: s.id, slug: s.slug, name: s.name.replace(/^Nova Tyres\s+/i, ''), unread: c?.unread ?? 0, messages: c?.messages ?? [] }
+      }).sort((a: any, b: any) => (b.messages.length ? 1 : 0) - (a.messages.length ? 1 : 0))
+      setStores(merged)
+      setActiveId(prev => prev ?? merged.find((s: any) => s.messages.length)?.id ?? merged[0]?.id ?? null)
+    } catch {
+      if (spinner) setError("Couldn't load your messages.")
+    } finally {
+      if (spinner) setLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => { load(true) }, [load])
+  useEffect(() => { const t = setInterval(() => load(false), 10000); return () => clearInterval(t) }, [load])
+
   const active = stores.find(s => s.id === activeId) || stores[0]
 
   function selectStore(id: string) { setActiveId(id); setStores(prev => prev.map(s => s.id === id ? { ...s, unread: 0 } : s)) }
-  function send() {
-    const text = input.trim(); if (!text) return
-    const out = { id: Date.now(), side: 'outbound' as const, text, time: nowTime() }
-    setStores(prev => prev.map(s => s.id === activeId ? { ...s, messages: [...s.messages, out] } : s)); setInput('')
-    setTimeout(() => {
-      const reply = { id: Date.now() + 1, side: 'inbound' as const, text: 'Thanks for your message! A team member will reply shortly (Mon–Fri 8 AM–6 PM).', time: nowTime() }
-      setStores(prev => prev.map(s => s.id === activeId ? { ...s, messages: [...s.messages, reply] } : s))
-    }, 1100)
+
+  async function send() {
+    const text = input.trim(); if (!text || !active || sending) return
+    setSending(true); setError(null)
+    const temp = { id: 'tmp-' + Date.now(), side: 'outbound' as const, text, time: nowTime() }
+    setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: [...s.messages, temp] } : s))
+    setInput('')
+    try {
+      const headers: HeadersInit = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      const r = await fetch('/api/chat', { method: 'POST', headers, body: JSON.stringify({ storeSlug: active.slug, body: text }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d?.error || 'Failed to send')
+      setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: s.messages.map(m => m.id === temp.id ? d.message : m) } : s))
+    } catch (e: any) {
+      setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: s.messages.filter(m => m.id !== temp.id) } : s))
+      setInput(text)
+      setError(e?.message || "Couldn't send. Please try again.")
+    } finally { setSending(false) }
   }
-  useEffect(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight }, [active.messages])
+
+  useEffect(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight }, [active?.messages])
+
+  if (loading) return <div className="chat-wrap"><div className="chat-empty"><p>Loading your messages…</p></div></div>
+  if (!active)  return <div className="chat-wrap"><div className="chat-empty"><p>No stores available right now.</p></div></div>
 
   let lastDay: string | null = null
   const msgNodes = active.messages.map(msg => {
@@ -160,10 +198,11 @@ function MessagesTab({ initials }: { initials: string }) {
     <div>
       <div className="acc-section-head"><h2>Messages</h2>{totalUnread > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{totalUnread} unread</span>}</div>
       <div className="chat-wrap">
-        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Nova Tyres — {active.name}</div><div className={`chat-agent-status${active.online ? '' : ' offline'}`}>{active.online ? '● Online' : '○ Offline'}</div></div></div>
-        <div className="chat-stores">{stores.map(store => (<button key={store.id} className={`chat-store-btn${activeId === store.id ? ' active' : ''}`} onClick={() => selectStore(store.id)}><span className={`chat-store-dot${!store.online ? ' offline' : ''}`} />{store.name}{store.unread > 0 && <span className="chat-store-unread">{store.unread}</span>}</button>))}</div>
-        <div className="chat-messages" ref={msgsRef}>{msgNodes.length === 0 ? (<div className="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages from {active.name} yet.</p></div>) : msgNodes}</div>
-        <div className="chat-input-row"><input type="text" className="chat-input" placeholder={`Message ${active.name}…`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} /><button className="chat-send" onClick={send}><ISend /></button></div>
+        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Nova Tyres — {active.name}</div><div className="chat-agent-status">Typically replies Mon–Fri, 8 AM–6 PM</div></div></div>
+        <div className="chat-stores">{stores.map(store => (<button key={store.id} className={`chat-store-btn${activeId === store.id ? ' active' : ''}`} onClick={() => selectStore(store.id)}><span className="chat-store-dot" />{store.name}{store.unread > 0 && <span className="chat-store-unread">{store.unread}</span>}</button>))}</div>
+        <div className="chat-messages" ref={msgsRef}>{msgNodes.length === 0 ? (<div className="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages with {active.name} yet — send one below.</p></div>) : msgNodes}</div>
+        {error && <div style={{ padding: '8px 14px', background: '#FFF4F0', color: '#C0431B', fontSize: '12.5px', fontFamily: "'DM Sans', sans-serif" }}>{error}</div>}
+        <div className="chat-input-row"><input type="text" className="chat-input" placeholder={`Message ${active.name}…`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} /><button className="chat-send" onClick={send} disabled={sending || !input.trim()}><ISend /></button></div>
       </div>
     </div>
   )
@@ -223,18 +262,35 @@ export default function AccountPage() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  /* Kept so the Messages tab can call /api/chat as this customer — without it
+     the API would treat them as an anonymous guest. */
+  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/refresh', { method: 'POST' })
       .then(r => r.json())
       .then(data => {
         if (!data.accessToken) { router.push('/login?from=/account'); return }
+        setToken(data.accessToken)
         return fetch('/api/auth/me', { headers: { Authorization: `Bearer ${data.accessToken}` } }).then(r => r.json())
       })
       .then(data => { if (data?.customer) setUser(data.customer) })
       .catch(() => router.push('/login?from=/account'))
       .finally(() => setLoading(false))
   }, [router])
+
+  /* Real unread count for the sidebar badge — store replies awaiting the customer. */
+  const [msgUnread, setMsgUnread] = useState(0)
+  useEffect(() => {
+    if (!token) return
+    const poll = () => fetch('/api/chat', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => setMsgUnread((d.conversations ?? []).reduce((n: number, c: any) => n + (c.unread || 0), 0)))
+      .catch(() => {})
+    poll()
+    const t = setInterval(poll, 15000)
+    return () => clearInterval(t)
+  }, [token])
 
   function showToast(msg: string) { setToast(msg); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 2800) }
 
@@ -246,11 +302,11 @@ export default function AccountPage() {
   return (
     <>
       <div className="acc-wrap">
-        <Sidebar tab={tab} setTab={setTab} user={user} msgUnread={1} />
+        <Sidebar tab={tab} setTab={setTab} user={user} msgUnread={msgUnread} />
         <div className="acc-main">
           {tab === 'account' && <AccountTab user={user} onRequest={() => setModal('details')} />}
           {tab === 'orders' && <OrdersTab />}
-          {tab === 'messages' && <MessagesTab initials={initials} />}
+          {tab === 'messages' && <MessagesTab initials={initials} token={token} />}
           {tab === 'security' && <SecurityTab email={user.email} onResetPw={() => setModal('password')} onRequest={() => setModal('details')} />}
         </div>
       </div>

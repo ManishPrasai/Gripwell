@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import StoreChat from '../chat/StoreChat'
 
 const STORES = [
   {
@@ -113,6 +114,7 @@ function StoreImage({ src, name, open }: { src: string; name: string; open: bool
 
 export default function FittingLocations() {
   const [offset, setOffset] = useState(0)
+  const [chatStore, setChatStore] = useState<{ slug: string; name: string } | null>(null)
   const maxOffset = Math.max(0, STORES.length - VISIBLE)
 
   return (
@@ -176,7 +178,11 @@ export default function FittingLocations() {
                     </div>
 
                     {/* Chat with Store */}
-                    <button style={{ width: '100%', border: '1px solid #E8572A', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#fff', cursor: 'pointer', marginBottom: '12px' }}>
+                    <button
+                      onClick={() => setChatStore({ slug: store.slug, name: store.name })}
+                      aria-label={`Chat with ${store.name}`}
+                      style={{ width: '100%', border: '1px solid #E8572A', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#fff', cursor: 'pointer', marginBottom: '12px' }}
+                    >
                       <i className="ti ti-message-circle" style={{ fontSize: '18px', color: '#E8572A' }} aria-hidden="true" />
                       <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '16px', color: '#E8572A' }}>Chat with Store</span>
                     </button>
@@ -220,6 +226,10 @@ export default function FittingLocations() {
         </div>
 
       </div>
+
+      {chatStore && (
+        <StoreChat storeSlug={chatStore.slug} storeName={chatStore.name} onClose={() => setChatStore(null)} />
+      )}
     </section>
   )
 }
