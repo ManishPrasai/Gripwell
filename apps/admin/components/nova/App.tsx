@@ -184,27 +184,39 @@ export default function AppV2() {
       .catch(() => { window.location.href = '/login'; });
   }, []);
 
-  /* SWR owns all dashboard data. `refetch()` (exposed on ctx) revalidates after
-     any write so the UI reflects server truth and survives a refresh.
-
-     Polling interval is deliberately conservative. Every request builds its own
-     PrismaClient + WASM query engine (Workers forbid reusing a DB socket across
-     requests), so each in-flight poll pins real memory for its whole duration.
-     A 20s interval against this endpoint pushed the Worker past its resource
-     limits (1102). 60s + revalidate-on-focus keeps the dashboard fresh without
-     stacking overlapping requests — and `refetch()` still fires instantly after
-     any write, so user actions never wait for the interval. */
+  /* The heavy dataset (13 queries, ~42 KB) is no longer interval-polled. It
+     loads once, revalidates on tab focus/reconnect, and `refetch()` (exposed on
+     ctx) pulls it again instantly after any write — so user actions never wait. */
   const { data: liveData, error: dataError, mutate: refetch } = useSWR(
     sessionAdmin ? '/api/admin/data' : null,
     swrFetcher,
     {
-      refreshInterval: 60000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      dedupingInterval: 10000,       // collapse duplicate in-flight requests
+      dedupingInterval: 10000,
       keepPreviousData: true,
     },
   );
+
+  /* The cheap heartbeat. Polls /api/admin/pulse (a few COUNTs, ~0.2 KB) every
+     60s and, only when its signature changes — a new message, booking, order,
+     review or enquiry — triggers ONE full refetch of the heavy data above.
+     This replaced a 60s poll of the full endpoint: ~90% less data and ~80%
+     fewer queries per minute, while the dashboard stays just as live. SWR
+     already pauses polling on a hidden tab, so a backgrounded dashboard is
+     silent. */
+  const { data: pulse } = useSWR(
+    sessionAdmin ? '/api/admin/pulse' : null,
+    swrFetcher,
+    { refreshInterval: 60000, revalidateOnFocus: true, dedupingInterval: 30000 },
+  );
+  const lastSig = useRef<string | null>(null);
+  useEffect(() => {
+    const sig = pulse?.signature;
+    if (!sig) return;
+    if (lastSig.current === null) { lastSig.current = sig; return; }  // first read = baseline
+    if (sig !== lastSig.current) { lastSig.current = sig; refetch(); }
+  }, [pulse, refetch]);
 
   /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.
      Gated by IDLE_LOGOUT_ENABLED (currently off); flip that flag to re-enable. */

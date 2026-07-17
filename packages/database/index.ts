@@ -9,8 +9,14 @@ declare global {
 function createPrismaClient(connectionString?: string) {
   const adapter = new PrismaPg({
     connectionString: connectionString || process.env.DATABASE_URL,
-    // Cloudflare Workers cap each invocation at 6 concurrent DB connections.
-    max: 5,
+    // Small on purpose. Hyperdrive already pools connections at the edge, so a
+    // Worker request doesn't need its own big pool — it just needs enough to run
+    // its queries. With max:5, ~8 concurrent /api/admin/data requests demanded
+    // ~40 connections at once and Postgres/Hyperdrive started refusing (fast
+    // 500s under load). max:3 balances that: each request's parallel queries
+    // still overlap 3 at a time (good single-request latency) while a burst of
+    // several dashboards loading at once stays well under the connection ceiling.
+    max: 3,
   })
   return new PrismaClient({
     adapter,
