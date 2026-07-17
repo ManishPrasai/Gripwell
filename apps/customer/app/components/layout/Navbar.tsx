@@ -77,7 +77,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
   ]
   const items = [
     { label: 'Service',   sub: 'Book & manage servicing', href: '/service',   icon: 'ti ti-tool' },
-    { label: 'Locations', sub: 'Find a store near you',   href: '/locations', icon: 'ti ti-map-pin' },
+    { label: 'Locations', sub: 'Find a store near you',   href: '/service?goto=shops', icon: 'ti ti-map-pin' },
     { label: 'Warranty',  sub: 'Coverage & claims',       href: '/warranty',  icon: 'ti ti-shield-check' },
   ]
 
@@ -214,7 +214,7 @@ export default function Navbar() {
     { label: 'Find Tyres',  href: '/tyres' },
     { label: 'Find Wheels', href: '/wheels' },
     { label: 'Service',     href: '/service' },
-    { label: 'Locations',   href: '/locations' },
+    { label: 'Locations',   href: '/service?goto=shops' },
     { label: 'Warranty',    href: '/warranty' },
   ]
 

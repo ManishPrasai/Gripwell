@@ -209,6 +209,14 @@ const STORES = [
   { name: 'Adelaide', state: 'SA', note: 'Serviced now from our Melbourne workshops', address: '', phone: null, wa: null, maps: null, soon: true },
 ]
 
+/* Stores with a real photo on disk (public/images/stores). Others get a clean
+   placeholder rather than a broken image. */
+const STORE_PHOTOS = new Set(['springvale', 'dandenong', 'bayswater', 'alphington', 'sefton'])
+const photoFor = (name: string) => {
+  const slug = name.toLowerCase()
+  return STORE_PHOTOS.has(slug) ? `/images/stores/${slug}.jpg` : null
+}
+
 const MARQUEE_ITEMS = ['Fully Qualified Mechanics', 'Warranty-Safe Log Books', 'Quality Parts & Oils', 'Free Safety Inspection', 'Pre-RWC Checks']
 
 const BRAND_CARDS = [
@@ -324,6 +332,18 @@ export default function ServicePage() {
 
   /* shops accordion — single open */
   const [openShop, setOpenShop] = useState<number | null>(null)
+
+  /* Arriving from the navbar "Locations" link (/service?goto=shops): the page
+     loads at the top, then smoothly scrolls DOWN to the store list — rather than
+     a hash which Next would hard-jump to. The small delay lets the below-fold
+     sections (content-visibility) settle so the scroll lands accurately. */
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('goto') !== 'shops') return
+    const t = setTimeout(() => {
+      document.getElementById('shops')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 220)
+    return () => clearTimeout(t)
+  }, [])
 
   /* write-a-review modal */
   const [modalOpen, setModalOpen] = useState(false)
@@ -820,7 +840,7 @@ export default function ServicePage() {
 
         <div className="shops-list">
           {STORES.map((store, i) => (
-            <div key={store.name} className={`shop-row${store.soon ? ' soon' : ''}${openShop === i ? ' open' : ''}`} data-reveal>
+            <div key={store.name} className={`shop-row${store.soon ? ' soon' : ''}${openShop === i ? ' open' : ''}`}>
               {store.soon ? (
                 <div className="shop-head">
                   <span className="shop-name">{store.name}<span className="shop-state">{store.state}</span></span>
@@ -841,7 +861,16 @@ export default function ServicePage() {
                   <div className="shop-panel">
                     <div className="shop-panel-inner">
                       <div className="shop-panel-pad">
-                        <div className="loc-photo" />
+                        {(() => {
+                          const src = photoFor(store.name)
+                          return src ? (
+                            <div className="loc-photo has-img" style={{ backgroundImage: `url(${src})` }} role="img" aria-label={`${store.name} store`} />
+                          ) : (
+                            <div className="loc-photo">
+                              <span className="loc-photo-ph"><IconPin />{store.name} · photo coming soon</span>
+                            </div>
+                          )
+                        })()}
                         <div className="shop-detail">
                           <a className="loc-line" href={store.maps!} target="_blank" rel="noopener noreferrer">
                             <IconPin />{store.address}
@@ -1648,7 +1677,10 @@ const CSS = `
   display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(20px, 3vw, 52px);
   align-items: center; padding: 4px 0 clamp(26px, 3vw, 40px);
 }
-.svcp .loc-photo { width: 100%; height: clamp(190px, 24vw, 300px); border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, #1C3A2B 0%, #0C0D0F 100%); }
+.svcp .loc-photo { width: 100%; height: clamp(190px, 24vw, 300px); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface, #ECEAE3); display: grid; place-items: center; }
+.svcp .loc-photo.has-img { background-size: cover; background-position: center; }
+.svcp .loc-photo-ph { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .01em; color: var(--text-dim); }
+.svcp .loc-photo-ph svg { width: 15px; height: 15px; color: var(--accent); }
 .svcp .shop-detail { display: flex; flex-direction: column; gap: 18px; }
 .svcp .loc-line { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(15px, 1.5vw, 18px); color: var(--text-mid); line-height: 1.45; transition: color .2s; }
 .svcp .loc-line:hover { color: var(--text); }
