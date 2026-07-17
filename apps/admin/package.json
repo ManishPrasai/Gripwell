@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
+    "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
+    "build": "npm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "npm run prisma:generate && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
