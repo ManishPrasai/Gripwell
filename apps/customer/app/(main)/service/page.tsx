@@ -341,7 +341,7 @@ export default function ServicePage() {
      instead of the section heading). A short delay lets hydration settle. */
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('goto') !== 'shops') return
-    const t = setTimeout(() => smoothScrollToSection('shops'), 90)
+    const t = setTimeout(() => smoothScrollToSection('shops-head', { offset: 96 }), 90)
     return () => clearTimeout(t)
   }, [])
 
@@ -833,7 +833,9 @@ export default function ServicePage() {
 
       {/* ══ FIND YOUR NEAREST SHOP ════════════════════════════════════ */}
       <section className="shops" id="shops">
-        <div className="shops-head" data-reveal>
+        {/* Scroll anchor: the Locations link lands on the heading, not the
+            section's top padding — so the kicker sits just below the nav. */}
+        <div className="shops-head" id="shops-head" data-reveal>
           <span className="kicker">Find your nearest shop</span>
           <h2>Where to<br />find us.</h2>
         </div>

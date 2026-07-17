@@ -15,7 +15,7 @@ const SHOPS_HREF = '/service?goto=shops'
 function scrollToShops(e: React.MouseEvent<HTMLAnchorElement>) {
   if (window.location.pathname !== '/service') return
   e.preventDefault()
-  smoothScrollToSection('shops')
+  smoothScrollToSection('shops-head', { offset: 96 })
 }
 
 const heroPill: React.CSSProperties = {
