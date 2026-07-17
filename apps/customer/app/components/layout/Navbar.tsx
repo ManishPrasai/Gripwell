@@ -5,6 +5,18 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useCart } from '../../context/CartContext'
+import { smoothScrollToSection } from '../../../lib/scrollToSection'
+
+const SHOPS_HREF = '/service?goto=shops'
+
+/* "Locations" → the service page's store list. If already on /service, scroll
+   there directly (both up and down); otherwise let the link navigate and the
+   service page scrolls on arrival. Mirrors scrollToBooking below. */
+function scrollToShops(e: React.MouseEvent<HTMLAnchorElement>) {
+  if (window.location.pathname !== '/service') return
+  e.preventDefault()
+  smoothScrollToSection('shops')
+}
 
 const heroPill: React.CSSProperties = {
   background:           'linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 100%)',
@@ -142,7 +154,7 @@ function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void 
                 <Link
                   key={it.href}
                   href={it.href}
-                  onClick={onClose}
+                  onClick={(e) => { if (it.href === SHOPS_HREF) scrollToShops(e); onClose() }}
                   className="flex items-center gap-3.5 min-h-[52px] py-2 border-b border-white/[0.06] active:bg-white/[0.03] transition-colors"
                   style={{ fontFamily: font }}
                 >
@@ -274,6 +286,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={link.href === SHOPS_HREF ? scrollToShops : undefined}
                 className="text-sm font-semibold tracking-wide text-neutral-300 hover:text-[#FF5A1F] transition-colors duration-200"
                 style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '0.05em', whiteSpace: 'nowrap', textDecoration: 'none' }}
               >

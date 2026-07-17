@@ -20,6 +20,7 @@
 
 import { useState, useEffect, useRef, ReactNode } from 'react'
 import Image from 'next/image'
+import { smoothScrollToSection } from '../../../lib/scrollToSection'
 
 /* ════════════════════════════════════════════════════════════════════
    ICONS — exact SVG paths from the reference
@@ -333,15 +334,14 @@ export default function ServicePage() {
   /* shops accordion — single open */
   const [openShop, setOpenShop] = useState<number | null>(null)
 
-  /* Arriving from the navbar "Locations" link (/service?goto=shops): the page
-     loads at the top, then smoothly scrolls DOWN to the store list — rather than
-     a hash which Next would hard-jump to. The small delay lets the below-fold
-     sections (content-visibility) settle so the scroll lands accurately. */
+  /* Arriving from the navbar "Locations" link (/service?goto=shops): load at the
+     top, then smoothly scroll DOWN to the store list. The util re-reads the
+     target each frame, so the content-visibility sections above rendering
+     mid-scroll can't make it overshoot (they did — it landed on the first store
+     instead of the section heading). A short delay lets hydration settle. */
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('goto') !== 'shops') return
-    const t = setTimeout(() => {
-      document.getElementById('shops')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 220)
+    const t = setTimeout(() => smoothScrollToSection('shops'), 90)
     return () => clearTimeout(t)
   }, [])
 
