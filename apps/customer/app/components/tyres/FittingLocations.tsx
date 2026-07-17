@@ -8,7 +8,7 @@ const STORES = [
   {
     name:    'NOV A TYRES – Alphington',
     address: '200 Grange Rd, Alphington VIC 3078',
-    phone:   '03 7009 7700',
+    phone:   '0403 884 151',
     image:   '/images/stores/alphington.jpg',
     slug:    'alphington',
     open:    true,
@@ -24,7 +24,7 @@ const STORES = [
   {
     name:    'NOV A TYRES – Sefton',
     address: '107 Carlingford St, Sefton NSW 2162',
-    phone:   '04 0338 8774',
+    phone:   '0403 388 774',
     image:   '/images/stores/sefton.jpg',
     slug:    'sefton',
     open:    true,
@@ -48,7 +48,7 @@ const STORES = [
   {
     name:    'NOV A TYRES – Sunshine',
     address: '9 Devonshire Rd, Sunshine VIC 3020',
-    phone:   '03 9311 0000',
+    phone:   '0401 199 224',
     image:   '/images/stores/sunshine.jpg',
     slug:    'sunshine',
     open:    true,
@@ -56,7 +56,7 @@ const STORES = [
   {
     name:    'NOV A TYRES – Geelong',
     address: '1/118 Bellarine Hwy, Newcomb VIC 3219',
-    phone:   '04 7869 8884',
+    phone:   '0478 698 884',
     image:   '/images/stores/geelong.jpg',
     slug:    'geelong',
     open:    true,
