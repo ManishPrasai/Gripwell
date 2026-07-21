@@ -13,9 +13,9 @@
   --green-2:       #0A7D3D;
   --green-soft:    #E9F5EE;
 
-  --bg:            #FFFFFF;
-  --surface:       #F8F8F7;
-  --surface-2:     #F4F4F2;
+  --bg:            #FAF9F5;   /* site background (--nova-cream), not pure white */
+  --surface:       #F5F4EF;
+  --surface-2:     #F0EFE9;
   --card:          #FFFFFF;
 
   --line:          #EBEBEB;
@@ -40,14 +40,18 @@
   color: var(--text);
   font-family: var(--font-body);
 }
-.nova-pdp *,
-.nova-pdp *::before,
-.nova-pdp *::after { box-sizing: border-box; }
-.nova-pdp a { text-decoration: none; color: inherit; }
-.nova-pdp button { font: inherit; background: none; border: none; cursor: pointer; color: inherit; }
-.nova-pdp h1, .nova-pdp h2, .nova-pdp h3, .nova-pdp h4, .nova-pdp p, .nova-pdp ul { margin: 0; }
-.nova-pdp ul { list-style: none; padding: 0; }
-.nova-pdp img, .nova-pdp svg { display: block; }
+/* Scoped resets wrapped in :where() so they carry ZERO specificity — a plain
+   `.pdp-add`/`.pdp-buynow` class always wins over them. Without :where(),
+   `.nova-pdp button` (0,1,1) beat `.pdp-add` (0,1,0) and stripped the accent
+   background off the action buttons (transparent button + white text). */
+:where(.nova-pdp) *,
+:where(.nova-pdp) *::before,
+:where(.nova-pdp) *::after { box-sizing: border-box; }
+:where(.nova-pdp) a { text-decoration: none; color: inherit; }
+:where(.nova-pdp) button { font: inherit; background: none; border: none; cursor: pointer; color: inherit; }
+:where(.nova-pdp) h1, :where(.nova-pdp) h2, :where(.nova-pdp) h3, :where(.nova-pdp) h4, :where(.nova-pdp) p, :where(.nova-pdp) ul { margin: 0; }
+:where(.nova-pdp) ul { list-style: none; padding: 0; }
+:where(.nova-pdp) img, :where(.nova-pdp) svg { display: block; }
 
 .pdp { padding: clamp(24px, 4vw, 48px) 0 clamp(40px, 6vw, 72px); }
 

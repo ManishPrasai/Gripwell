@@ -65,7 +65,7 @@ export default function SocialGrid() {
 
         {/* Instagram CTA */}
         <a
-          href="https://instagram.com/novatyres"
+          href="https://www.instagram.com/novatyres/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2"
@@ -90,7 +90,7 @@ export default function SocialGrid() {
         {images.map((img, i) => (
           <a
             key={i}
-            href="https://instagram.com/novatyres"
+            href="https://www.instagram.com/novatyres/"
             target="_blank"
             rel="noopener noreferrer"
             className="group"

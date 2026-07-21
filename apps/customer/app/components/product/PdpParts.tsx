@@ -15,6 +15,12 @@ interface MapStore {
 
 const StoreMap = dynamic(() => import('../locations/StoreMap'), { ssr: false })
 
+/* Official Nova Tyres social profiles — reused by the footer + review share. */
+export const NOVA_SOCIAL = {
+  facebook:  'https://www.facebook.com/Novatyres.Official',
+  instagram: 'https://www.instagram.com/novatyres/',
+}
+
 export const PAYMENT_LOGOS = [
   { name: 'Stripe',     src: '/images/footer/payment-stripe.png' },
   { name: 'VISA',       src: '/images/footer/payment-visa.png' },
@@ -43,6 +49,16 @@ const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', stroke
 export const IcoChevR   = () => <svg viewBox="0 0 24 24" strokeWidth={2.4} {...S}><polyline points="9 18 15 12 9 6" /></svg>
 export const IcoChevD   = () => <svg viewBox="0 0 24 24" strokeWidth={2.2} {...S}><polyline points="6 9 12 15 18 9" /></svg>
 export const IcoInfo    = () => <svg viewBox="0 0 24 24" strokeWidth={2} fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9" /></svg>
+/* ── Spec-grid icons — line-art matched to the reference design ───────────── */
+export const IcoDiameter = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /></svg>
+export const IcoWidth    = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M4 12h16M4 12l3-3M4 12l3 3M20 12l-3-3M20 12l-3 3" /></svg>
+export const IcoProfile  = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M12 4v16M12 4l-3 3M12 4l3 3M12 20l-3-3M12 20l3 3" /></svg>
+export const IcoRim      = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></svg>
+export const IcoPcd      = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /></svg>
+export const IcoOffset   = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><line x1="12" y1="4" x2="12" y2="20" /><polyline points="8 8 12 4 16 8" /></svg>
+export const IcoFinish   = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" /></svg>
+export const IcoSpeed    = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M3.5 13a8.5 8.5 0 0 1 17 0" /><path d="M12 13l4.5-3" /><circle cx="12" cy="13" r="1.2" fill="currentColor" stroke="none" /></svg>
+export const IcoLoad     = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M6 9h12l1.6 11H4.4z" /><path d="M9 9a3 3 0 0 1 6 0" /></svg>
 export const IcoZoom    = () => <svg viewBox="0 0 24 24" strokeWidth={1.9} {...S}><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
 export const IcoTruck   = () => <svg viewBox="0 0 24 24" strokeWidth={1.8} {...S}><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
 export const IcoPin     = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
@@ -154,8 +170,8 @@ export function WriteReviewBox() {
       </div>
       <div className="pdp-review-row" style={{ marginTop: 18, justifyContent: 'flex-end' }}>
         <span className="pdp-share">Share
-          <a href="#" aria-label="Facebook"><IcoFacebook /></a>
-          <a href="#" aria-label="Instagram"><IcoInstagram /></a>
+          <a href={NOVA_SOCIAL.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"><IcoFacebook /></a>
+          <a href={NOVA_SOCIAL.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><IcoInstagram /></a>
         </span>
       </div>
     </div>

@@ -9,7 +9,8 @@ import './pdp.css'
 import {
   Breadcrumb, Accordion, FeatureChips, SecureCheckout, WriteReviewBox, FittingFeesCard,
   ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand,
-  IcoInfo, IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
+  IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
+  IcoDiameter, IcoWidth, IcoPcd, IcoOffset, IcoFinish,
   type SimilarItem, type ReviewCard,
 } from './PdpParts'
 
@@ -71,11 +72,11 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
   }
 
   const specs = [
-    { label: 'Diameter', value: `${wheel.diameter}"` },
-    { label: 'Width',    value: `${wheel.width}J` },
-    { label: 'PCD',      value: wheel.pcd },
-    { label: 'Offset',   value: offset },
-    { label: 'Finish',   value: wheel.finish ?? '—' },
+    { label: 'Diameter', value: `${wheel.diameter}"`, icon: <IcoDiameter /> },
+    { label: 'Width',    value: `${wheel.width}J`,     icon: <IcoWidth /> },
+    { label: 'PCD',      value: wheel.pcd,             icon: <IcoPcd /> },
+    { label: 'Offset',   value: offset,                icon: <IcoOffset /> },
+    { label: 'Finish',   value: wheel.finish ?? '—',   icon: <IcoFinish /> },
   ]
 
   return (
@@ -138,7 +139,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
             <div className="pdp-specs">
               {specs.map(s => (
                 <div className="pdp-spec" key={s.label}>
-                  <span className="sp-label"><IcoInfo />{s.label}</span>
+                  <span className="sp-label">{s.icon}{s.label}</span>
                   <span className="sp-val">{s.value}</span>
                 </div>
               ))}

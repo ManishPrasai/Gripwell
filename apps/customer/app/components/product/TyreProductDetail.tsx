@@ -9,7 +9,8 @@ import './pdp.css'
 import {
   Breadcrumb, Accordion, FeatureChips, SecureCheckout, WriteReviewBox, FittingFeesCard,
   ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand,
-  IcoInfo, IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
+  IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
+  IcoWidth, IcoProfile, IcoRim, IcoSpeed, IcoLoad,
   type SimilarItem, type ReviewCard,
 } from './PdpParts'
 
@@ -94,11 +95,11 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
   }
 
   const specs = [
-    { label: 'Width',        value: ts.width },
-    { label: 'Profile',      value: ts.profile },
-    { label: 'Rim',          value: `${ts.rimDiameter}"` },
-    { label: 'Speed',        value: ts.speedRating ?? '—' },
-    { label: 'Load',         value: ts.loadIndex ?? '—' },
+    { label: 'Width',   value: ts.width,               icon: <IcoWidth /> },
+    { label: 'Profile', value: ts.profile,             icon: <IcoProfile /> },
+    { label: 'Rim',     value: `${ts.rimDiameter}"`,   icon: <IcoRim /> },
+    { label: 'Speed',   value: ts.speedRating ?? '—',  icon: <IcoSpeed /> },
+    { label: 'Load',    value: ts.loadIndex ?? '—',    icon: <IcoLoad /> },
   ]
 
   return (
@@ -161,7 +162,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
             <div className="pdp-specs">
               {specs.map(s => (
                 <div className="pdp-spec" key={s.label}>
-                  <span className="sp-label"><IcoInfo />{s.label}</span>
+                  <span className="sp-label">{s.icon}{s.label}</span>
                   <span className="sp-val">{s.value}</span>
                 </div>
               ))}

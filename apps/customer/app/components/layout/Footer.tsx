@@ -61,8 +61,8 @@ const socialConnect = [
   { name: 'Product Review', src: '/images/footer/social-productreview.png', href: '#', wide: true },
   { name: 'LinkedIn',       src: '/images/footer/social-linkedin.png',      href: '#', wide: false },
   { name: 'Yelp',           src: '/images/footer/social-yelp.png',          href: '#', wide: false },
-  { name: 'Facebook',       src: '/images/footer/social-facebook.png',      href: '#', wide: false },
-  { name: 'Instagram',      src: '/images/footer/social-instagram.png',     href: '#', wide: false },
+  { name: 'Facebook',       src: '/images/footer/social-facebook.png',      href: 'https://www.facebook.com/Novatyres.Official', wide: false },
+  { name: 'Instagram',      src: '/images/footer/social-instagram.png',     href: 'https://www.instagram.com/novatyres/',        wide: false },
 ]
 
 const legalLinks = ['Warranty & Returns', 'Privacy & Policy', 'Terms of Service']
