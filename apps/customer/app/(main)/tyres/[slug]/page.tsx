@@ -34,6 +34,20 @@ async function getProduct(slug: string) {
   return DEMO_PRODUCTS[slug] ?? DEMO_PRODUCTS.default
 }
 
+/* Fitment-aware "similar tyres" — real matches by rim size / category / price.
+   Empty array falls back to the component's built-in demo picks. */
+async function getSimilar(slug: string) {
+  try {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const res  = await fetch(`${base}/api/tyres/${slug}/similar`, { next: { revalidate: 300 } })
+    if (res.ok) {
+      const data = await res.json()
+      return data.tyres ?? []
+    }
+  } catch {}
+  return []
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const product = await getProduct(slug) as { brand?: string; model?: string } | null
@@ -46,7 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function TyreProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const product = await getProduct(slug)
+  const [product, similar] = await Promise.all([getProduct(slug), getSimilar(slug)])
   if (!product) notFound()
-  return <TyreProductDetail product={product} />
+  return <TyreProductDetail product={product} similar={similar} />
 }

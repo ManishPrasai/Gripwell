@@ -25,6 +25,20 @@ async function getWheel(slug: string) {
   return { ...DEMO_WHEEL, slug }
 }
 
+/* Fitment-aware "similar wheels" — real matches by rim diameter / bolt pattern /
+   price. Empty array falls back to the component's built-in demo picks. */
+async function getSimilar(slug: string) {
+  try {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const res  = await fetch(`${base}/api/wheels/${slug}/similar`, { next: { revalidate: 300 } })
+    if (res.ok) {
+      const data = await res.json()
+      return data.wheels ?? []
+    }
+  } catch {}
+  return []
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const wheel = await getWheel(slug) as { brand?: string; model?: string } | null
@@ -37,7 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function WheelProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const wheel = await getWheel(slug)
+  const [wheel, similar] = await Promise.all([getWheel(slug), getSimilar(slug)])
   if (!wheel) notFound()
-  return <WheelProductDetail wheel={wheel} />
+  return <WheelProductDetail wheel={wheel} similar={similar} />
 }
