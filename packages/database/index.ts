@@ -1,9 +1,26 @@
-import { PrismaClient } from '@prisma/client/wasm'
+import { PrismaClient as PrismaClientWasm } from '@prisma/client/wasm'
+import { PrismaClient as PrismaClientNode } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
+// Prisma ships two client builds. The wasm query engine only initialises under
+// workerd (the deployed Worker); under Node — `next dev`, `next build`,
+// `prisma seed` — it throws "The loaded wasm module was unexpectedly null once
+// loaded", which 500s every query in local dev. So instantiate the build that
+// matches the runtime. `@prisma/client` is already in the Worker bundle (see
+// `export *` below), so importing it here adds no weight and it is only ever
+// *instantiated* on Node — never under workerd.
+const isWorkerd =
+  typeof navigator !== 'undefined' &&
+  (navigator as { userAgent?: string }).userAgent === 'Cloudflare-Workers'
+
+const PrismaClient: typeof PrismaClientWasm =
+  isWorkerd ? PrismaClientWasm : (PrismaClientNode as unknown as typeof PrismaClientWasm)
+
+type PrismaClientInstance = InstanceType<typeof PrismaClientWasm>
+
 declare global {
-  var prisma: PrismaClient | undefined
+  var prisma: PrismaClientInstance | undefined
 }
 
 function createPrismaClient(connectionString?: string) {
@@ -68,7 +85,7 @@ function getPrisma(): PrismaClient {
 // per-request client on Workers, or the shared singleton on Node — and never
 // constructs anything at import time (keeps `next build` in Node from loading
 // the edge/WASM engine, which only loads on workerd).
-export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+export const prisma: PrismaClientInstance = new Proxy({} as PrismaClientInstance, {
   get(_target, prop) {
     const client = getPrisma()
     const value = Reflect.get(client, prop, client)
