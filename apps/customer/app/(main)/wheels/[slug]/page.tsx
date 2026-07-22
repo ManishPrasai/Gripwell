@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import WheelProductDetail from '../../../components/product/WheelProductDetail'
+import { getWheelBySlug, getSimilarWheels } from '../../../lib/product-queries'
 
 const DEMO_WHEEL = {
   id: 'demo-w1',
@@ -15,12 +16,8 @@ const DEMO_WHEEL = {
 
 async function getWheel(slug: string) {
   try {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res  = await fetch(`${base}/api/wheels/${slug}`, { next: { revalidate: 60 } })
-    if (res.ok) {
-      const data = await res.json()
-      return data.wheel ?? null
-    }
+    const wheel = await getWheelBySlug(slug)
+    if (wheel) return wheel
   } catch {}
   return { ...DEMO_WHEEL, slug }
 }
@@ -28,15 +25,7 @@ async function getWheel(slug: string) {
 /* Fitment-aware "similar wheels" — real matches by rim diameter / bolt pattern /
    price. Empty array falls back to the component's built-in demo picks. */
 async function getSimilar(slug: string) {
-  try {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res  = await fetch(`${base}/api/wheels/${slug}/similar`, { next: { revalidate: 300 } })
-    if (res.ok) {
-      const data = await res.json()
-      return data.wheels ?? []
-    }
-  } catch {}
-  return []
+  return getSimilarWheels(slug)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

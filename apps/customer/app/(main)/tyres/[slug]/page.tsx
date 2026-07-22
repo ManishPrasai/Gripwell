@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import TyreProductDetail from '../../../components/product/TyreProductDetail'
+import { getTyreBySlug, getSimilarTyres } from '../../../lib/product-queries'
 
 /* ── Demo fallback used when the DB is not yet seeded ───────────────────── */
 const DEMO_PRODUCTS: Record<string, object> = {
@@ -23,29 +24,17 @@ const DEMO_PRODUCTS: Record<string, object> = {
 
 async function getProduct(slug: string) {
   try {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res  = await fetch(`${base}/api/tyres/${slug}`, { next: { revalidate: 60 } })
-    if (res.ok) {
-      const data = await res.json()
-      return data.tyre ?? null
-    }
+    const tyre = await getTyreBySlug(slug)
+    if (tyre) return tyre
   } catch {}
-  /* fallback — return demo product for any slug */
+  /* fallback — return demo product only when the DB has nothing for this slug */
   return DEMO_PRODUCTS[slug] ?? DEMO_PRODUCTS.default
 }
 
 /* Fitment-aware "similar tyres" — real matches by rim size / category / price.
    Empty array falls back to the component's built-in demo picks. */
 async function getSimilar(slug: string) {
-  try {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res  = await fetch(`${base}/api/tyres/${slug}/similar`, { next: { revalidate: 300 } })
-    if (res.ok) {
-      const data = await res.json()
-      return data.tyres ?? []
-    }
-  } catch {}
-  return []
+  return getSimilarTyres(slug)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
