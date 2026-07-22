@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
-    "build": "npm run prisma:generate && next build",
+    "postinstall": "npm run prisma:generate",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "npm run prisma:generate && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
