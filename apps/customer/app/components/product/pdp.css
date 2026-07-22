@@ -111,7 +111,7 @@
    never collide. Equal-width segments adapt to any metric count. */
 .pdp-specs {
   display: flex; flex-wrap: wrap; margin-top: 24px;
-  background: var(--surface-2); border: 1px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius-sm); overflow: hidden;
 }
 .pdp-spec {
