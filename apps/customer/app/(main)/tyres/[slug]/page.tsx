@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import TyreProductDetail from '../../../components/product/TyreProductDetail'
 import { getTyreBySlug, getSimilarTyres } from '../../../lib/product-queries'
 
+/* Always render from live DB data (Redis-cached in the query layer) so a page is
+   never served as stale/pre-rendered demo content. */
+export const dynamic = 'force-dynamic'
+
 /* ── Demo fallback used when the DB is not yet seeded ───────────────────── */
 const DEMO_PRODUCTS: Record<string, object> = {
   default: {

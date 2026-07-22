@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import WheelProductDetail from '../../../components/product/WheelProductDetail'
 import { getWheelBySlug, getSimilarWheels } from '../../../lib/product-queries'
 
+/* Always render from live DB data (Redis-cached in the query layer) so a page is
+   never served as stale/pre-rendered demo content. */
+export const dynamic = 'force-dynamic'
+
 const DEMO_WHEEL = {
   id: 'demo-w1',
   brand: 'Black Rhino', model: 'AWOL',
