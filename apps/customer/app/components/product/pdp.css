@@ -75,7 +75,7 @@
 .pdp-thumb {
   width: 76px; height: 76px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer;
   background: var(--surface-2); border: 2px solid var(--line); transition: border-color .2s, transform .2s var(--ease);
-  display: grid; place-items: center; padding: 6px;
+  display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; padding: 6px;
 }
 .pdp-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .pdp-thumb:hover { transform: translateY(-2px); border-color: var(--line-strong); }
