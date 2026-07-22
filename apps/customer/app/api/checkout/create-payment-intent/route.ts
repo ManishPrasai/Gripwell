@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { computeDiscount } from '../../../../lib/discount'
 import { MAX_TYRES_PER_ORDER } from '../../../../lib/order-rules'
+import { DEFAULT_FITTING_PRICES, computeTotalsCents, isVehicleType } from '../../../../lib/fitting'
 
 // ── Stripe server client (lazy) ───────────────────────────────────────────────
 // Initialised on first request, not at module load, so the build phase never
@@ -17,9 +18,6 @@ function getStripe(): Stripe {
   _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia', httpClient: Stripe.createFetchHttpClient() })
   return _stripe
 }
-
-// ── Fitting fee (must match checkout UI) ─────────────────────────────────────
-const FITTING_CENTS = 2500   // A$25.00
 
 // ── Dev user helper (same pattern as /api/cart) ───────────────────────────────
 let _devUserId: string | null = null
@@ -51,6 +49,12 @@ export async function POST(req: Request) {
     const userId = await devUserId()
     const body = await req.json().catch(() => ({} as any))
     const discountCode = String(body?.discountCode || '').trim()
+
+    // Fitting context from the cart (server re-derives the price — never trusts a
+    // client-supplied amount, only the selected vehicle type + fulfilment method).
+    const rawVehicle = String(body?.vehicleType || 'passenger')
+    const vehicle = isVehicleType(rawVehicle) ? rawVehicle : 'passenger'
+    const fulfilMethod = String(body?.method || 'fit') === 'pickup' ? 'pickup' : 'fit'
 
     // ── 1. Fetch cart rows ────────────────────────────────────────────────────
     const cartItems = await prisma.cartItem.findMany({
@@ -103,6 +107,7 @@ export async function POST(req: Request) {
       const unitPrice = priceMap.get(item.productId) ?? 0
       return sum + Math.round(unitPrice * 100) * item.quantity
     }, 0)
+    const itemCount = cartItems.reduce((n, i) => n + i.quantity, 0)
 
     // ── 3b. Apply discount code (server-authoritative) ────────────────────────
     let discountCents = 0
@@ -117,7 +122,12 @@ export async function POST(req: Request) {
       }
     }
 
-    const totalCents = Math.max(50, subtotalCents + FITTING_CENTS - discountCents)
+    // ── 3c. GST (10% on products) + fitting (per-vehicle rate × items fitted).
+    //  Phase 2 swaps DEFAULT_FITTING_PRICES for the chosen store's overrides.
+    const fittingRate = DEFAULT_FITTING_PRICES[vehicle]
+    const { totalCents, gstCents, fittingCents } = computeTotalsCents({
+      subtotalCents, itemCount, fittingRate, fit: fulfilMethod === 'fit', discountCents,
+    })
 
     // ── 4. Create Stripe PaymentIntent ────────────────────────────────────────
     const intent = await getStripe().paymentIntents.create({
@@ -131,6 +141,10 @@ export async function POST(req: Request) {
         discountCode: appliedCode,
         discountId,
         discountCents: String(discountCents),
+        gstCents:     String(gstCents),
+        fittingCents: String(fittingCents),
+        vehicleType:  vehicle,
+        fulfilMethod,
       },
     })
 

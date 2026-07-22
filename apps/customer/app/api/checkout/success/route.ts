@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 
-const FITTING_FEE = 25.00   // A$25.00 — must match FITTING_COST on the frontend
-
 let _stripe: Stripe | null = null
 function getStripe(): Stripe | null {
   if (_stripe) return _stripe
@@ -131,18 +129,24 @@ export async function POST(req: NextRequest) {
       return sum + Number(row?.price ?? 0) * item.quantity
     }, 0)
 
-    // ── 4b. Recover any applied discount from the PaymentIntent metadata ──────
+    // ── 4b. Recover discount + GST + fitting from the PaymentIntent metadata ──
+    //  The PaymentIntent is the source of truth for what was actually charged.
     let discountAmount = 0
     let discountId = ''
+    let gst = Math.round(subtotal * 0.10 * 100) / 100   // fallback if metadata missing
+    let fitting = 0
     if (paymentIntentId) {
       try {
         const intent = await getStripe()?.paymentIntents.retrieve(paymentIntentId)
-        const cents = Number(intent?.metadata?.discountCents || 0)
-        if (cents > 0) { discountAmount = cents / 100; discountId = intent?.metadata?.discountId || '' }
-      } catch { /* fall back to no discount */ }
+        const m = intent?.metadata ?? {}
+        const dcents = Number(m.discountCents || 0)
+        if (dcents > 0) { discountAmount = dcents / 100; discountId = m.discountId || '' }
+        if (m.gstCents     != null) gst     = Number(m.gstCents) / 100
+        if (m.fittingCents != null) fitting = Number(m.fittingCents) / 100
+      } catch { /* fall back to computed GST, no discount/fitting */ }
     }
 
-    const total = Math.max(0, subtotal + FITTING_FEE - discountAmount)
+    const total = Math.max(0, subtotal + gst + fitting - discountAmount)
 
     // ── 5. Create Order + clear cart atomically ───────────────────────────────
     const order = await prisma.$transaction(async tx => {
@@ -175,13 +179,10 @@ export async function POST(req: NextRequest) {
                   totalPrice: unitCost * item.quantity,
                 }
               }),
-              // ── Fitting & balancing fee ────────────────────────────────────
-              {
-                itemType:   'fitting',
-                quantity:   1,
-                unitPrice:  FITTING_FEE,
-                totalPrice: FITTING_FEE,
-              },
+              // ── Fitting service (only when fitting was chosen) ─────────────
+              ...(fitting > 0
+                ? [{ itemType: 'fitting', quantity: 1, unitPrice: fitting, totalPrice: fitting }]
+                : []),
             ],
           },
         },

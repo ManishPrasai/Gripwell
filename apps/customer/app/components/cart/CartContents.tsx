@@ -1,36 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+/* eslint-disable @next/next/no-img-element */
+
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
-
-type StoreData = {
-  id:       string
-  name:     string
-  address:  string
-  suburb:   string
-  state:    string
-  postcode: string
-  phone:    string | null
-}
-
-const VEHICLE_TYPES = [
-  { id: 'passenger', label: 'Passenger Car',  desc: 'Sedans, hatchbacks, coupes, wagons', icon: 'ti-car' },
-  { id: 'suv',       label: 'SUV/LT/4x4',     desc: 'SUV, light trucks, 4WDs',            icon: 'ti-car-suv' },
-  { id: 'commercial',label: 'Commercial',      desc: 'Vans, light commercial vehicles',    icon: 'ti-truck' },
-  { id: 'truck',     label: 'Truck',           desc: 'Heavy truck & large vehicles',       icon: 'ti-truck-delivery' },
-]
-
-
-const INFO_CARDS = [
-  { icon: 'ti-clock', title: 'Estimated fitting time', value: '45–60min', desc: 'Time may vary upon store & vehicle' },
-  { icon: 'ti-tool',  title: "What's included",        value: '',         desc: 'Fitting & Balancing' },
-  { icon: 'ti-receipt-2', title: 'Prices shown per tyre', value: '', desc: 'All prices include GST' },
-  { icon: 'ti-building-store', title: 'Store availability', value: '', desc: 'Store availability may vary by vehicle type' },
-]
-
-const FITTING_COST = 25.00
+import {
+  VEHICLE_TYPES, DEFAULT_FITTING_PRICES, computeTotals,
+  type VehicleType, type FulfilMethod,
+} from '../../../lib/fitting'
+import './cart.css'
 
 const PAYMENT_LOGOS = [
   { name: 'Stripe',     src: '/images/footer/payment-stripe.png' },
@@ -41,395 +20,314 @@ const PAYMENT_LOGOS = [
   { name: 'Klarna',     src: '/images/footer/payment-klarna.png' },
 ]
 
-/* ── Step indicator ──────────────────────────────────────────────────────── */
-function Step({ n, last = false, children }: { n: number; last?: boolean; children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', gap: '16px', marginBottom: last ? 0 : '32px' }}>
-      {/* Number + line */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-        <div style={{
-          width: '34px', height: '34px', borderRadius: '50%',
-          background: '#076330', color: '#fff', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px',
-          flexShrink: 0,
-        }}>
-          {n}
-        </div>
-        {!last && <div style={{ width: '2px', flex: 1, background: '#C5E0CD', marginTop: '6px', minHeight: '32px' }} />}
-      </div>
-      {/* Content */}
-      <div style={{ flex: 1, paddingTop: '5px', minWidth: 0 }}>{children}</div>
-    </div>
-  )
+type StoreData = {
+  id: string; name: string; address: string; suburb: string; state: string; postcode: string; phone: string | null
 }
 
-/* ── Brand logo with fallback ────────────────────────────────────────────── */
-function BrandLogo({ src, brand }: { src: string; brand: string }) {
+const money = (n: number) => `$${n.toFixed(2)}`
+
+/* ── inline icons (match the reference design) ─────────────────────────────── */
+const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round' } as const
+const IcoTrash  = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+const IcoMinus  = () => <svg viewBox="0 0 24 24" strokeWidth={2.4} {...S}><line x1="5" y1="12" x2="19" y2="12" /></svg>
+const IcoPlus   = () => <svg viewBox="0 0 24 24" strokeWidth={2.4} {...S}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+const IcoCheck  = () => <svg viewBox="0 0 24 24" strokeWidth={3.2} {...S}><polyline points="20 6 9 17 4 12" /></svg>
+const IcoTool   = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2z" /></svg>
+const IcoBag    = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+const IcoPin    = () => <svg viewBox="0 0 24 24" strokeWidth={1.9} {...S}><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+const IcoSend   = () => <svg viewBox="0 0 24 24" strokeWidth={1.9} {...S}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+const IcoLock   = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+const IcoClock  = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+const IcoList   = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+const IcoTarget = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3.2" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3" /></svg>
+const IcoShieldPin = () => <svg viewBox="0 0 24 24" strokeWidth={1.7} {...S}><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z" /><path d="M9 10l2 2 4-4" /></svg>
+const IcoHeadset = () => <svg viewBox="0 0 24 24" {...S}><path d="M3 12a9 9 0 0 1 18 0" /><path d="M3 12v4a2 2 0 0 0 2 2h1v-6H4M21 12v4a2 2 0 0 1-2 2h-1v-6h2" /></svg>
+const IcoTruck  = () => <svg viewBox="0 0 24 24" {...S}><path d="M1 3h13v13H1zM14 8h4l3 3v5h-7z" /><circle cx="6" cy="18" r="1.6" /><circle cx="17" cy="18" r="1.6" /></svg>
+const IcoExpert = () => <svg viewBox="0 0 24 24" {...S}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+
+const VEHICLE_ICONS: Record<VehicleType, React.ReactNode> = {
+  passenger:  <svg viewBox="0 0 24 24" strokeWidth={1.6} {...S}><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13m-14 0h14m-14 0v4h2v-2m10 2h2v-4m-2 4v-2" /><circle cx="7.5" cy="15" r="1" /><circle cx="16.5" cy="15" r="1" /></svg>,
+  suv:        <svg viewBox="0 0 24 24" strokeWidth={1.6} {...S}><path d="M3 13l1-4a2 2 0 0 1 2-1.5h11a2 2 0 0 1 1.7 1L21 13m-18 0h18m-18 0v4h2v-2m14 2h2v-4M8 8v5" /><circle cx="7" cy="15" r="1" /><circle cx="17" cy="15" r="1" /></svg>,
+  commercial: <svg viewBox="0 0 24 24" strokeWidth={1.6} {...S}><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z" /><circle cx="7" cy="17" r="1.4" /><circle cx="17" cy="17" r="1.4" /></svg>,
+  truck:      <svg viewBox="0 0 24 24" strokeWidth={1.6} {...S}><path d="M2 5h13v11H2zM15 8h4l3 4v4h-7z" /><circle cx="6" cy="18" r="1.4" /><circle cx="18" cy="18" r="1.4" /></svg>,
+}
+
+/* ── brand logo with text fallback ─────────────────────────────────────────── */
+function Brand({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
-  if (err) return <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '12px', color: '#333' }}>{brand}</span>
-  return <Image src={src} alt={brand} width={72} height={18} style={{ objectFit: 'contain', height: '16px', width: 'auto', maxWidth: '72px' }} onError={() => setErr(true)} />
+  if (!src || err) return <span className="brand-tag">{brand}</span>
+  return <img className="brand-logo" src={src} alt={brand} onError={() => setErr(true)} />
 }
 
-/* ── Cart item row ───────────────────────────────────────────────────────── */
-function CartItemRow({ item, onUpdate, onRemove }: {
-  item:     { id: string; brand: string; brandLogo: string; model: string; size: string; spec: string; price: number; qty: number; image: string }
-  onUpdate: (d: number) => void
-  onRemove: () => void
-}) {
-  const [removeHovered, setRemoveHovered] = useState(false)
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid #F0F0F0' }}>
-      {/* Product image */}
-      <div style={{ width: '72px', height: '72px', position: 'relative', flexShrink: 0, background: '#F8F8F8', borderRadius: '10px', overflow: 'hidden' }}>
-        <Image src={item.image} alt={item.model} fill style={{ objectFit: 'contain', padding: '6px' }} sizes="72px" />
-      </div>
-
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ marginBottom: '4px' }}>
-          <BrandLogo src={item.brandLogo} brand={item.brand} />
-        </div>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px', color: '#1A1A1A', marginBottom: '2px' }}>{item.model}</p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 500, fontSize: '13px', color: '#888', marginBottom: '6px' }}>{item.size}&nbsp;{item.spec}</p>
-
-        {/*
-          Subtle remove — deliberately low-contrast and small so it doesn't
-          draw the eye or encourage removal. Visible to someone who seeks it,
-          invisible to someone who doesn't. Classic large-retailer pattern.
-        */}
-        <button
-          onClick={onRemove}
-          onMouseEnter={() => setRemoveHovered(true)}
-          onMouseLeave={() => setRemoveHovered(false)}
-          style={{
-            background:     'none',
-            border:         'none',
-            padding:        0,
-            cursor:         'pointer',
-            fontFamily:     "'DM Sans', sans-serif",
-            fontSize:       '12px',
-            fontWeight:     400,
-            color:          removeHovered ? '#888' : '#bbb',
-            textDecoration: removeHovered ? 'underline' : 'none',
-            transition:     'color 0.2s',
-            letterSpacing:  '0.01em',
-          }}
-        >
-          Remove
-        </button>
-      </div>
-
-      {/* Price */}
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '17px', color: '#1A1A1A' }}>A${item.price.toFixed(2)}</p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#aaa', fontWeight: 500 }}>each</p>
-      </div>
-
-      {/* Qty controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0, background: '#F5F5F5', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E0E0E0' }}>
-        <button onClick={() => onUpdate(-1)} style={{ width: '36px', height: '36px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-        <span style={{ minWidth: '28px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px', color: '#1A1A1A' }}>{item.qty}</span>
-        <button onClick={() => onUpdate(+1)} style={{ width: '36px', height: '36px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-      </div>
-    </div>
-  )
-}
-
-/* ── Vehicle type card ───────────────────────────────────────────────────── */
-function VehicleCard({ v, selected, onSelect }: { v: typeof VEHICLE_TYPES[0]; selected: boolean; onSelect: () => void }) {
-  return (
-    <button
-      onClick={onSelect}
-      style={{
-        background: selected ? '#F0F9F4' : '#fff',
-        border: `1.5px solid ${selected ? '#076330' : '#E0E0E0'}`,
-        borderRadius: '10px',
-        padding: '14px 12px',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'border-color 0.2s, background 0.2s',
-      }}
-    >
-      <i className={`ti ${v.icon}`} style={{ fontSize: '28px', color: selected ? '#076330' : '#999', display: 'block', marginBottom: '8px' }} aria-hidden="true" />
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '3px', lineHeight: 1.2 }}>{v.label}</p>
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, fontSize: '12px', color: '#888', lineHeight: 1.4 }}>{v.desc}</p>
-    </button>
-  )
-}
-
-/* ── Store list item ─────────────────────────────────────────────────────── */
-function StoreItem({ store, selected, onSelect }: { store: StoreData; selected: boolean; onSelect: () => void }) {
-  const fullAddress = `${store.address}, ${store.suburb} ${store.state} ${store.postcode}`
-  return (
-    <button
-      onClick={onSelect}
-      style={{
-        width: '100%',
-        textAlign: 'left',
-        background: selected ? '#F0F9F4' : '#fff',
-        border: `1px solid ${selected ? '#076330' : '#EBEBEB'}`,
-        borderRadius: '10px',
-        padding: '12px 14px',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        marginBottom: '8px',
-        display: 'block',
-      }}
-    >
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '3px' }}>{store.name}</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <i className="ti ti-map-pin" style={{ fontSize: '12px', color: '#076330', flexShrink: 0 }} aria-hidden="true" />
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, fontSize: '12px', color: '#888' }}>{fullAddress}</p>
-      </div>
-    </button>
-  )
-}
-
-/* ── Info card ───────────────────────────────────────────────────────────── */
-function InfoCard({ item }: { item: typeof INFO_CARDS[0] }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: '12px', padding: '16px', border: '1px solid #E5E5E5', display: 'flex', alignItems: 'center', gap: '14px' }}>
-      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#F5F5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <i className={`ti ${item.icon}`} style={{ fontSize: '22px', color: '#1A1A1A' }} aria-hidden="true" />
-      </div>
-      <div>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '2px', lineHeight: 1.2 }}>
-          {item.title}{item.value ? <span style={{ color: '#E8572A', marginLeft: '4px' }}>{item.value}</span> : ''}
-        </p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 400, fontSize: '12px', color: '#888', lineHeight: 1.4 }}>{item.desc}</p>
-      </div>
-    </div>
-  )
-}
-
-/* ── Main component ──────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════════ */
 export default function CartContents() {
-  const { items, updateQty, removeItem, cartCount: itemCount, cartTotal: subtotal } = useCart()
-  const [vehicleType,    setVehicleType]    = useState('passenger')
-  const [postcode,       setPostcode]       = useState('')
-  const [selectedStore,  setSelectedStore]  = useState<string | null>(null)
-  const [stores,         setStores]         = useState<StoreData[]>([])
-  const [storesLoading,  setStoresLoading]  = useState(true)
+  const { items, updateQty, removeItem, cartCount, cartTotal } = useCart()
+
+  const [method,        setMethod]        = useState<FulfilMethod>('fit')
+  const [vehicleType,   setVehicleType]   = useState<VehicleType>('passenger')
+  const [postcode,      setPostcode]      = useState('')
+  const [selectedStore, setSelectedStore] = useState<string | null>(null)
+  const [stores,        setStores]        = useState<StoreData[]>([])
+  const [storesLoading, setStoresLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/stores')
       .then(r => r.json())
-      .then(data => setStores(data.stores ?? []))
+      .then(d => setStores(d.stores ?? []))
       .catch(() => {})
       .finally(() => setStoresLoading(false))
   }, [])
 
+  /* Persist the fitting choice so /checkout can charge the right total server-side. */
+  useEffect(() => {
+    try {
+      localStorage.setItem('nova_fitting', JSON.stringify({ method, vehicleType, storeId: selectedStore }))
+    } catch {}
+  }, [method, vehicleType, selectedStore])
+
   function handleStoreSelect(store: StoreData) {
     setSelectedStore(store.id)
-    localStorage.setItem('nova_selected_store', JSON.stringify({
-      id:       store.id,
-      name:     store.name,
-      address:  store.address,
-      suburb:   store.suburb,
-      state:    store.state,
-      postcode: store.postcode,
-      phone:    store.phone ?? '',
-    }))
+    try {
+      localStorage.setItem('nova_selected_store', JSON.stringify({
+        id: store.id, name: store.name, address: store.address, suburb: store.suburb,
+        state: store.state, postcode: store.postcode, phone: store.phone ?? '',
+      }))
+    } catch {}
   }
 
-  const total = subtotal + FITTING_COST
+  /* Phase 1: default per-vehicle rates. Phase 2 swaps in the selected store's overrides. */
+  const rate = DEFAULT_FITTING_PRICES[vehicleType]
+  const totals = useMemo(
+    () => computeTotals({ subtotal: cartTotal, itemCount: cartCount, fittingRate: rate, fit: method === 'fit' }),
+    [cartTotal, cartCount, rate, method],
+  )
+
+  const stationList = (
+    <div className="station-list">
+      {storesLoading
+        ? <p style={{ fontSize: 13, color: 'var(--text-dim)', padding: '10px 2px' }}>Loading stores…</p>
+        : stores.length === 0
+          ? <p style={{ fontSize: 13, color: 'var(--text-dim)', padding: '10px 2px' }}>No stores available.</p>
+          : stores.map(s => (
+            <button
+              key={s.id}
+              type="button"
+              className={`station-item${selectedStore === s.id ? ' active' : ''}`}
+              onClick={() => handleStoreSelect(s)}
+            >
+              <span className="st-pin"><IcoPin /></span>
+              <span className="st-body">
+                <span className="st-name">{s.name}</span>
+                <span className="st-addr"><IcoPin />{s.address}, {s.suburb} {s.state} {s.postcode}</span>
+              </span>
+              <span className="st-radio" />
+            </button>
+          ))}
+    </div>
+  )
+
+  const mapEmbed = (
+    <div className="picker-map">
+      <iframe
+        title="Nova Tyres store locations"
+        src="https://www.openstreetmap.org/export/embed.html?bbox=144.5,-38.3,151.3,-33.7&layer=mapnik"
+        loading="lazy"
+      />
+    </div>
+  )
 
   return (
-    <div className="nv-shell">
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
+    <main className="nova-cart" style={{ paddingTop: 64 }}>
+      <div className="cart-page">
+        <div className="nv-shell">
 
-        {/* ════════════ LEFT COLUMN ════════════ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-          {/* Cart items card */}
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '24px', border: '1px solid #E5E5E5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '22px', color: '#1A1A1A', marginBottom: '4px' }}>
-              Your cart{' '}
-              <span style={{ color: '#888', fontWeight: 500, fontSize: '18px' }}>({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-            </h1>
-
-            {items.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px 0', color: '#aaa', fontFamily: "'DM Sans', sans-serif" }}>
-                <i className="ti ti-shopping-cart-off" style={{ fontSize: '40px', display: 'block', marginBottom: '12px' }} />
-                Your cart is empty. <Link href="/tyres/results" style={{ color: '#E8572A' }}>Shop tyres</Link>
-              </div>
-            ) : (
-              items.map(it => <CartItemRow key={it.id} item={it} onUpdate={d => updateQty(it.id, d)} onRemove={() => removeItem(it.id)} />)
-            )}
+          <div className="cart-title">
+            <h1>Your cart</h1>
+            <span>({items.length} {items.length === 1 ? 'item' : 'items'})</span>
           </div>
 
-          {/* Steps card */}
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '28px', border: '1px solid #E5E5E5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div className="cart-grid">
+            {/* ════════ LEFT ════════ */}
+            <div className="cart-left">
 
-            {/* ── Step 1 ── */}
-            <Step n={1}>
-              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '18px', color: '#1A1A1A', marginBottom: '4px' }}>
-                Select Your Vehicle Type
-              </h2>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#888', marginBottom: '16px' }}>
-                Fitting price depends on your vehicle category
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                {VEHICLE_TYPES.map(v => (
-                  <VehicleCard key={v.id} v={v} selected={vehicleType === v.id} onSelect={() => setVehicleType(v.id)} />
-                ))}
-              </div>
-            </Step>
-
-            {/* ── Step 2 ── */}
-            <Step n={2}>
-              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '18px', color: '#1A1A1A', marginBottom: '4px' }}>
-                Fitting station near you
-              </h2>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#888', marginBottom: '16px' }}>
-                We'll show the nearest fitting station based on your location.
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative' }}>
-                  <i className="ti ti-map-pin" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '15px', color: '#888' }} aria-hidden="true" />
-                  <input
-                    type="text"
-                    placeholder="Enter postcode"
-                    value={postcode}
-                    onChange={e => setPostcode(e.target.value)}
-                    maxLength={4}
-                    style={{
-                      paddingLeft: '36px', paddingRight: '14px', height: '42px',
-                      border: '1px solid #D5D5D5', borderRadius: '8px',
-                      fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 500,
-                      outline: 'none', width: '160px', color: '#1A1A1A',
-                    }}
-                  />
+              {/* cart items */}
+              {items.length === 0 ? (
+                <div className="cart-empty">
+                  <svg viewBox="0 0 24 24" {...S} strokeWidth={1.6}><circle cx="9" cy="21" r="1.5" /><circle cx="18" cy="21" r="1.5" /><path d="M2.5 3h2.2l2.2 12.4a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L21.5 7H6" /></svg>
+                  Your cart is empty. <Link href="/tyres/results">Shop tyres</Link>
                 </div>
-                <span style={{ color: '#aaa', fontSize: '13px', fontFamily: "'DM Sans', sans-serif" }}>Or</span>
-                <button
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '7px',
-                    background: '#fff', border: '1px solid #D5D5D5', borderRadius: '8px',
-                    padding: '0 16px', height: '42px', cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '14px', color: '#1A1A1A',
-                  }}
-                >
-                  <i className="ti ti-current-location" style={{ fontSize: '16px', color: '#E8572A' }} aria-hidden="true" />
-                  Use My Location
-                </button>
-              </div>
-            </Step>
-
-            {/* ── Step 3 ── */}
-            <Step n={3} last>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-                <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '18px', color: '#1A1A1A' }}>
-                  Choose a Fitting Station
-                </h2>
-                <button
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    background: '#fff', border: '1px solid #D5D5D5', borderRadius: '8px',
-                    padding: '0 14px', height: '36px', cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '13px', color: '#1A1A1A',
-                  }}
-                >
-                  <i className="ti ti-current-location" style={{ fontSize: '14px', color: '#E8572A' }} aria-hidden="true" />
-                  Use my location
-                </button>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {/* Map */}
-                <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #E0E0E0', height: '260px' }}>
-                  <iframe
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=144.5,-38.2,145.5,-37.5&layer=mapnik"
-                    title="Store locations map"
-                    style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                  />
+              ) : (
+                <div className="cart-items">
+                  {items.map(it => (
+                    <div className="cart-item" key={it.id}>
+                      <span className="ci-thumb"><img src={it.image} alt={it.model} /></span>
+                      <div className="ci-info">
+                        <div className="ci-brand"><Brand src={it.brandLogo} brand={it.brand} /></div>
+                        <div className="ci-name">{it.model}</div>
+                        <div className="ci-spec">{it.size}{it.spec ? ` · ${it.spec}` : ''}</div>
+                        <button className="ci-remove" type="button" onClick={() => removeItem(it.id)}><IcoTrash />Remove</button>
+                      </div>
+                      <div className="ci-price"><b>A${it.price.toFixed(2)}</b><small>each</small></div>
+                      <div className="qty">
+                        <button type="button" aria-label="Decrease" onClick={() => updateQty(it.id, -1)} disabled={it.qty <= 1}><IcoMinus /></button>
+                        <span>{it.qty}</span>
+                        <button type="button" aria-label="Increase" onClick={() => updateQty(it.id, +1)}><IcoPlus /></button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              )}
 
-                {/* Store list */}
-                <div style={{ overflow: 'auto', maxHeight: '260px' }}>
-                  {storesLoading ? (
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '12px 0' }}>Loading stores…</p>
-                  ) : stores.length === 0 ? (
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '12px 0' }}>No stores available.</p>
-                  ) : (
-                    stores.map(s => (
-                      <StoreItem key={s.id} store={s} selected={selectedStore === s.id} onSelect={() => handleStoreSelect(s)} />
-                    ))
-                  )}
+              {/* fulfilment choice */}
+              <div className="block">
+                <div className="block-head">
+                  <h2>How would you like to get them?</h2>
+                  <p>Collect your tyres &amp; wheels yourself, or have us fit and balance them at one of our stores.</p>
+                </div>
+                <div className="fulfil-opts">
+                  <button type="button" className={`fulfil-card${method === 'fit' ? ' active' : ''}`} onClick={() => setMethod('fit')}>
+                    <span className="fc-check"><IcoCheck /></span>
+                    <span className="fc-ico"><IcoTool /></span>
+                    <span className="fc-body">
+                      <h3>Fit at a Nova store</h3>
+                      <p>We professionally fit &amp; balance at your chosen workshop while you wait.</p>
+                      <span className="fc-fee">+ {money(rate)} per tyre/wheel fitting</span>
+                    </span>
+                  </button>
+                  <button type="button" className={`fulfil-card${method === 'pickup' ? ' active' : ''}`} onClick={() => setMethod('pickup')}>
+                    <span className="fc-check"><IcoCheck /></span>
+                    <span className="fc-ico"><IcoBag /></span>
+                    <span className="fc-body">
+                      <h3>Pick up in-store</h3>
+                      <p>Collect from any Nova Tyres store — ready when you are, no fitting fee.</p>
+                      <span className="fc-fee">No fitting fee</span>
+                    </span>
+                  </button>
                 </div>
               </div>
-            </Step>
-          </div>
 
-        </div>
+              {/* fitting flow */}
+              <div className="flow" hidden={method !== 'fit'}>
+                <div className="flow-step">
+                  <div className="flow-marker"><span className="flow-num">1</span><span className="flow-line" /></div>
+                  <div className="flow-body">
+                    <h3>Select your vehicle type</h3>
+                    <p>Fitting price depends on your vehicle category.</p>
+                    <div className="veh-grid">
+                      {VEHICLE_TYPES.map(v => (
+                        <button key={v.id} type="button" className={`veh-card${vehicleType === v.id ? ' active' : ''}`} onClick={() => setVehicleType(v.id)}>
+                          {VEHICLE_ICONS[v.id]}
+                          <b>{v.label}<span className="veh-fee">{money(DEFAULT_FITTING_PRICES[v.id])}</span></b>
+                          <small>{v.desc}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-        {/* ════════════ RIGHT COLUMN ════════════ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '100px' }}>
+                <div className="flow-step">
+                  <div className="flow-marker"><span className="flow-num">2</span><span className="flow-line" /></div>
+                  <div className="flow-body">
+                    <h3>Fitting station near you</h3>
+                    <p>We&apos;ll show the nearest fitting station based on your location.</p>
+                    <div className="loc-row">
+                      <span className="loc-input"><IcoPin /><input type="text" value={postcode} onChange={e => setPostcode(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="0000" inputMode="numeric" maxLength={4} /></span>
+                      <span className="loc-or">Or</span>
+                      <button type="button" className="loc-btn-geo"><IcoSend />Use my location</button>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Order Summary */}
-          <div style={{ background: '#fff', borderRadius: '14px', padding: '22px', border: '1px solid #E5E5E5', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '18px', color: '#1A1A1A', marginBottom: '18px' }}>
-              Order Summary
-            </h2>
-
-            {[
-              { label: `Subtotal (${itemCount} ${itemCount === 1 ? 'item' : 'items'})`, value: `$${subtotal.toFixed(2)}`, muted: false },
-              { label: 'Fitting & Balancing', value: `$${FITTING_COST.toFixed(2)}`, muted: false },
-              { label: 'GST Status', value: 'GST Calculated', muted: true },
-            ].map(row => (
-              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#555', fontWeight: 500 }}>{row.label}</span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: row.muted ? '#888' : '#1A1A1A', fontWeight: row.muted ? 400 : 600 }}>{row.value}</span>
+                <div className="flow-step">
+                  <div className="flow-marker"><span className="flow-num">3</span></div>
+                  <div className="flow-body">
+                    <h3>Choose a fitting station</h3>
+                    <p>Select where you&apos;d like your tyres &amp; wheels fitted.</p>
+                    <div className="picker"><div className="picker-layout">{mapEmbed}{stationList}</div></div>
+                  </div>
+                </div>
               </div>
-            ))}
 
-            <div style={{ height: '1px', background: '#EBEBEB', margin: '14px 0' }} />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '16px', fontWeight: 800, color: '#1A1A1A' }}>Total</span>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '20px', fontWeight: 900, color: '#E8572A' }}>
-                ${total.toFixed(2)}
-              </span>
+              {/* pickup flow */}
+              <div className="flow" hidden={method !== 'pickup'}>
+                <div className="flow-step">
+                  <div className="flow-marker"><span className="flow-num">1</span></div>
+                  <div className="flow-body">
+                    <h3>Choose a pickup store</h3>
+                    <p>Select the store you&apos;d like to collect your order from — we&apos;ll notify you when it&apos;s ready.</p>
+                    <div className="picker"><div className="picker-layout">{mapEmbed}{stationList}</div></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <Link
-              href="/checkout"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                width: '100%', background: '#E8572A', color: '#fff',
-                borderRadius: '10px', padding: '14px',
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px',
-                letterSpacing: '0.04em', marginBottom: '12px', textDecoration: 'none',
-                transition: 'opacity 0.2s',
-              }}
-              onMouseOver={e => (e.currentTarget.style.opacity = '0.88')}
-              onMouseOut={e => (e.currentTarget.style.opacity = '1')}
-            >
-              <i className="ti ti-lock" style={{ fontSize: '16px' }} aria-hidden="true" />
-              Proceed to checkout
-            </Link>
-
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#aaa', textAlign: 'center', marginBottom: '12px' }}>
-              Secured Checkout
-            </p>
-
-            {/* Payment logos */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
-              {PAYMENT_LOGOS.map(p => (
-                <div key={p.name} style={{ background: '#F8F8F8', borderRadius: '5px', padding: '4px 8px', height: '28px', display: 'flex', alignItems: 'center' }}>
-                  <Image src={p.src} alt={p.name} width={44} height={18} style={{ objectFit: 'contain', height: '16px', width: 'auto' }} />
+            {/* ════════ RIGHT ════════ */}
+            <aside className="summary">
+              <div className="summary-card">
+                <h2>Order Summary</h2>
+                <div className="sum-row">
+                  <span className="sr-label">Products <small>({cartCount} {cartCount === 1 ? 'item' : 'items'})</small></span>
+                  <span className="sr-val">{money(totals.subtotal)}</span>
                 </div>
-              ))}
-            </div>
+                <div className="sum-row">
+                  <span className="sr-label">GST <small>(10%)</small></span>
+                  <span className="sr-val">{money(totals.gst)}</span>
+                </div>
+                {method === 'fit' && (
+                  <div className="sum-row">
+                    <span className="sr-label">Fitting service price <small>({cartCount} × {money(rate)})</small></span>
+                    <span className="sr-val">{money(totals.fitting)}</span>
+                  </div>
+                )}
+                <div className="sum-divider" />
+                <div className="sum-total">
+                  <span className="st-label"><b>Total</b><small>GST included</small></span>
+                  <span className="st-amt">{money(totals.total)}</span>
+                </div>
+
+                <Link className="checkout-btn" href="/checkout"><IcoLock />Proceed to checkout</Link>
+
+                <div className="secure">
+                  <span className="secure-label">🔒 Secured checkout</span>
+                  <div className="pay-row">
+                    {PAYMENT_LOGOS.map(p => <span key={p.name} className="pay-badge"><img src={p.src} alt={p.name} /></span>)}
+                  </div>
+                </div>
+              </div>
+
+              {method === 'fit' && (
+                <div className="info-card">
+                  <span className="ic-ico"><IcoClock /></span>
+                  <div><h4>Estimated fitting time <em>45–60min</em></h4><p>Time may vary by store &amp; vehicle.</p></div>
+                </div>
+              )}
+              <div className="info-card">
+                <span className="ic-ico"><IcoList /></span>
+                <div><h4>What&apos;s included</h4><p>Fitting &amp; balancing.</p></div>
+              </div>
+              <div className="info-card">
+                <span className="ic-ico"><IcoTarget /></span>
+                <div><h4>GST included</h4><p>10% GST applied to product prices.</p></div>
+              </div>
+              <div className="info-card">
+                <span className="ic-ico"><IcoShieldPin /></span>
+                <div><h4>Store availability</h4><p>Availability may vary by vehicle type.</p></div>
+              </div>
+            </aside>
           </div>
 
-          {/* Info cards */}
-          {INFO_CARDS.map(c => <InfoCard key={c.title} item={c} />)}
+          {/* assurance band */}
+          <div className="assure">
+            <div className="assure-grid">
+              <div className="assure-cell"><span className="as-ico"><IcoHeadset /></span><div><h4>Need help choosing?</h4><p>Our tyre experts are here to help find the perfect fit.</p></div></div>
+              <div className="assure-cell"><span className="as-ico"><IcoTruck /></span><div><h4>Fast delivery</h4><p>Quick shipping on in-stock tyres.</p></div></div>
+              <div className="assure-cell"><span className="as-ico"><IcoTool /></span><div><h4>Fitting available</h4><p>Official fitting locations available.</p></div></div>
+              <div className="assure-cell"><span className="as-ico"><IcoExpert /></span><div><h4>Expert support</h4><p>Support from our friendly team.</p></div></div>
+            </div>
+          </div>
 
         </div>
       </div>
-    </div>
+    </main>
   )
 }
