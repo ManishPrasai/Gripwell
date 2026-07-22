@@ -105,13 +105,22 @@
 .pdp-rate a { font-size: 13.5px; color: var(--text-dim); }
 .pdp-rate a:hover { color: var(--accent); }
 
-/* spec grid */
-.pdp-specs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
-.pdp-spec { padding: 18px 14px; text-align: center; border-right: 1px solid var(--line); }
-.pdp-spec:last-child { border-right: none; }
-.pdp-spec .sp-label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-dim); }
-.pdp-spec .sp-label svg { width: 16px; height: 16px; opacity: .75; }
-.pdp-spec .sp-val { font-family: var(--font-display); font-weight: 800; font-size: 17px; margin-top: 11px; letter-spacing: -.01em; }
+/* spec strip — dynamic key-attribute tiles (icon → LABEL → value, stacked).
+   Horizontal row of equal-width cards that wrap on narrow screens; works for
+   any number of metrics (tyres, wheels, …). */
+.pdp-specs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.pdp-spec {
+  flex: 1 1 0; min-width: 92px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px;
+  padding: 16px 10px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  transition: border-color .2s;
+}
+.pdp-spec:hover { border-color: var(--line-strong); }
+.pdp-spec .sp-ico { display: grid; place-items: center; color: var(--text-dim); }
+.pdp-spec .sp-ico svg { width: 20px; height: 20px; opacity: .85; }
+.pdp-spec .sp-label { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
+.pdp-spec .sp-val { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.05; letter-spacing: -.01em; color: var(--text); }
 
 /* stock + delivery */
 .pdp-status { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
@@ -318,8 +327,6 @@
   .pdp-gallery { grid-template-columns: 1fr; }
   .pdp-thumbs { flex-direction: row; }
   .pdp-thumb { width: 64px; height: 64px; }
-  .pdp-specs { grid-template-columns: repeat(2, 1fr); }
-  .pdp-spec { border-bottom: 1px solid var(--line); }
   .pdp-buy { grid-template-columns: 1fr; }
   .rev-band .rs-num { font-size: 48px; }
 }

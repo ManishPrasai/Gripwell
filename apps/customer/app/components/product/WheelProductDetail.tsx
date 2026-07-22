@@ -8,10 +8,10 @@ import { useCart } from '../../context/CartContext'
 import './pdp.css'
 import {
   Breadcrumb, Accordion, FeatureChips, SecureCheckout, WriteReviewBox, FittingFeesCard,
-  ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand,
+  ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand, ProductSpecs,
   IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
-  IcoDiameter, IcoWidth, IcoPcd, IcoOffset, IcoFinish,
-  type SimilarItem, type ReviewCard,
+  IcoDiameter, IcoWidth, IcoPcd, IcoOffset, IcoBore,
+  type SimilarItem, type ReviewCard, type SpecItem,
 } from './PdpParts'
 
 const BRAND_LOGOS: Record<string, string> = {
@@ -71,12 +71,12 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
     setTimeout(() => setAdded(false), 1800)
   }
 
-  const specs = [
-    { label: 'Diameter', value: `${wheel.diameter}"`, icon: <IcoDiameter /> },
-    { label: 'Width',    value: `${wheel.width}J`,     icon: <IcoWidth /> },
-    { label: 'PCD',      value: wheel.pcd,             icon: <IcoPcd /> },
-    { label: 'Offset',   value: offset,                icon: <IcoOffset /> },
-    { label: 'Finish',   value: wheel.finish ?? '—',   icon: <IcoFinish /> },
+  const specs: SpecItem[] = [
+    { label: 'Diameter', value: `${wheel.diameter}"`,                 icon: <IcoDiameter /> },
+    { label: 'Width',    value: `${wheel.width}J`,                    icon: <IcoWidth /> },
+    { label: 'PCD',      value: wheel.pcd,                            icon: <IcoPcd /> },
+    { label: 'Offset',   value: offset,                              icon: <IcoOffset /> },
+    { label: 'Bore',     value: wheel.bore ? `${wheel.bore}mm` : '—', icon: <IcoBore /> },
   ]
 
   return (
@@ -136,14 +136,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
               <a href="#storeReviews">· 126 reviews</a>
             </div>
 
-            <div className="pdp-specs">
-              {specs.map(s => (
-                <div className="pdp-spec" key={s.label}>
-                  <span className="sp-label">{s.icon}{s.label}</span>
-                  <span className="sp-val">{s.value}</span>
-                </div>
-              ))}
-            </div>
+            <ProductSpecs items={specs} />
 
             <div className="pdp-status">
               {inStock

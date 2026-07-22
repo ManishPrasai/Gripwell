@@ -8,10 +8,10 @@ import { useCart, DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER } from '../../context/Ca
 import './pdp.css'
 import {
   Breadcrumb, Accordion, FeatureChips, SecureCheckout, WriteReviewBox, FittingFeesCard,
-  ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand,
+  ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand, ProductSpecs,
   IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
   IcoWidth, IcoProfile, IcoRim, IcoSpeed, IcoLoad,
-  type SimilarItem, type ReviewCard,
+  type SimilarItem, type ReviewCard, type SpecItem,
 } from './PdpParts'
 
 const BRAND_LOGOS: Record<string, string> = {
@@ -94,7 +94,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
     setTimeout(() => setAdded(false), 1800)
   }
 
-  const specs = [
+  const specs: SpecItem[] = [
     { label: 'Width',   value: ts.width,               icon: <IcoWidth /> },
     { label: 'Profile', value: ts.profile,             icon: <IcoProfile /> },
     { label: 'Rim',     value: `${ts.rimDiameter}"`,   icon: <IcoRim /> },
@@ -159,14 +159,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
               <a href="#storeReviews">· {reviewCount} reviews</a>
             </div>
 
-            <div className="pdp-specs">
-              {specs.map(s => (
-                <div className="pdp-spec" key={s.label}>
-                  <span className="sp-label">{s.icon}{s.label}</span>
-                  <span className="sp-val">{s.value}</span>
-                </div>
-              ))}
-            </div>
+            <ProductSpecs items={specs} />
 
             <div className="pdp-status">
               {inStock

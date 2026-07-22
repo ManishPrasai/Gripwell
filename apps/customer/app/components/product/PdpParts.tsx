@@ -59,6 +59,29 @@ export const IcoOffset   = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}
 export const IcoFinish   = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" /></svg>
 export const IcoSpeed    = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M3.5 13a8.5 8.5 0 0 1 17 0" /><path d="M12 13l4.5-3" /><circle cx="12" cy="13" r="1.2" fill="currentColor" stroke="none" /></svg>
 export const IcoLoad     = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M6 9h12l1.6 11H4.4z" /><path d="M9 9a3 3 0 0 1 6 0" /></svg>
+export const IcoBore     = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /></svg>
+
+/* ════════════════════════════════════════════════════════════════════════
+   ProductSpecs — key attribute strip, reused across product types.
+   A horizontal row of tiles; inside each tile the icon, LABEL and value are
+   stacked vertically for hierarchy + scannability. Accepts any set of metrics
+   (tyres: Width/Profile/Rim/…, wheels: PCD/Offset/Bore/…), any count.
+════════════════════════════════════════════════════════════════════════ */
+export interface SpecItem { label: string; value: React.ReactNode; icon: React.ReactNode }
+
+export function ProductSpecs({ items }: { items: SpecItem[] }) {
+  return (
+    <div className="pdp-specs">
+      {items.map((s, i) => (
+        <div className="pdp-spec" key={i}>
+          <span className="sp-ico">{s.icon}</span>
+          <span className="sp-label">{s.label}</span>
+          <span className="sp-val">{s.value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 export const IcoZoom    = () => <svg viewBox="0 0 24 24" strokeWidth={1.9} {...S}><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
 export const IcoTruck   = () => <svg viewBox="0 0 24 24" strokeWidth={1.8} {...S}><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
 export const IcoPin     = () => <svg viewBox="0 0 24 24" strokeWidth={2} {...S}><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
