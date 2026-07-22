@@ -70,6 +70,11 @@ export default function CartContents() {
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
   const [stores,        setStores]        = useState<StoreData[]>([])
   const [storesLoading, setStoresLoading] = useState(true)
+  const [fitCount,      setFitCount]      = useState<number | null>(null) // null = fit all
+
+  /* How many tyres/wheels to fit now; the rest go home. Clamped to the cart. */
+  const fitQty   = fitCount === null ? cartCount : Math.max(0, Math.min(fitCount, cartCount))
+  const takeHome = cartCount - fitQty
 
   useEffect(() => {
     fetch('/api/stores')
@@ -82,9 +87,9 @@ export default function CartContents() {
   /* Persist the fitting choice so /checkout can charge the right total server-side. */
   useEffect(() => {
     try {
-      localStorage.setItem('nova_fitting', JSON.stringify({ method, vehicleType, storeId: selectedStore }))
+      localStorage.setItem('nova_fitting', JSON.stringify({ method, vehicleType, storeId: selectedStore, fitCount: fitQty }))
     } catch {}
-  }, [method, vehicleType, selectedStore])
+  }, [method, vehicleType, selectedStore, fitQty])
 
   function handleStoreSelect(store: StoreData) {
     setSelectedStore(store.id)
@@ -100,8 +105,8 @@ export default function CartContents() {
   const storePrices = stores.find(s => s.id === selectedStore)?.fittingPrices ?? null
   const rate = fittingRate(vehicleType, storePrices)
   const totals = useMemo(
-    () => computeTotals({ subtotal: cartTotal, itemCount: cartCount, fittingRate: rate, fit: method === 'fit' }),
-    [cartTotal, cartCount, rate, method],
+    () => computeTotals({ subtotal: cartTotal, itemCount: fitQty, fittingRate: rate, fit: method === 'fit' }),
+    [cartTotal, fitQty, rate, method],
   )
 
   const stationList = (
@@ -210,6 +215,31 @@ export default function CartContents() {
 
               {/* fitting flow */}
               <div className="flow" hidden={method !== 'fit'}>
+
+                {/* How many to fit vs take home */}
+                {cartCount > 0 && (
+                  <div className="fit-split">
+                    <div className="fs-info">
+                      <span className="fs-ico"><IcoTool /></span>
+                      <div>
+                        <h3>How many do you want fitted?</h3>
+                        <p>Fit some with us now and take the rest home to fit later — you only pay fitting for the ones we fit.</p>
+                      </div>
+                    </div>
+                    <div className="fs-control">
+                      <div className="fs-stepper">
+                        <button type="button" aria-label="Fit fewer" onClick={() => setFitCount(Math.max(0, fitQty - 1))} disabled={fitQty <= 0}><IcoMinus /></button>
+                        <span className="fs-num">{fitQty}</span>
+                        <button type="button" aria-label="Fit more" onClick={() => setFitCount(Math.min(cartCount, fitQty + 1))} disabled={fitQty >= cartCount}><IcoPlus /></button>
+                      </div>
+                      <div className="fs-tags">
+                        <span className="fs-tag fit"><IcoTool />{fitQty} fitted at store</span>
+                        <span className="fs-tag home"><IcoBag />{takeHome} taken home{takeHome > 0 ? ' · no fee' : ''}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flow-step">
                   <div className="flow-marker"><span className="flow-num">1</span><span className="flow-line" /></div>
                   <div className="flow-body">
@@ -277,7 +307,7 @@ export default function CartContents() {
                 </div>
                 {method === 'fit' && (
                   <div className="sum-row">
-                    <span className="sr-label">Fitting service price <small>({cartCount} × {money(rate)})</small></span>
+                    <span className="sr-label">Fitting service price <small>({fitQty} × {money(rate)})</small></span>
                     <span className="sr-val">{money(totals.fitting)}</span>
                   </div>
                 )}

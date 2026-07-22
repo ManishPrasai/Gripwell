@@ -112,6 +112,26 @@
 .fulfil-card.active .fc-check { border-color: var(--green); background: var(--green); }
 .fulfil-card.active .fc-check svg { opacity: 1; }
 
+/* ---------- how many to fit vs take home ---------- */
+.fit-split { display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center; margin-bottom: 26px; background: var(--green-soft); border: 1.5px solid color-mix(in oklab, var(--green) 28%, transparent); border-radius: var(--radius); padding: 20px 22px; }
+.fit-split .fs-info { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+.fit-split .fs-ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--green); color: #fff; flex-shrink: 0; }
+.fit-split .fs-ico svg { width: 22px; height: 22px; }
+.fit-split h3 { font-family: var(--font-display); font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
+.fit-split .fs-info p { font-size: 13px; color: var(--text-mid); margin-top: 4px; line-height: 1.5; max-width: 46ch; }
+.fit-split .fs-control { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.fs-stepper { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px; }
+.fs-stepper button { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--text); transition: background .2s, color .2s; }
+.fs-stepper button:hover:not(:disabled) { background: var(--green); color: #fff; }
+.fs-stepper button:disabled { color: var(--text-dim); cursor: not-allowed; }
+.fs-stepper button svg { width: 16px; height: 16px; }
+.fs-num { min-width: 42px; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+.fs-tags { display: flex; flex-direction: column; gap: 5px; }
+.fs-tag { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+.fs-tag svg { width: 13px; height: 13px; }
+.fs-tag.fit { background: var(--green); color: #fff; }
+.fs-tag.home { background: var(--card); border: 1px solid var(--line-strong); color: var(--text-mid); }
+
 /* ---------- numbered flow ---------- */
 .flow { margin-top: 26px; }
 .flow-step { display: grid; grid-template-columns: 34px 1fr; gap: 18px; padding-bottom: 26px; position: relative; }
@@ -221,6 +241,7 @@
 }
 @media (max-width: 720px) {
   .fulfil-opts { grid-template-columns: 1fr; }
+  .fit-split { grid-template-columns: 1fr; }
   .veh-grid { grid-template-columns: 1fr 1fr; }
   .cart-item { grid-template-columns: 72px 1fr; grid-row-gap: 14px; }
   .ci-thumb { width: 72px; height: 72px; }

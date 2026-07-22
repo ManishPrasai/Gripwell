@@ -109,6 +109,9 @@ export async function POST(req: Request) {
       return sum + Math.round(unitPrice * 100) * item.quantity
     }, 0)
     const itemCount = cartItems.reduce((n, i) => n + i.quantity, 0)
+    // How many tyres/wheels the customer chose to fit (rest go home). Default: all.
+    const rawFit = Number(body?.fitCount)
+    const fitCount = Number.isFinite(rawFit) ? Math.max(0, Math.min(Math.floor(rawFit), itemCount)) : itemCount
 
     // ── 3b. Apply discount code (server-authoritative) ────────────────────────
     let discountCents = 0
@@ -137,7 +140,7 @@ export async function POST(req: Request) {
     }
     const rate = fittingRate(vehicle, storePrices)
     const { totalCents, gstCents, fittingCents } = computeTotalsCents({
-      subtotalCents, itemCount, fittingRate: rate, fit: fulfilMethod === 'fit', discountCents,
+      subtotalCents, itemCount: fitCount, fittingRate: rate, fit: fulfilMethod === 'fit', discountCents,
     })
 
     // ── 4. Create Stripe PaymentIntent ────────────────────────────────────────
@@ -156,6 +159,7 @@ export async function POST(req: Request) {
         fittingCents: String(fittingCents),
         vehicleType:  vehicle,
         fulfilMethod,
+        fitCount:     String(fitCount),
       },
     })
 
