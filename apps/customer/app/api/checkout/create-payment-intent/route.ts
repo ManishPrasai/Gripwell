@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { computeDiscount } from '../../../../lib/discount'
 import { MAX_TYRES_PER_ORDER } from '../../../../lib/order-rules'
-import { DEFAULT_FITTING_PRICES, computeTotalsCents, isVehicleType } from '../../../../lib/fitting'
+import { fittingRate, computeTotalsCents, isVehicleType, type VehicleType } from '../../../../lib/fitting'
 
 // ── Stripe server client (lazy) ───────────────────────────────────────────────
 // Initialised on first request, not at module load, so the build phase never
@@ -55,6 +55,7 @@ export async function POST(req: Request) {
     const rawVehicle = String(body?.vehicleType || 'passenger')
     const vehicle = isVehicleType(rawVehicle) ? rawVehicle : 'passenger'
     const fulfilMethod = String(body?.method || 'fit') === 'pickup' ? 'pickup' : 'fit'
+    const storeId = String(body?.storeId || '').trim()
 
     // ── 1. Fetch cart rows ────────────────────────────────────────────────────
     const cartItems = await prisma.cartItem.findMany({
@@ -123,10 +124,20 @@ export async function POST(req: Request) {
     }
 
     // ── 3c. GST (10% on products) + fitting (per-vehicle rate × items fitted).
-    //  Phase 2 swaps DEFAULT_FITTING_PRICES for the chosen store's overrides.
-    const fittingRate = DEFAULT_FITTING_PRICES[vehicle]
+    //  Use the chosen store's overrides when present, else app-wide defaults.
+    let storePrices: Partial<Record<VehicleType, number>> | null = null
+    if (storeId) {
+      const rows = await prisma.storeFittingPrice.findMany({
+        where: { storeId }, select: { vehicleType: true, price: true },
+      })
+      if (rows.length) {
+        storePrices = {}
+        for (const r of rows) if (isVehicleType(r.vehicleType)) storePrices[r.vehicleType] = Number(r.price)
+      }
+    }
+    const rate = fittingRate(vehicle, storePrices)
     const { totalCents, gstCents, fittingCents } = computeTotalsCents({
-      subtotalCents, itemCount, fittingRate, fit: fulfilMethod === 'fit', discountCents,
+      subtotalCents, itemCount, fittingRate: rate, fit: fulfilMethod === 'fit', discountCents,
     })
 
     // ── 4. Create Stripe PaymentIntent ────────────────────────────────────────

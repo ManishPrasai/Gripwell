@@ -8,6 +8,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
 import { adminFetch } from "../../lib/adminFetch";
+import { VEHICLE_TYPES } from "../../lib/fitting";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, Tooltip, Drawer, Modal, ConfirmModal, toast,
@@ -177,6 +178,39 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [creating, setCreating] = useState<any>(null);
   const [savingNew, setSavingNew] = useState(false);
 
+  // ── Per-store fitting prices (loaded when the store drawer opens) ──────────
+  const [fitPrices, setFitPrices] = useState<Record<string, number> | null>(null);
+  const [fitLoading, setFitLoading] = useState(false);
+  const [fitSaving, setFitSaving] = useState(false);
+
+  useEffect(() => {
+    if (!active?.id) { setFitPrices(null); return; }
+    setFitLoading(true); setFitPrices(null);
+    fetch(`/api/admin/stores/${active.id}/fitting-prices`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error("load failed")))
+      .then((r: any) => setFitPrices(r?.prices ?? null))
+      .catch(() => setFitPrices(null))
+      .finally(() => setFitLoading(false));
+  }, [active?.id]);
+
+  async function saveFitPrices() {
+    if (!active?.id || !fitPrices) return;
+    setFitSaving(true);
+    try {
+      await adminFetch(`/api/admin/stores/${active.id}/fitting-prices`, "PUT", {
+        prices: {
+          passenger:  Number(fitPrices.passenger)  || 0,
+          suv:        Number(fitPrices.suv)         || 0,
+          commercial: Number(fitPrices.commercial)  || 0,
+          truck:      Number(fitPrices.truck)       || 0,
+        },
+      });
+      toast({ kind: "ok", title: "Fitting prices saved", body: `${active.name} fitting rates updated.` });
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't save prices", body: e?.message || "Please try again." });
+    } finally { setFitSaving(false); }
+  }
+
   async function createStore() {
     const s = creating;
     for (const [k, label] of [["name", "Name"], ["address", "Address"], ["suburb", "Suburb"], ["postcode", "Postcode"], ["phone", "Phone"], ["email", "Email"], ["latitude", "Latitude"], ["longitude", "Longitude"]] as const) {
@@ -299,6 +333,41 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <div className="set-row"><Icon name="phone" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.phone}</b><span>Store phone</span></div></div>
             <div className="set-row"><Icon name="clock" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.opens} – {active.closes}</b><span>Opening hours (Mon–Fri)</span></div></div>
             <div className="set-row"><Icon name="users" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.staff} team members</b><span>{active.bays} bays operating</span></div></div>
+          </div>
+
+          {/* ── Fitting service prices (per tyre/wheel, by vehicle type) ── */}
+          <hr className="hr" />
+          <div className="field">
+            <label>Fitting service prices <span style={{ color: "var(--ink-3)", fontWeight: 400 }}>· per tyre/wheel, by vehicle</span></label>
+            {fitLoading ? (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Loading prices…</div>
+            ) : !active.id ? (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Save the store first to set fitting prices.</div>
+            ) : fitPrices ? (
+              <React.Fragment>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+                  {VEHICLE_TYPES.map(v => (
+                    <div key={v.id} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{v.label}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-2, #f4f4f2)", border: "1px solid var(--line, #e5e5e5)", borderRadius: 9, padding: "0 12px" }}>
+                        <span style={{ fontSize: 14, color: "var(--ink-3)" }}>$</span>
+                        <input
+                          type="number" min="0" step="1"
+                          value={fitPrices[v.id] ?? ""}
+                          onChange={e => setFitPrices(p => ({ ...(p || {}), [v.id]: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                          style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: "10px 0", fontSize: 15, fontWeight: 700, color: "var(--ink-1, #16211b)" }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="btn" style={{ marginTop: 14, width: "100%" }} disabled={fitSaving} onClick={saveFitPrices}>
+                  <Icon name="checkCircle" />{fitSaving ? "Saving…" : "Save fitting prices"}
+                </button>
+              </React.Fragment>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Couldn&apos;t load prices for this store.</div>
+            )}
           </div>
         </Drawer>
       )}

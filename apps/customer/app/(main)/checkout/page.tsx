@@ -331,12 +331,12 @@ export default function CheckoutPage() {
     setPayIntentError(null)
     try {
       // Carry the cart's fitting choice so the server charges the right total.
-      let fitting: { vehicleType?: string; method?: string } = {}
+      let fitting: { vehicleType?: string; method?: string; storeId?: string } = {}
       try { fitting = JSON.parse(localStorage.getItem('nova_fitting') || '{}') } catch {}
       const res  = await fetch('/api/checkout/create-payment-intent', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ vehicleType: fitting.vehicleType, method: fitting.method }),
+        body:    JSON.stringify({ vehicleType: fitting.vehicleType, method: fitting.method, storeId: fitting.storeId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to initialize payment')

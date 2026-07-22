@@ -231,10 +231,27 @@ model Store {
   chatAgents        ChatAgent[]
   chatHours         ChatOperatingHours[]
   reviews           Review[]
+  fittingPrices     StoreFittingPrice[]
 
   @@index([slug])
   @@index([suburb])
   @@index([state])
+}
+
+// Per-store fitting/balancing price by vehicle type. A missing row means the
+// store uses the app-wide default (see apps/customer/lib/fitting.ts).
+model StoreFittingPrice {
+  id          String   @id @default(uuid())
+  storeId     String
+  vehicleType String   // 'passenger' | 'suv' | 'commercial' | 'truck'
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, vehicleType])
+  @@index([storeId])
 }
 
 model StoreHours {

@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useCart } from '../../context/CartContext'
 import {
-  VEHICLE_TYPES, DEFAULT_FITTING_PRICES, computeTotals,
+  VEHICLE_TYPES, fittingRate, computeTotals,
   type VehicleType, type FulfilMethod,
 } from '../../../lib/fitting'
 import './cart.css'
@@ -22,6 +22,7 @@ const PAYMENT_LOGOS = [
 
 type StoreData = {
   id: string; name: string; address: string; suburb: string; state: string; postcode: string; phone: string | null
+  fittingPrices?: Partial<Record<VehicleType, number>>
 }
 
 const money = (n: number) => `$${n.toFixed(2)}`
@@ -95,8 +96,9 @@ export default function CartContents() {
     } catch {}
   }
 
-  /* Phase 1: default per-vehicle rates. Phase 2 swaps in the selected store's overrides. */
-  const rate = DEFAULT_FITTING_PRICES[vehicleType]
+  /* Use the chosen store's rates when a store is selected, else app-wide defaults. */
+  const storePrices = stores.find(s => s.id === selectedStore)?.fittingPrices ?? null
+  const rate = fittingRate(vehicleType, storePrices)
   const totals = useMemo(
     () => computeTotals({ subtotal: cartTotal, itemCount: cartCount, fittingRate: rate, fit: method === 'fit' }),
     [cartTotal, cartCount, rate, method],
@@ -217,7 +219,7 @@ export default function CartContents() {
                       {VEHICLE_TYPES.map(v => (
                         <button key={v.id} type="button" className={`veh-card${vehicleType === v.id ? ' active' : ''}`} onClick={() => setVehicleType(v.id)}>
                           {VEHICLE_ICONS[v.id]}
-                          <b>{v.label}<span className="veh-fee">{money(DEFAULT_FITTING_PRICES[v.id])}</span></b>
+                          <b>{v.label}<span className="veh-fee">{money(fittingRate(v.id, storePrices))}</span></b>
                           <small>{v.desc}</small>
                         </button>
                       ))}
