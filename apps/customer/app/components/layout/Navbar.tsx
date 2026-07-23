@@ -260,20 +260,20 @@ export default function Navbar() {
             className="flex-1 flex items-center"
             style={{ transform: scrolled && !isMobile ? 'translateX(24px)' : 'translateX(0)', transition: ANIM }}
           >
-            <Link href="/" style={{ textDecoration: 'none' }}>
-              <span style={{
-                fontFamily:    "'DM Sans', sans-serif",
-                fontStyle:     'italic',
-                fontWeight:     700,
-                fontSize:      '28px',
-                color:         '#ffffff',
-                letterSpacing: '0.12em',
-                whiteSpace:    'nowrap',
-                textShadow:    scrolled ? 'none' : '0px 4px 4px rgba(0,0,0,0.35)',
-                transition:    'text-shadow 0.35s ease',
-              }}>
-                NOVA TYRES
-              </span>
+            <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} aria-label="Nova Tyres home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/nova-logo.svg"
+                alt="Nova Tyres"
+                style={{
+                  height:     isMobile ? '18px' : '24px',
+                  width:      'auto',
+                  display:    'block',
+                  // Keep it legible over the bright hero; drop the shadow once scrolled onto the dark bar.
+                  filter:     scrolled ? 'none' : 'drop-shadow(0 2px 5px rgba(0,0,0,0.45))',
+                  transition: 'filter 0.35s ease, height 0.35s ease',
+                }}
+              />
             </Link>
           </div>
 
