@@ -12,6 +12,7 @@ import {
   toast, SearchBox, EmptyState, PanelHead, usePager, Pager,
 } from "./ui";
 import { downloadCSV } from "../../lib/csv";
+import { ProductGallery } from "./image-upload";
 
 type Ctx = any;
 
@@ -24,6 +25,10 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [rows, setRows] = useState<any[]>(D.products);
   const [edit, setEdit] = useState<any>(null);
   const [del, setDel] = useState<any>(null);
+
+  // Server truth wins once a refetch lands, so an image added in the drawer
+  // shows up in the table instead of waiting for a full page reload.
+  React.useEffect(() => { setRows(D.products); }, [D.products]);
 
   const cats = ["All", "Tyres", "Wheels", "Oils", "Parts"];
   const lowCount = rows.filter((p) => p.stock <= p.low).length;
@@ -111,7 +116,15 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
               <tbody>
                 {pager.slice.map((p) => (
                   <tr key={p.id}>
-                    <td><div className="cell-flex"><span className="prod-thumb"><Icon name={p.icon} /></span><div><div className="cell-main">{p.name}</div><div className="cell-sub mono">{p.spec}</div></div></div></td>
+                    <td><div className="cell-flex">
+                      <span className="prod-thumb">
+                        {p.image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 }} />
+                          : <Icon name={p.icon} />}
+                      </span>
+                      <div><div className="cell-main">{p.name}</div><div className="cell-sub mono">{p.spec}</div></div>
+                    </div></td>
                     <td className="nowrap">{p.brand}</td>
                     <td className="mono">${p.price}</td>
                     <td>
@@ -138,6 +151,9 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
       {edit && (
         <Drawer title={edit.name} sub={edit.brand + " · " + edit.cat} onClose={() => setEdit(null)}
           foot={<React.Fragment><button className="btn ghost" style={{ flex: 1 }} onClick={() => setEdit(null)}>Cancel</button><button className="btn" style={{ flex: 1 }} onClick={saveEdit}><Icon name="check" />Save changes</button></React.Fragment>}>
+          {/* Images save on their own (the product already exists), unlike the
+              fields below which apply on "Save changes". */}
+          {edit.id && <ProductGallery productId={edit.id} onChanged={() => ctx.refetch?.()} />}
           <div className="field"><label>Product name</label><input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></div>
           <div className="field"><label>Specification</label><input value={edit.spec} onChange={(e) => setEdit({ ...edit, spec: e.target.value })} /></div>
           <div className="form-grid">

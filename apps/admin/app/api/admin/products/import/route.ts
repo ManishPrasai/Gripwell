@@ -33,6 +33,9 @@ const RowSchema = z.object({
   wheelWidth:  numish,
   pcd:         z.string().trim().optional().default(''),
   material:    z.string().trim().optional().default(''),
+  // Paths returned by POST /api/admin/media, in display order. Restricted to
+  // URLs this app serves so an import can't inject an external <img src>.
+  imageUrls:   z.array(z.string().trim().min(1).max(500)).max(8).optional(),
 })
 
 const BodySchema = z.object({ products: z.array(RowSchema).min(1).max(500) })
@@ -41,6 +44,10 @@ const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'product'
 const rand = (n = 5) => Math.random().toString(36).slice(2, 2 + n)
 const num  = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : 0 }
+
+/** Keep only paths we host ourselves — see `imageUrls` on the schema. */
+const ownImages = (urls?: string[]) =>
+  (urls ?? []).filter(u => u.startsWith('/media/') || u.startsWith('/images/')).slice(0, 8)
 
 /** Parse "225/45R17" (or "225/45 R17") into its three dimensions. */
 function parseSize(s: string): { width: number; profile: number; rimDiameter: number } | null {
@@ -69,6 +76,7 @@ export async function POST(req: NextRequest) {
 
     const rows = parsed.data.products
     const errors: { row: number; name: string; reason: string }[] = []
+    const createdIds: string[] = []
     let created = 0
 
     for (let i = 0; i < rows.length; i++) {
@@ -83,7 +91,7 @@ export async function POST(req: NextRequest) {
             create: size,
             update: {},
           })
-          await prisma.tyre.create({
+          const tyre = await prisma.tyre.create({
             data: {
               brand: r.brand || r.name.split(' ')[0], model: r.name,
               description: r.description || null, tyreSizeId: ts.id,
@@ -91,12 +99,20 @@ export async function POST(req: NextRequest) {
               stockQuantity: Math.max(0, Math.round(num(r.stock))),
               slug: `${slugify(`${r.brand}-${r.name}-${r.size}`)}-${rand()}`, isActive: true,
             },
+            select: { id: true },
           })
+          const tyreImages = ownImages(r.imageUrls)
+          if (tyreImages.length) {
+            await prisma.tyreImage.createMany({
+              data: tyreImages.map((url, n) => ({ tyreId: tyre.id, url, altText: r.name, sortOrder: n })),
+            })
+          }
+          createdIds.push(tyre.id)
           created++
         } else if (cat.startsWith('wheel')) {
           const dia = Math.round(num(r.diameter))
           if (!dia) { errors.push({ row: i + 1, name: r.name, reason: 'Wheels need a diameter (inches)' }); continue }
-          await prisma.wheel.create({
+          const wheel = await prisma.wheel.create({
             data: {
               brand: r.brand || r.name.split(' ')[0], model: r.name,
               description: r.description || null,
@@ -105,7 +121,15 @@ export async function POST(req: NextRequest) {
               stockQuantity: Math.max(0, Math.round(num(r.stock))),
               slug: `${slugify(`${r.brand}-${r.name}-${dia}`)}-${rand()}`, isActive: true,
             },
+            select: { id: true },
           })
+          const wheelImages = ownImages(r.imageUrls)
+          if (wheelImages.length) {
+            await prisma.wheelImage.createMany({
+              data: wheelImages.map((url, n) => ({ wheelId: wheel.id, url, altText: r.name, sortOrder: n })),
+            })
+          }
+          createdIds.push(wheel.id)
           created++
         } else {
           errors.push({ row: i + 1, name: r.name, reason: `No catalog table for "${r.category}" — only Tyres and Wheels are supported` })
@@ -123,6 +147,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true, created, skipped: errors.length, total: rows.length,
       errors: errors.slice(0, 50),
+      // Lets the manual-add form attach further images to what it just created.
+      ids: createdIds,
     })
   } catch (e) {
     if (e instanceof AdminError) return NextResponse.json({ error: e.message }, { status: e.status })

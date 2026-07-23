@@ -6,8 +6,15 @@ import { accessFromToken, can, type PermArea } from './lib/rbac'
    ROUTE CLASSIFICATION
    ───────────────────────────────────────────────────────────────────────── */
 
-/** Always public — no token required */
-const PUBLIC_PREFIXES = ['/login', '/api/auth/']
+/**
+ * Always public — no token required.
+ *
+ * `/media/` serves product photos out of KV. They're public catalog imagery
+ * (the storefront serves the identical bytes to anonymous shoppers), and
+ * leaving them gated would bounce every <img> in the console to /login the
+ * moment an access token lapsed.
+ */
+const PUBLIC_PREFIXES = ['/login', '/api/auth/', '/media/']
 
 /**
  * /api/admin/* routes only accessible to SUPER_ADMIN.

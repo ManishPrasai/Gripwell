@@ -8,6 +8,7 @@ import { useState, useRef } from "react";
 import { Icon } from "./icons";
 import { toast } from "./ui";
 import { adminFetch } from "../../lib/adminFetch";
+import { ImageSlot } from "./image-upload";
 
 const IMPORT_CATS = ["Tyres", "Wheels"];
 const IMPORT_FIELDS: [string, string, boolean][] = [
@@ -15,14 +16,6 @@ const IMPORT_FIELDS: [string, string, boolean][] = [
   ["size", "Tyre size (e.g. 225/45R17)", false], ["type", "Tyre type", false],
   ["price", "Price", false], ["stock", "Stock quantity", false], ["description", "Description", false], ["sku", "SKU", false],
 ];
-
-function ImgSlot({ height, placeholder, style }: { height: number; placeholder: string; style?: React.CSSProperties }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height, borderRadius: 12, border: "1px dashed var(--border)", color: "var(--ink-3)", fontSize: 13, background: "var(--chip)", cursor: "pointer", ...style }}>
-      {placeholder}
-    </div>
-  );
-}
 
 function parseCSVText(text: string) {
   const lines = text.trim().split(/\r?\n/);
@@ -290,6 +283,12 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
   const [form, setForm] = useState<any>(emptyForm);
   const [added, setAdded] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  // Images are uploaded as soon as they're picked; these are the resulting
+  // /media/... paths, sent with the product so they're attached on create.
+  // [0] is the main photo, [1..3] the extra angles.
+  const [images, setImages] = useState<(string | null)[]>([null, null, null, null]);
+  const setImageAt = (n: number, url: string | null) =>
+    setImages((prev) => prev.map((u, i) => (i === n ? url : u)));
 
   async function addProduct() {
     if (!form.name.trim()) { toast({ kind: "err", title: "Name required", body: "Enter a product name to continue." }); return; }
@@ -305,13 +304,15 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
           diameter: form.diameter, pcd: form.pcd, material: form.material,
           price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0,
           sku: form.sku, description: form.description,
+          imageUrls: images.filter(Boolean),
         }],
       });
       if (res.created > 0) {
-        setAdded((prev) => [{ ...form, id: Date.now(), price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0 }, ...prev]);
+        setAdded((prev) => [{ ...form, id: Date.now(), image: images[0], price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0 }, ...prev]);
         toast({ kind: "ok", title: "Product added", body: form.name + " saved to inventory." });
         ctx?.refetch?.();
         setForm(emptyForm);
+        setImages([null, null, null, null]);
       } else {
         toast({ kind: "err", title: "Couldn't add product", body: res.errors?.[0]?.reason || "Check the details and try again." });
       }
@@ -429,13 +430,24 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="panel" style={{ padding: 24 }}>
               <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 16 }}>Product image</div>
-              <ImgSlot height={230} placeholder="Drop a product photo here" style={{ borderRadius: 14 }} />
-              <p style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10, textAlign: "center" }}>Recommended: 800 × 800 px · PNG or JPEG</p>
+              <ImageSlot
+                value={images[0]} onChange={(url) => setImageAt(0, url)}
+                height={230} placeholder="Drop a product photo here, or click to browse"
+                style={{ borderRadius: 14 }}
+              />
+              <p style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10, textAlign: "center" }}>
+                Recommended: 800 × 800 px · JPEG, PNG or WebP
+              </p>
 
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-2)", marginBottom: 10 }}>Additional images</div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {[1, 2, 3].map((n) => (<ImgSlot key={n} height={80} placeholder="+" style={{ flex: 1, borderRadius: 10 }} />))}
+                  {[1, 2, 3].map((n) => (
+                    <ImageSlot
+                      key={n} compact value={images[n]} onChange={(url) => setImageAt(n, url)}
+                      height={80} placeholder="+" style={{ flex: 1, borderRadius: 10 }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -449,7 +461,12 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
                 <div style={{ paddingBottom: 8 }}>
                   {added.map((p) => (
                     <div className="lrow" key={p.id}>
-                      <span className="prod-thumb"><Icon name={p.category === "Tyres" ? "tyre" : p.category === "Wheels" ? "wheel" : p.category === "Oils" ? "oil" : "part"} /></span>
+                      <span className="prod-thumb">
+                        {p.image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 }} />
+                          : <Icon name={p.category === "Tyres" ? "tyre" : p.category === "Wheels" ? "wheel" : p.category === "Oils" ? "oil" : "part"} />}
+                      </span>
                       <div className="lrow-main">
                         <b>{p.name}</b>
                         <span>{p.brand ? p.brand + " · " : ""}{p.category} · ${p.price}</span>
