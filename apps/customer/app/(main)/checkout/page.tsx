@@ -159,10 +159,12 @@ function StripePaymentForm({
         return
       }
 
+      let ck: { email?: string; name?: string; storeName?: string } = {}
+      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
       const res  = await fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
+        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null, email: ck.email, name: ck.name, storeName: ck.storeName }),
       })
       const data = await res.json()
 
@@ -283,10 +285,12 @@ export default function CheckoutPage() {
     if (status === 'succeeded' && piId) {
       // Redirect-based method (PayPal / Afterpay / Klarna) returned successfully.
       // Call the success route to record the order, then navigate to confirmation.
+      let ck: { email?: string; name?: string; storeName?: string } = {}
+      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
       fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paymentIntentId: piId }),
+        body:    JSON.stringify({ paymentIntentId: piId, email: ck.email, name: ck.name, storeName: ck.storeName }),
       })
         .then(r => r.json())
         .then(data => {
@@ -329,6 +333,14 @@ export default function CheckoutPage() {
   async function advanceToPayment() {
     setPayIntentLoading(true)
     setPayIntentError(null)
+    // Persist contact + store for the order confirmation email (survives redirect flows).
+    try {
+      let storeName = ''
+      try { storeName = (JSON.parse(localStorage.getItem('nova_selected_store') || '{}') as { name?: string }).name || '' } catch {}
+      localStorage.setItem('nova_checkout', JSON.stringify({
+        email: contact.email, name: `${contact.firstName} ${contact.lastName}`.trim(), storeName,
+      }))
+    } catch {}
     try {
       // Carry the cart's fitting choice so the server charges the right total.
       let fitting: { vehicleType?: string; method?: string; storeId?: string; fitCount?: number } = {}
