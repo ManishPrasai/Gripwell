@@ -263,7 +263,7 @@ export default function Navbar() {
             <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }} aria-label="Nova Tyres home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/nova-logo.svg"
+                src="/images/nova-logo.png"
                 alt="Nova Tyres"
                 style={{
                   height:     isMobile ? '18px' : '24px',
