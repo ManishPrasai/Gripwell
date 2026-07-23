@@ -14,14 +14,14 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 // Invoice / order-confirmation sender. Override with EMAIL_FROM if needed.
 const DEFAULT_FROM = 'Nova Tyres <no-reply@novatyres.com.au>'
 
-async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<boolean> {
+async function sendEmail(opts: { to: string; subject: string; html: string; from?: string; replyTo?: string }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
   if (!key) {
     console.warn('[email] RESEND_API_KEY not set — skipping send to', opts.to)
     return false
   }
-  const from    = process.env.EMAIL_FROM || DEFAULT_FROM
-  const replyTo = process.env.EMAIL_REPLY_TO
+  const from    = opts.from ?? process.env.EMAIL_FROM ?? DEFAULT_FROM
+  const replyTo = opts.replyTo ?? process.env.EMAIL_REPLY_TO
 
   try {
     const res = await fetch(RESEND_ENDPOINT, {
@@ -138,6 +138,65 @@ function orderConfirmationHtml(d: OrderEmailData): string {
       </p>
     </div>
     <p style="text-align:center;color:#B0B0A8;font-size:11px;margin-top:16px">© Nova Tyres · Australian tyre &amp; wheel retailer</p>
+  </div>
+</body></html>`
+}
+
+/* ── Sales / promotional email (from the marketing address) ────────────────── */
+const DEFAULT_MARKETING_FROM = 'Nova Tyres <updates@novatyres.com.au>'
+const SITE_URL = 'https://nova-tyres-customer.manish-prasai31.workers.dev'
+
+export interface SalesEmailData {
+  to:            string
+  customerName?: string
+  headline:      string
+  subhead?:      string
+  code?:         string
+  ctaLabel?:     string
+  ctaUrl?:       string
+}
+
+export async function sendSalesEmail(d: SalesEmailData): Promise<boolean> {
+  if (!d.to) return false
+  const from = process.env.EMAIL_MARKETING_FROM || DEFAULT_MARKETING_FROM
+  return sendEmail({
+    to:      d.to,
+    subject: `${d.headline} — Nova Tyres`,
+    html:    salesHtml(d),
+    from,
+  })
+}
+
+function salesHtml(d: SalesEmailData): string {
+  const cta = d.ctaUrl || `${SITE_URL}/tyres/results`
+  return `<!doctype html>
+<html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;padding:24px 16px">
+    <div style="background:#076330;border-radius:16px 16px 0 0;padding:22px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    </div>
+    <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px;text-align:center">
+      <div style="display:inline-block;background:#FAECE7;color:#E8572A;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:999px">Sale on now</div>
+      <h1 style="margin:18px 0 8px;color:#16211B;font-size:28px;line-height:1.15;letter-spacing:-.02em">${esc(d.headline)}</h1>
+      ${d.subhead ? `<p style="margin:0 auto 22px;color:#47554D;font-size:15px;line-height:1.6;max-width:42ch">${esc(d.subhead)}</p>` : ''}
+      ${d.code ? `
+        <div style="margin:0 auto 24px;max-width:320px;border:2px dashed #E8572A;border-radius:12px;padding:16px">
+          <div style="color:#85908A;font-size:12px;text-transform:uppercase;letter-spacing:.06em">Use code</div>
+          <div style="color:#E8572A;font-weight:800;font-size:24px;letter-spacing:.04em;margin-top:2px">${esc(d.code)}</div>
+        </div>` : ''}
+      <a href="${esc(cta)}" style="display:inline-block;background:#E8572A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">${esc(d.ctaLabel || 'Shop the sale')}</a>
+
+      <table style="width:100%;border-collapse:collapse;margin-top:32px;border-top:1px solid #EBEBEB;padding-top:8px">
+        <tr>
+          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🏷️<br>Warehouse-direct prices</td>
+          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🔧<br>Fitting at 7 stores</td>
+          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🚚<br>Fast Australia-wide delivery</td>
+        </tr>
+      </table>
+    </div>
+    <p style="text-align:center;color:#B0B0A8;font-size:11px;margin-top:16px;line-height:1.6">
+      You're receiving this because you shop with Nova Tyres.<br>© Nova Tyres · Reply to unsubscribe.
+    </p>
   </div>
 </body></html>`
 }
