@@ -11,7 +11,8 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
-const DEFAULT_FROM = 'Nova Tyres <accounts@novatyres.com.au>'
+// Invoice / order-confirmation sender. Override with EMAIL_FROM if needed.
+const DEFAULT_FROM = 'Nova Tyres <no-reply@novatyres.com.au>'
 
 async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
