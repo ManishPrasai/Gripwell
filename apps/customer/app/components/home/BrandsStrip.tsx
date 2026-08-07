@@ -1,85 +1,79 @@
-const brands = [
-  { name: 'Continental', logo: '/images/brands/continental.svg' },
-  { name: 'Pirelli',     logo: '/images/brands/pirelli.svg' },
-  { name: 'Bridgestone', logo: '/images/brands/bridgestone.svg' },
-  { name: 'Michelin',    logo: '/images/brands/michelin.svg' },
-  { name: 'Yokohama',    logo: '/images/brands/yokohama.svg' },
-  { name: 'Maxxis',      logo: '/images/brands/maxxis.svg' },
-  { name: 'Nitto',       logo: '/images/brands/nitto.svg' },
-  { name: 'Hankook',     logo: '/images/brands/hankook.svg' },
-  { name: 'Atlander',    logo: '/images/brands/atlander.svg' },
+import Link from 'next/link'
+
+const BRANDS = [
+  { name: 'Continental', src: '/images/brands/continental.svg' },
+  { name: 'Pirelli',     src: '/images/brands/pirelli.svg' },
+  { name: 'Bridgestone', src: '/images/brands/bridgestone.svg' },
+  { name: 'Michelin',    src: '/images/brands/michelin.svg' },
+  { name: 'Yokohama',    src: '/images/brands/yokohama.svg' },
+  { name: 'Maxxis',      src: '/images/brands/maxxis.svg' },
+  { name: 'Nitto',       src: '/images/brands/nitto.svg' },
+  { name: 'Hankook',     src: '/images/brands/hankook.svg' },
+  { name: 'Atlander',    src: '/images/brands/atlander.svg' },
 ]
+
+/* The list is rendered twice so the -50% keyframe lands exactly on the seam,
+   making the scroll look continuous. The duplicate half is decorative. */
+const LOOP = [...BRANDS, ...BRANDS]
 
 export default function BrandsStrip() {
   return (
-    <section className="py-10 border-y" style={{ background: 'white', borderColor: '#E5E5E5' }}>
-      <div className="nv-shell">
-
-        {/* Heading — wrapper lets desktop keep mb-8 while mobile gets a subtitle */}
-        <div className="text-center mb-5 md:mb-8">
-          <p
-            className="uppercase tracking-widest"
-            style={{ color: '#888', letterSpacing: '0.15em', fontSize: '12px', fontWeight: 500 }}
-          >
-            Trusted Brands — 200+ Models in Stock
-          </p>
-          {/* Mobile-only subtitle — communicates the value, not just the list */}
-          <p
-            className="md:hidden mt-2"
-            style={{ color: '#555', fontSize: '13px', fontFamily: "'DM Sans', sans-serif", fontWeight: 400, lineHeight: 1.4 }}
-          >
-            All original products. Manufacturer warranty on every tyre.
-          </p>
+    <section
+      style={{
+        background: '#FFFFFF', borderTop: '1px solid #E7E5DE', borderBottom: '1px solid #E7E5DE',
+        padding: 'clamp(44px,5vw,68px) 0 0', overflow: 'hidden', fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: '1180px', margin: '0 auto clamp(28px,3.4vw,44px)',
+          padding: '0 clamp(16px,4vw,40px)', display: 'flex', flexWrap: 'wrap',
+          alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px 24px',
+        }}
+      >
+        <div>
+          <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E8572A', marginBottom: '12px' }}>
+            80+ brands in stock
+          </span>
+          <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(36px,4.6vw,58px)', letterSpacing: '0.015em', lineHeight: 1, color: '#16211B' }}>
+            Our Brands
+          </h2>
         </div>
+        <Link
+          href="/tyres"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '14px', fontWeight: 700, color: '#076330', textDecoration: 'none', paddingBottom: '4px', borderBottom: '1.5px solid transparent', transition: 'border-color .2s' }}
+        >
+          Search by brand
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Link>
+      </div>
 
-        {/* Mobile: 3×3 card grid — Desktop: original flex row */}
-        <div className="grid grid-cols-3 gap-2.5 md:flex md:flex-wrap md:items-center md:justify-center md:gap-10">
-          {brands.map(brand => (
-            <div
-              key={brand.name}
-              className={[
-                /* Mobile card */
-                'flex flex-col items-center justify-center gap-1.5 min-h-[86px] rounded-xl',
-                'border border-[#EBEBEB] bg-[#FAFAFA]',
-                /* Desktop: strip the card treatment, restore flex-item sizing */
-                'md:min-h-0 md:rounded-none md:border-0 md:bg-transparent md:p-0',
-                'transition-opacity duration-200 hover:opacity-70',
-              ].join(' ')}
-              style={{ minWidth: '60px' }}
-            >
-              <img
-                src={brand.logo}
-                alt={brand.name}
-                /* Mobile: 42px gives wordmarks enough height to be legible
-                   Desktop: 32px ≈ original 30–32px per-brand heights */
-                className="w-auto object-contain max-h-[42px] md:max-h-[32px]"
-              />
-              {/* Brand name — mobile only, acts as fallback label for mark-only logos */}
-              <span
-                className="md:hidden leading-none"
-                style={{
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  letterSpacing: '0.07em',
-                  textTransform: 'uppercase',
-                  color: '#BEBEBE',
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                {brand.name}
-              </span>
-            </div>
+      {/* Edges fade out under a mask so logos enter and leave without a hard cut */}
+      <div
+        style={{
+          position: 'relative', borderTop: '1px solid #E7E5DE', padding: 'clamp(24px,3vw,34px) 0',
+          WebkitMaskImage: 'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
+          maskImage:       'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
+        }}
+      >
+        <div className="nv-marquee" style={{ display: 'flex', width: 'max-content', gap: '16px' }}>
+          {LOOP.map((b, i) => (
+            <span
+              key={`${b.name}-${i}`}
+              role="img"
+              aria-label={i < BRANDS.length ? b.name : undefined}
+              aria-hidden={i >= BRANDS.length}
+              style={{
+                flex: '0 0 auto', width: '176px', height: '76px',
+                border: '1px solid #E7E5DE', borderRadius: '12px', backgroundColor: '#FFFFFF',
+                backgroundImage: `url('${b.src}')`, backgroundSize: '104px auto',
+                backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+              }}
+            />
           ))}
         </div>
-
-        {/* Mobile-only closing line — reinforces quality, anchors the section */}
-        <p
-          className="md:hidden text-center mt-5"
-          style={{ fontSize: '11.5px', color: '#AAA', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}
-        >
-          Original stock · No grey imports · Fitted by certified technicians
-        </p>
-
       </div>
     </section>
   )

@@ -1,128 +1,85 @@
-'use client'
-
 import Image from 'next/image'
 
-const images = [
-  '/images/social/social-1.jpg',
-  '/images/social/social-2.jpg',
-  '/images/social/social-3.jpg',
-  '/images/social/social-4.jpg',
-  '/images/social/social-5.jpg',
-  '/images/social/social-6.jpg',
-  '/images/social/social-7.jpg',
-  '/images/social/social-8.jpg',
+const SOCIAL_LINKS = [
+  { label: 'Facebook',  href: 'https://facebook.com/Novatyres.Official' },
+  { label: 'Instagram', href: 'https://instagram.com/novatyres' },
+  { label: 'TikTok',    href: 'https://tiktok.com/@novatyres' },
+]
+
+const PICS = [
+  { tag: 'IG', href: 'https://instagram.com/novatyres',      src: '/images/social/social-1.jpg', alt: 'Customer car on the open road' },
+  { tag: 'IG', href: 'https://instagram.com/novatyres',      src: '/images/social/social-2.jpg', alt: 'Fresh set of wheels in the bay' },
+  { tag: 'FB', href: 'https://facebook.com/Novatyres.Official', src: '/images/social/social-3.jpg', alt: 'A Nova Tyres fit-out' },
+  { tag: 'IG', href: 'https://instagram.com/novatyres',      src: '/images/social/social-4.jpg', alt: 'Front end of a customer car' },
+  { tag: 'TT', href: 'https://tiktok.com/@novatyres',        src: '/images/social/social-5.jpg', alt: 'A customer ride tagged #NovaTyres' },
+  { tag: 'IG', href: 'https://instagram.com/novatyres',      src: '/images/social/social-6.jpg', alt: 'Another #NovaTyres tag from the road' },
 ]
 
 export default function SocialGrid() {
   return (
-    <section style={{ background: '#FAF9F5', overflow: 'hidden' }}>
+    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        .nv-social-grid { display: grid; gap: 0; grid-template-columns: repeat(6,minmax(0,1fr)); }
+        @media (max-width: 1100px) { .nv-social-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+        @media (max-width: 780px)  { .nv-social-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+        .nv-social-tile img { transition: transform .55s cubic-bezier(.22,1,.36,1); }
+        .nv-social-tile:hover img { transform: scale(1.06); }
+        .nv-social-link { font-size: 14.5px; font-weight: 700; color: #076330; text-decoration: none; border-bottom: 1.5px solid transparent; padding-bottom: 2px; transition: border-color .2s; }
+        .nv-social-link:hover { border-color: #076330; }
+      `}</style>
 
-      {/* ── Header — left-aligned ── */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '72px', paddingBottom: '36px' }}>
-        {/* "FOLLOW US" badge */}
-        <p
-          style={{
-            color:          '#E8572A',
-            fontSize:       '11px',
-            fontWeight:     700,
-            letterSpacing:  '0.20em',
-            textTransform:  'uppercase',
-            marginBottom:   '10px',
-            fontFamily:     "'DM Sans', sans-serif",
-          }}
-        >
-          Follow Us
-        </p>
-
-        {/* Main heading */}
-        <h2
-          style={{
-            color:       '#1A1A1A',
-            fontFamily:  "'Bebas Neue', sans-serif",
-            fontSize:    'clamp(30px, 4vw, 44px)',
-            letterSpacing: '0.03em',
-            lineHeight:  1.05,
-            marginBottom: '14px',
-          }}
-        >
+      <div
+        style={{
+          maxWidth: '1180px', margin: '0 auto',
+          padding: 'clamp(34px,4vw,52px) clamp(16px,4vw,40px)',
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px 24px',
+        }}
+      >
+        <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(30px,3.8vw,46px)', letterSpacing: '0.015em', lineHeight: 1, color: '#16211B' }}>
           <span style={{ color: '#E8572A' }}>#NovaTyres</span> in Social Media
         </h2>
-
-        {/* Subtitle — readable, below heading */}
-        <p
-          style={{
-            color:       '#444444',
-            fontSize:    '15px',
-            fontWeight:  400,
-            lineHeight:  1.6,
-            fontFamily:  "'DM Sans', sans-serif",
-            marginBottom: '22px',
-            maxWidth:    '440px',
-          }}
-        >
-          Tag us in your photos and get featured on our feed.
-        </p>
-
-        {/* Instagram CTA */}
-        <a
-          href="https://www.instagram.com/novatyres/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2"
-          style={{
-            background:     '#1A1A1A',
-            color:          '#fff',
-            fontSize:       '13px',
-            fontWeight:     600,
-            padding:        '10px 20px',
-            borderRadius:   '999px',
-            textDecoration: 'none',
-            fontFamily:     "'DM Sans', sans-serif",
-          }}
-        >
-          <i className="ti ti-brand-instagram" style={{ fontSize: '15px' }} aria-hidden="true" />
-          @novatyres
-        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(16px,2.4vw,28px)' }}>
+          {SOCIAL_LINKS.map(sl => (
+            <a key={sl.label} href={sl.href} target="_blank" rel="noopener noreferrer" className="nv-social-link">
+              {sl.label}
+            </a>
+          ))}
+        </div>
       </div>
 
-      {/* ── Image grid — 4×2, full bleed ── */}
-      <div className="grid grid-cols-4 gap-0">
-        {images.map((img, i) => (
+      <div className="nv-social-grid">
+        {PICS.map((sp, i) => (
           <a
             key={i}
-            href="https://www.instagram.com/novatyres/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group"
-            style={{
-              position:    'relative',
-              display:     'block',
-              aspectRatio: '1',
-              overflow:    'hidden',
-              background:  '#E5E5E5',
-            }}
+            href={sp.href} target="_blank" rel="noopener noreferrer"
+            aria-label={sp.alt}
+            className="nv-social-tile"
+            style={{ position: 'relative', display: 'block', aspectRatio: '1', overflow: 'hidden', background: '#12241A' }}
           >
-            <Image
-              src={img}
-              alt={`Nova Tyres social post ${i + 1}`}
-              fill
-              sizes="25vw"
-              style={{
-                objectFit:  'cover',
-                transition: 'transform 0.5s ease',
-              }}
-              className="group-hover:scale-110"
-            />
-            <div
-              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: 'rgba(28,58,43,0.65)' }}
-            >
-              <i className="ti ti-brand-instagram" style={{ fontSize: '22px', color: 'white' }} aria-hidden="true" />
-            </div>
+            <Image src={sp.src} alt={sp.alt} fill sizes="(max-width: 780px) 50vw, (max-width: 1100px) 33vw, 16vw" style={{ objectFit: 'cover' }} />
+            <span style={{
+              position: 'absolute', top: '10px', right: '10px', display: 'inline-flex',
+              alignItems: 'center', justifyContent: 'center', minWidth: '24px', height: '24px',
+              padding: '0 7px', borderRadius: '6px', background: 'rgba(13,26,18,0.72)', color: '#F1EFE7',
+              fontFamily: "'DM Mono', monospace", fontSize: '10px', letterSpacing: '0.06em',
+            }}>
+              {sp.tag}
+            </span>
+            <span style={{
+              position: 'absolute', left: '50%', bottom: '12px', transform: 'translateX(-50%)',
+              display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FFFFFF',
+              color: '#0F2A1C', borderRadius: '999px', padding: '5px 11px',
+              fontFamily: "'DM Mono', monospace", fontSize: '9.5px', letterSpacing: '0.12em',
+              textTransform: 'uppercase', whiteSpace: 'nowrap', boxShadow: '0 6px 16px -10px rgba(0,0,0,0.6)',
+            }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#076330" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 11.5a8.38 8.38 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l2-5.2A8.4 8.4 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5Z" />
+              </svg>
+              DM for price
+            </span>
           </a>
         ))}
       </div>
-
     </section>
   )
 }
