@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== HANDOFF: last session state (from .claude/HANDOFF.md) ==='; cat \"$CLAUDE_PROJECT_DIR/.claude/HANDOFF.md\" 2>/dev/null; echo '=== Update this file before you finish. ==='",
+            "statusMessage": "Loading session handoff…"
+          }
+        ]
+      }
+    ]
+  }
+}
