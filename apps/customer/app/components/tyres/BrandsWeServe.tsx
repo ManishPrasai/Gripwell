@@ -1,107 +1,76 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import Image from 'next/image'
+import { C, FONT, CONTAINER, KICKER } from '../shop/tokens'
 
-/*
-  All logos share the same row height so no cell is taller than others,
-  which eliminates the perceived gap around smaller logos.
-  darkFix — brightness(0) for SVGs with white/near-white paths
-*/
-const ROW1 = [
-  { name: 'Continental', logo: '/images/brands/continental.svg' },
-  { name: 'Pirelli',     logo: '/images/brands/pirelli.svg' },
-  { name: 'Nitto',       logo: '/images/brands/nitto.svg' },
-  { name: 'Yokohama',    logo: '/images/brands/yokohama.svg',   logoH: 58,  logoMaxW: 220 },
-  { name: 'Maxxis',      logo: '/images/brands/maxxis.svg',     logoH: 58,  logoMaxW: 220 },
-  { name: 'Atlander',    logo: '/images/brands/atlander.svg' },
+/* All twelve marks the design calls for — every one has real artwork in
+   public/images/brands, so no tile falls back to a placeholder.
+
+   `cat` routes each tile to the catalogue that actually stocks it: tyre brands
+   to /tyres/results, wheel brands to /wheels/results. Nitto and Atlander are
+   marks we serve but hold no stock for, so they open the unfiltered tyre grid
+   rather than an empty brand filter. */
+const BRANDS: { name: string; src: string; cat: 'tyres' | 'wheels' | 'none' }[] = [
+  { name: 'Continental', src: '/images/brands/continental.svg', cat: 'tyres' },
+  { name: 'Pirelli',     src: '/images/brands/pirelli.svg',     cat: 'tyres' },
+  { name: 'Nitto',       src: '/images/brands/nitto.svg',       cat: 'none' },
+  { name: 'Yokohama',    src: '/images/brands/yokohama.svg',    cat: 'tyres' },
+  { name: 'Maxxis',      src: '/images/brands/maxxis.svg',      cat: 'tyres' },
+  { name: 'Atlander',    src: '/images/brands/atlander.svg',    cat: 'none' },
+  { name: 'King Wheels', src: '/images/brands/king-wheels.svg', cat: 'wheels' },
+  { name: 'ROH',         src: '/images/brands/roh.svg',         cat: 'wheels' },
+  { name: 'Black Rhino', src: '/images/brands/Black Rino.svg',  cat: 'wheels' },
+  { name: 'Sonix',       src: '/images/brands/sonix.svg',       cat: 'wheels' },
+  { name: 'BF Goodrich', src: '/images/brands/bfgoodrich.svg',  cat: 'tyres' },
+  { name: 'Hankook',     src: '/images/brands/hankook.svg',     cat: 'tyres' },
 ]
 
-const ROW2 = [
-  { name: 'King Wheels', logo: '/images/brands/king-wheels.svg', darkFix: true },
-  { name: 'ROH',         logo: '/images/brands/roh.svg' },
-  { name: 'Black Rhino', logo: '/images/brands/Black Rino.svg',  logoH: 78,  logoMaxW: 260 },
-  { name: 'Sonix',       logo: '/images/brands/sonix.svg' },
-  { name: 'BFGoodrich',  logo: '/images/brands/bfgoodrich.svg' },
-  { name: 'Hankook',     logo: '/images/brands/hankook.svg' },
-]
-
-type Brand = { name: string; logo: string; logoH?: number; logoMaxW?: number; darkFix?: boolean }
-
-function BrandCell({ name, logo, logoH = 44, logoMaxW = 160, darkFix }: {
-  name: string; logo: string; logoH?: number; logoMaxW?: number; darkFix?: boolean
-}) {
-  const [err, setErr] = useState(false)
-  return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 0' }}>
-      <Link
-        href={`/tyres?brand=${encodeURIComponent(name)}`}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
-      >
-        {err ? (
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '14px', color: '#1A1A1A' }}>
-            {name}
-          </span>
-        ) : (
-          <Image
-            src={logo}
-            alt={name}
-            width={logoMaxW * 2}
-            height={logoH * 2}
-            style={{
-              objectFit: 'contain',
-              height: `${logoH}px`,
-              width: 'auto',
-              maxWidth: `${logoMaxW}px`,
-              filter: darkFix ? 'brightness(0)' : undefined,
-            }}
-            onError={() => setErr(true)}
-          />
-        )}
-      </Link>
-    </div>
-  )
+function brandHref(b: (typeof BRANDS)[number]): string {
+  if (b.cat === 'none') return '/tyres/results'
+  return `/${b.cat}/results?brand=${encodeURIComponent(b.name)}`
 }
 
 export default function BrandsWeServe() {
+  const [hovered, setHovered] = useState<string | null>(null)
+
   return (
-    <section style={{ background: '#fff', paddingTop: '40px', paddingBottom: '0px' }}>
-      <div className="nv-shell">
-
-        {/* Divider separating Shop by Tyre Type from Brands We Serve */}
-        <div style={{ height: '1px', background: '#E8E8E8', marginBottom: '14px' }} />
-
-        <h2 style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 'clamp(22px, 2.5vw, 28px)',
-          fontWeight: 900,
-          color: '#1A1A1A',
-          marginBottom: '4px',
-        }}>
-          Brands We Serve
-        </h2>
-
-        {/* Row 1 */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {ROW1.map(b => (
-            <BrandCell key={b.name} name={b.name} logo={b.logo}
-              logoH={(b as Brand).logoH} logoMaxW={(b as Brand).logoMaxW} />
-          ))}
+    <section style={{ background: '#fff', padding: '0 clamp(16px,3vw,64px) clamp(36px,5vw,56px)', fontFamily: FONT }}>
+      <div style={{ ...CONTAINER, borderTop: `1px solid ${C.line}`, paddingTop: 'clamp(24px,3vw,36px)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '18px' }}>
+          <div>
+            <div style={KICKER}>Brands we serve</div>
+            <h2 style={{ font: `800 clamp(24px,2.8vw,34px) ${FONT}`, color: C.ink, margin: 0 }}>
+              80+ brands, original stock only
+            </h2>
+          </div>
+          <Link href="/tyres/results" style={{ fontSize: '14px', fontWeight: 700, color: C.green, textDecoration: 'none' }}>
+            Shop all brands →
+          </Link>
         </div>
 
-        {/* Gap between rows */}
-        <div style={{ height: '6px' }} />
-
-        {/* Row 2 */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          {ROW2.map(b => (
-            <BrandCell key={b.name} name={b.name} logo={b.logo}
-              logoH={(b as Brand).logoH} logoMaxW={(b as Brand).logoMaxW}
-              darkFix={(b as Brand).darkFix} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '12px' }}>
+          {BRANDS.map(b => (
+            <Link
+              key={b.name}
+              href={brandHref(b)}
+              aria-label={`Shop ${b.name}`}
+              onMouseEnter={() => setHovered(b.name)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                height: '84px', background: '#fff',
+                border: `1px solid ${hovered === b.name ? C.line3 : C.line}`,
+                borderRadius: '10px', padding: '14px', boxSizing: 'border-box',
+                textDecoration: 'none', transition: 'border-color .18s ease',
+              }}
+            >
+              <Image src={b.src} alt={b.name} width={110} height={30}
+                style={{ objectFit: 'contain', maxWidth: '100%', height: 'auto', maxHeight: '34px', width: 'auto' }} />
+            </Link>
           ))}
         </div>
-
       </div>
     </section>
   )

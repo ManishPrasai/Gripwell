@@ -2,7 +2,7 @@ export default function CollectionHero() {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ background: '#111', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '80px' }}
+      style={{ background: '#111', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       {/* Background — reuses existing warehouse image */}
       <img

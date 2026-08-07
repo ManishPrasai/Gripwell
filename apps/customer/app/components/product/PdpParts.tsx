@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { STORES } from '../../../lib/stores'
 
 interface MapStore {
   id: string; name: string; address: string; suburb: string; lat: number; lng: number
@@ -157,7 +158,7 @@ export function Accordion({ items }: { items: { q: string; points: React.ReactNo
 export function FeatureChips() {
   const feats = [
     { ico: <IcoTruck />,  label: 'Fast delivery' },
-    { ico: <IcoPin />,    label: 'Fit at 9 locations' },
+    { ico: <IcoPin />,    label: `Fit at ${STORES.length} stores` },
     { ico: <IcoShield />, label: 'Fitment guaranteed' },
     { ico: <IcoHeadset />,label: 'Expert support' },
   ]
