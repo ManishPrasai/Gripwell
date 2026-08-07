@@ -42,7 +42,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title:       "Nova Tyres — Australia's Best Tyre Deals",
-  description: 'Buy tyres online and get them fitted same day at one of our 9 locations across Australia.',
+  description: 'Buy tyres online and get them fitted same day at one of our 7 stores across VIC and NSW.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
