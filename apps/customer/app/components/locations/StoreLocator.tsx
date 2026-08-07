@@ -1,182 +1,195 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useRef } from 'react'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { STORES, STORE_NETWORK_LABEL, telHref, fullAddress, directionsHref, type Store } from '../../../lib/stores'
 
-/* Map renders Leaflet against `window` — must be client-only */
-const StoreMap = dynamic(() => import('./StoreMap'), { ssr: false })
+/* Leaflet touches `window` on import — client-only. The skeleton keeps the
+   section's height stable so the page doesn't jump when the map arrives. */
+const StoreMap = dynamic(() => import('./StoreMap'), {
+  ssr: false,
+  loading: () => <div style={{ width: '100%', height: '100%', background: '#EFEEE8' }} />,
+})
 
-/* ── Store data ──────────────────────────────────────────────────────────── */
-export interface Store {
-  id:      string
-  name:    string
-  address: string
-  suburb:  string
-  lat:     number
-  lng:     number
-}
+/* Re-exported so existing importers of the old location keep resolving. */
+export type { Store }
 
-const STORES: Store[] = [
-  { id: 'alphington', name: 'Nova Tyres Alphington', address: '200 Grange Rd',        suburb: 'Alphington VIC 3078',     lat: -37.7782, lng: 145.0253 },
-  { id: 'bayswater',  name: 'Nova Tyres Bayswater',  address: '194 Canterbury Rd',    suburb: 'Bayswater VIC 3153',      lat: -37.8421, lng: 145.2589 },
-  { id: 'dandenong',  name: 'Nova Tyres Dandenong',  address: '55 Lonsdale St',       suburb: 'Dandenong VIC 3175',      lat: -37.9875, lng: 145.2148 },
-  { id: 'sefton',     name: 'Nova Tyres Sefton',     address: '120 Hector St',        suburb: 'Sefton NSW 2162',         lat: -33.8894, lng: 151.0112 },
-  { id: 'springvale', name: 'Nova Tyres Springvale', address: '800 Princes Hwy',      suburb: 'Springvale VIC 3171',     lat: -37.9482, lng: 145.1537 },
-  { id: 'brisbane',   name: 'Nova Tyres Brisbane',   address: '123 Ipswich Rd',       suburb: 'Woolloongabba QLD 4102',  lat: -27.4891, lng: 153.0321 },
-  { id: 'adelaide',   name: 'Nova Tyres Adelaide',   address: '456 Port Rd',          suburb: 'Hindmarsh SA 5007',       lat: -34.9287, lng: 138.5632 },
-  { id: 'richmond',   name: 'Nova Tyres Richmond',   address: '310 Swan St',          suburb: 'Richmond VIC 3121',       lat: -37.8228, lng: 144.9964 },
-  { id: 'geelong',    name: 'Nova Tyres Geelong',    address: '88 Latrobe Terrace',   suburb: 'Geelong VIC 3220',        lat: -38.1500, lng: 144.3600 },
-]
+const RAIL_STEP = 520
 
-/* MVP journey link — 125 Holden St, Fitzroy North to the Nova Tyres
-   Alphington storefront. Hardcoded so the directions route flawlessly
-   without runtime geolocation. */
-const DIRECTIONS_URL =
-  'https://www.google.com/maps/dir/?api=1&origin=-37.7794723,144.9840095&destination=-37.7675693,145.0275057&travelmode=driving'
-
-const STATE_FILTERS = ['All', 'VIC', 'NSW', 'QLD'] as const
-
-/* ── Component ───────────────────────────────────────────────────────────── */
 export default function StoreLocator() {
-  const [isMounted,    setIsMounted]    = useState(false)
-  const [search,        setSearch]        = useState('')
-  const [stateFilter,   setStateFilter]   = useState<typeof STATE_FILTERS[number]>('All')
-  const [selectedStore, setSelectedStore] = useState<Store | null>(STORES[0])
+  const [active, setActive] = useState<Store>(STORES[0])
+  const railRef = useRef<HTMLDivElement>(null)
 
-  /* Guards client-only calculations (geolocation, map sync) from running
-     during SSR — prevents the markup mismatch that was throwing a hydration error. */
-  useEffect(() => { setIsMounted(true) }, [])
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return STORES.filter(s => {
-      const matchesQuery = !q || s.name.toLowerCase().includes(q) || s.suburb.toLowerCase().includes(q)
-      const matchesState = stateFilter === 'All' || s.suburb.includes(stateFilter)
-      return matchesQuery && matchesState
-    })
-  }, [search, stateFilter])
-
-  if (!isMounted) return null
+  function scrollRail(delta: number) {
+    railRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  }
 
   return (
-    <section className="relative py-16 px-4 overflow-hidden" style={{ background: '#1a3022' }}>
-      {/* Background image — zoomed in 50%, centered */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'url(/images/store-bg.jpg)',
-          backgroundSize: '150%',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          opacity: 0.55,
-          filter: 'blur(4px)',
-          transform: 'scale(1.06)',
-        }}
-      />
-      {/* Hint of green scrim */}
-      <div className="absolute inset-0" style={{ background: 'rgba(22, 65, 32, 0.15)' }} />
+    <section id="locations" style={{ background: '#FFFFFF', padding: 'clamp(56px,6.5vw,88px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        .nv-rail-btn:hover { background: #F0EFE9; border-color: #076330; }
+        .nv-store-tel:hover { background: #FF6817; }
+      `}</style>
 
-      {/* 90% theater container — title + interactive grid both live inside it,
-          so everything locks to the same edges on laptops and wide monitors */}
-      <div className="relative z-10 w-[90%] max-w-[1600px] mx-auto bg-gradient-to-b from-neutral-950/90 to-neutral-900/95 border border-white/10 backdrop-blur-3xl rounded-[2rem] p-6 md:p-8 my-4 h-[calc(100vh-40px)] max-h-[680px] flex flex-col overflow-hidden shadow-[0_50px_100px_-30px_rgba(0,0,0,0.9)]">
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-neutral-800/60 pb-6 w-full flex-shrink-0 mb-6">
-          <div>
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full uppercase tracking-wide mb-4"
-              style={{ background: 'rgba(232,87,42,0.2)', color: '#E8572A', letterSpacing: '0.1em', fontSize: '11px', fontWeight: 500 }}
-            >
-              <i className="ti ti-map-pin" style={{ fontSize: '12px' }} aria-hidden="true" />
-              Our Locations
-            </div>
-            <h2 className="text-white leading-tight" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-              Multiple Stores{' '}
-              <em style={{ color: '#E8572A', fontStyle: 'italic' }}>one phone call</em>
-              <br />away for new tyres.
+        {/* ── Header ── */}
+        <div data-reveal style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px 24px', marginBottom: 'clamp(22px,2.6vw,30px)' }}>
+          <div style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#E8572A', marginBottom: '12px' }}>
+              Come see us
+            </span>
+            <h2 style={{ margin: '0 0 10px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(34px,4.6vw,58px)', letterSpacing: '0.015em', lineHeight: 1, color: '#16211B' }}>
+              {STORE_NETWORK_LABEL}
             </h2>
+            <p style={{ margin: 0, fontSize: '15.5px', color: '#6E7C74' }}>
+              Walk in for a free tyre and safety check — no booking needed.
+            </p>
+          </div>
+          <Link
+            href="/service?goto=shops"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '14px', fontWeight: 700, color: '#076330', textDecoration: 'none', borderBottom: '1.5px solid rgba(7,99,48,0.35)', paddingBottom: '3px', whiteSpace: 'nowrap' }}
+          >
+            All store details &amp; services
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Link>
+        </div>
+
+        {/* ── Map + floating detail card ── */}
+        <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid #E7E5DE', background: '#EFEEE8' }}>
+          <div style={{ width: '100%', height: 'clamp(300px,38vw,440px)' }}>
+            {/* next/dynamic erases StoreMap's generic, so the callback arrives
+                typed as the narrow MappableStore — resolve it back to the full
+                record before storing it as the active store. */}
+            <StoreMap
+              stores={STORES}
+              selectedStore={active}
+              onSelectStore={s => {
+                const full = STORES.find(x => x.id === s.id)
+                if (full) setActive(full)
+              }}
+            />
           </div>
 
-          {/* Premium control deck — low-profile state filter + live journey link,
-              baseline-aligned with the heading on the right */}
-          <div className="hidden lg:flex items-center gap-3">
-
-            <div className="flex bg-neutral-900 border border-neutral-800 rounded-xl p-1">
-              {STATE_FILTERS.map(state => (
-                <button
-                  key={state}
-                  onClick={() => setStateFilter(state)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    stateFilter === state ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  {state}
-                </button>
-              ))}
-            </div>
-
-            <a
-              href={DIRECTIONS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#f05a28] text-white hover:bg-[#d94f21] shadow-lg shadow-orange-500/10 transition-all cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>Find Nearest Store &amp; Get Directions</span>
-            </a>
+          {/* Sits above Leaflet's panes (which top out around z-index 800) so
+              the card is never swallowed by a tile or marker layer. */}
+          <div
+            style={{
+              position: 'absolute', left: 'clamp(12px,2vw,20px)', bottom: 'clamp(12px,2vw,20px)', right: 'clamp(12px,2vw,20px)',
+              display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+              background: '#FFFFFF', border: '1px solid #E7E5DE', borderRadius: '12px', padding: '14px 16px',
+              boxShadow: '0 18px 40px -24px rgba(20,25,22,0.5)', zIndex: 1000,
+            }}
+          >
+            <span style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+              <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.03em', lineHeight: 1.05, color: '#16211B' }}>
+                {active.name}
+              </span>
+              <span style={{ fontSize: '12.5px', color: '#6E7C74' }}>{fullAddress(active)}</span>
+            </span>
+            <span style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <a
+                href={directionsHref(active)} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#F0EFE9', color: '#16211B', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m3 11 19-9-9 19-2-8-8-2z" />
+                </svg>
+                Directions
+              </a>
+              <a
+                href={telHref(active.tel)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#076330', color: '#fff', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+                {active.tel}
+              </a>
+            </span>
           </div>
         </div>
 
-        {/* Side-by-side grid — explicit columns, no absolute/floating layers
-            colliding with Leaflet's own positioned panes */}
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 flex-1 min-h-0 w-full items-stretch overflow-hidden pb-2">
+        {/* ── Rail controls ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', margin: 'clamp(22px,2.6vw,30px) 0 14px' }}>
+          <p style={{ margin: 0, fontSize: '14.5px', color: '#16211B' }}>
+            <strong>Browse stores</strong> <span style={{ color: '#6E7C74' }}>— tap a store to see it on the map</span>
+          </p>
+          <span style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button onClick={() => scrollRail(-RAIL_STEP)} aria-label="Previous stores" className="nv-rail-btn"
+              style={{ width: '38px', height: '38px', borderRadius: '8px', border: '1px solid #DEDCD4', background: '#FFFFFF', color: '#16211B', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s, border-color .2s' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M19 12H5M11 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button onClick={() => scrollRail(RAIL_STEP)} aria-label="More stores" className="nv-rail-btn"
+              style={{ width: '38px', height: '38px', borderRadius: '8px', border: '1px solid #DEDCD4', background: '#FFFFFF', color: '#16211B', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s, border-color .2s' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          </span>
+        </div>
 
-          {/* Search console panel */}
-          <div className="flex flex-col w-full h-full min-h-0 bg-neutral-900/40 border border-white/5 rounded-2xl p-4 overflow-hidden">
-            <div className="relative w-full">
-              <i className="ti ti-search absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ fontSize: '16px', color: 'rgba(255,255,255,0.35)' }} aria-hidden="true" />
-              <input
-                type="text"
-                placeholder="Search suburb or store..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 focus:border-orange-500 text-white rounded-xl pl-10 pr-4 py-3 text-sm placeholder-neutral-500 transition-all outline-none"
-              />
-            </div>
-
-            <div className="w-full flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-3 mt-4">
-              {filtered.map(store => {
-                const active = selectedStore?.id === store.id
-                return (
-                  <button
-                    key={store.id}
-                    onClick={() => setSelectedStore(store)}
-                    className={`w-full text-left p-4 rounded-xl bg-neutral-900 border border-white/5 transition-all duration-200 hover:bg-neutral-800/80 cursor-pointer ${
-                      active ? '!border-l-4 !border-l-[#f05a28] bg-neutral-800/90 shadow-[inset_0_0_20px_rgba(240,90,40,0.05)]' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-base font-bold text-white tracking-tight">{store.name}</p>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md uppercase tracking-wide whitespace-nowrap">
-                        ✓ Official
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-300 font-medium mt-1">
-                      {store.address}, {store.suburb}
-                    </p>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Map canvas cell — Leaflet stretches to fill this cell at 100%/100% */}
-          <div className="w-full h-full relative rounded-2xl overflow-hidden border border-white/5 z-10">
-            <StoreMap stores={filtered} selectedStore={selectedStore} onSelectStore={setSelectedStore} />
-          </div>
+        {/* ── Store rail ── */}
+        <div
+          ref={railRef}
+          className="nv-rail"
+          style={{ display: 'flex', gap: '16px', overflowX: 'auto', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}
+        >
+          {STORES.map(st => {
+            const on = st.id === active.id
+            return (
+              <div
+                key={st.id}
+                style={{
+                  flex: '0 0 auto', width: '244px', boxSizing: 'border-box', background: '#FFFFFF',
+                  border: `1px solid ${on ? '#076330' : '#E7E5DE'}`, borderRadius: '12px', padding: '18px',
+                  boxShadow: on ? '0 10px 26px -18px rgba(7,99,48,0.6)' : '0 4px 6px rgba(20,25,22,0.05)',
+                  transition: 'border-color .2s, box-shadow .2s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0 }}>
+                  <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '25px', letterSpacing: '0.03em', lineHeight: 1.05, color: '#16211B' }}>
+                    {st.short}
+                  </span>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', letterSpacing: '0.12em', color: '#076330' }}>
+                    {st.state}
+                  </span>
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#6E7C74' }}>{st.address}</p>
+                <button
+                  onClick={() => setActive(st)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '10px',
+                    padding: 0, border: 'none', background: 'transparent', cursor: 'pointer',
+                    fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700,
+                    color: on ? '#E8572A' : '#076330',
+                  }}
+                >
+                  {on ? 'Showing on map' : 'Show on map'}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 19V5M6 11l6-6 6 6" />
+                  </svg>
+                </button>
+                <a
+                  href={telHref(st.tel)}
+                  className="nv-store-tel"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    marginTop: '14px', background: '#E8572A', color: '#fff', textDecoration: 'none',
+                    borderRadius: '8px', padding: '13px 12px', fontSize: '14.5px', fontWeight: 700,
+                    whiteSpace: 'nowrap', transition: 'background .2s',
+                  }}
+                >
+                  {st.tel}
+                </a>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
