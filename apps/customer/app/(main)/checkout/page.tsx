@@ -372,7 +372,7 @@ export default function CheckoutPage() {
   // ── Order confirmed screen (fallback — normally replaced by navigation) ────
   if (placed) {
     return (
-      <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', maxWidth: '420px', padding: '0 24px' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#EDF7F1', border: '2px solid #19D26A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#076330" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -390,7 +390,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '96px', paddingBottom: '72px' }}>
+    <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '40px', paddingBottom: '72px' }}>
 
       {/* ── Page heading ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '36px', paddingTop: '16px' }}>
