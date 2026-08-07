@@ -9,7 +9,7 @@ export const metadata = {
 export default async function WheelResultsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ brand?: string; diameter?: string; finish?: string }>
+  searchParams: Promise<{ brand?: string; diameter?: string; width?: string; finish?: string }>
 }) {
   const params = await searchParams
 
@@ -19,6 +19,7 @@ export default async function WheelResultsPage({
       <WheelGrid
         initialBrand={params.brand}
         initialDiameter={params.diameter}
+        initialWidth={params.width}
         initialFinish={params.finish}
       />
     </main>

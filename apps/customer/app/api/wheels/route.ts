@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     const material  = searchParams.get('material')
     const finish    = searchParams.get('finish')
     const diameter  = searchParams.get('diameter')
+    const width     = searchParams.get('width')
     const minPrice  = searchParams.get('minPrice')
     const maxPrice  = searchParams.get('maxPrice')
     const page      = parseInt(searchParams.get('page') || '1')
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     const sortBy    = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    const cacheKey = `wheels:list:${brand}:${material}:${finish}:${diameter}:${minPrice}:${maxPrice}:${page}:${limit}:${sortBy}:${sortOrder}`
+    const cacheKey = `wheels:list:${brand}:${material}:${finish}:${diameter}:${width}:${minPrice}:${maxPrice}:${page}:${limit}:${sortBy}:${sortOrder}`
 
     const cached = await getCache(cacheKey)
     if (cached) return NextResponse.json(cached)
@@ -32,6 +33,9 @@ export async function GET(req: NextRequest) {
     if (material) where.material = { equals: material, mode: 'insensitive' }
     if (finish)   where.finish   = { equals: finish, mode: 'insensitive' }
     if (diameter) where.diameter = parseInt(diameter)
+    /* Rim width is a Decimal (e.g. 8.0) — parse as float, and ignore junk
+       input rather than passing NaN into the query. */
+    if (width && !Number.isNaN(parseFloat(width))) where.width = parseFloat(width)
 
     if (minPrice || maxPrice) {
       where.price = {}

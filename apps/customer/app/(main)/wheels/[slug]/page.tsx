@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import WheelProductDetail from '../../../components/product/WheelProductDetail'
 import { getWheelBySlug, getSimilarWheels } from '../../../lib/product-queries'
+import { STORES } from '../../../../lib/stores'
 
 /* Always render from live DB data (Redis-cached in the query layer) so a page is
    never served as stale/pre-rendered demo content. */
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!wheel) return {}
   return {
     title: `${wheel.brand} ${wheel.model} — Nova Tyres`,
-    description: `Buy the ${wheel.brand} ${wheel.model} from Nova Tyres. Expert fitting across 9 Australian locations.`,
+    description: `Buy the ${wheel.brand} ${wheel.model} from Nova Tyres. Expert fitting across ${STORES.length} Australian stores.`,
   }
 }
 

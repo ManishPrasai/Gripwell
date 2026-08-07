@@ -21,7 +21,7 @@ export default function FindWheelsPage() {
       <WheelHero />
       <FeaturedWheels />
       <FittingLocations />
-      <TyreInfoBar />
+      <TyreInfoBar kind="wheels" />
     </main>
   )
 }
