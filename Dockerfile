@@ -1,18 +1,19 @@
-FROM node:20-alpine
-
+FROM node:20-alpine AS base
 WORKDIR /app
-
-# Crucial fix: Tell Next.js to safely bypass native binary locks
-ENV NEXT_DISABLE_SWC_LAUNCH_FLAG=true
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY package*.json ./
-
-RUN npm install
-
+FROM base AS build
+ARG APP=customer
 COPY . .
+RUN npm ci
+RUN npm run build --workspace=apps/${APP}
+
+FROM base AS runner
+ARG APP=customer
+ENV NODE_ENV=production
+COPY --from=build /app ./
+WORKDIR /app/apps/${APP}
 
 EXPOSE 3000
-EXPOSE 3001
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
