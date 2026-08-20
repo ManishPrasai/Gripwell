@@ -1,0 +1,465 @@
+/* ============================================================
+   NOVA TYRES — Admin v3 · "Flat editorial" restyle layer
+   Loads LAST. Strips glassmorphism / gradient glow / oversized
+   radii for a calmer, more modern surface. Brand colours kept.
+   ============================================================ */
+
+/* ---------------------------------------------------------
+   1. TOKEN OVERRIDES  (cascade everywhere for free)
+   --------------------------------------------------------- */
+:root {
+  --radius: 16px;
+  --glass-blur: 0px;
+  --glass-alpha: 1;
+  --glass-alpha-2: 1;
+}
+
+[data-theme="light"] {
+  /* flat canvas — warm paper, no glow */
+  --bg-a: #F3F5F2;
+  --bg-b: #F3F5F2;
+  --glow-1: transparent;
+  --glow-2: transparent;
+
+  --glass: #FFFFFF;
+  --glass-2: #FFFFFF;
+  --glass-solid: #FFFFFF;
+  --glass-hover: #FAFBFA;
+  --hairline: transparent;
+
+  --border: #E4E8E3;
+  --border-strong: #D2D8D0;
+
+  --chip: #F1F3F0;
+  --chip-2: #E7EBE6;
+
+  /* flat, tight shadows — used sparingly */
+  --shadow-sm: 0 1px 2px rgba(16,38,27,.04);
+  --shadow: 0 1px 3px rgba(16,38,27,.05), 0 6px 16px -10px rgba(16,38,27,.16);
+  --shadow-lg: 0 8px 24px -12px rgba(16,38,27,.18);
+}
+
+[data-theme="dark"] {
+  --bg-a: #0E1512;
+  --bg-b: #0E1512;
+  --glow-1: transparent;
+  --glow-2: transparent;
+
+  --glass: #161D19;
+  --glass-2: #161D19;
+  --glass-solid: #161D19;
+  --glass-hover: #1C241F;
+  --hairline: transparent;
+
+  --border: #283029;
+  --border-strong: #364038;
+
+  --chip: #1B231E;
+  --chip-2: #232C26;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.6);
+  --shadow-lg: 0 12px 30px -14px rgba(0,0,0,.7);
+}
+
+/* ---------------------------------------------------------
+   2. KILL BLUR + GLOW ON EVERY SURFACE
+   --------------------------------------------------------- */
+.app-bg { background: var(--bg-b) !important; }
+
+.glass, .panel, .sidebar, .topbar, .bottombar,
+.btn.ghost, .tb-search, .drawer, .modal, .kcard, .tabs {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---------------------------------------------------------
+   3. SURFACES — solid, hairline-bordered, flat
+   --------------------------------------------------------- */
+.panel, .glass {
+  background: var(--glass-solid) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius) !important;
+}
+
+.sidebar {
+  background: var(--glass-solid) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* ---------------------------------------------------------
+   4. TOPBAR — flat, hairline base
+   --------------------------------------------------------- */
+.topbar {
+  background: var(--glass-solid) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.tb-title h1 {
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+}
+.tb-breadcrumb { letter-spacing: 0.02em; text-transform: uppercase; font-size: 10.5px; font-weight: 600; }
+
+/* logo card → flat, square-ish, no heavy glow */
+.tb-logo-card {
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  border: 1px solid color-mix(in oklab, var(--brand) 35%, #000 0%) !important;
+}
+
+.tb-search {
+  border-radius: 10px !important;
+  background: var(--chip) !important;
+  border: 1px solid var(--border) !important;
+}
+.tb-icon { border-radius: 10px !important; }
+.tb-icon:hover { background: var(--chip) !important; transform: none !important; }
+
+/* ---------------------------------------------------------
+   5. BUTTONS — flat fills, no glow, sharper radius
+   --------------------------------------------------------- */
+.btn {
+  border-radius: 11px !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+}
+.btn:hover { transform: none !important; box-shadow: none !important; background: var(--brand-2) !important; }
+.btn.accent { box-shadow: none !important; }
+.btn.accent:hover { box-shadow: none !important; }
+.btn.ghost {
+  background: var(--glass-solid) !important;
+  border: 1px solid var(--border) !important;
+}
+.btn.ghost:hover { background: var(--chip) !important; box-shadow: none !important; }
+.btn.danger { box-shadow: none !important; }
+.btn.sm { border-radius: 9px !important; }
+.iconbtn { border-radius: 9px !important; }
+
+/* ---------------------------------------------------------
+   6. KPI CARDS — bigger, calmer icon tile
+   --------------------------------------------------------- */
+.kpi { padding: 22px !important; }
+.kpi-ico {
+  width: 52px !important; height: 52px !important;
+  border-radius: 13px !important;
+}
+.kpi-ico svg { width: 24px !important; height: 24px !important; }
+.kpi-ico.green  { background: color-mix(in oklab, var(--brand) 12%, transparent) !important; color: var(--brand-2) !important; }
+.kpi-ico.orange { background: color-mix(in oklab, var(--accent) 12%, transparent) !important; }
+.kpi-ico.blue   { background: color-mix(in oklab, var(--info) 11%, transparent) !important; }
+.kpi-ico.amber  { background: color-mix(in oklab, var(--warn) 13%, transparent) !important; }
+.kpi-val { font-weight: 800 !important; letter-spacing: -0.035em !important; }
+.kpi-label { font-weight: 600 !important; }
+
+/* ---------------------------------------------------------
+   7. CHART — solid flat bars, light track, no gradient
+   --------------------------------------------------------- */
+.bar {
+  background: var(--brand) !important;
+  border-radius: 6px 6px 0 0 !important;
+}
+.bar.b2 { background: var(--accent) !important; }
+.bar-col:hover .bar { opacity: 1 !important; background: var(--brand-2) !important; }
+.lrow-bar i { background: var(--brand) !important; }
+
+/* ---------------------------------------------------------
+   8. PANEL HEAD — stronger, editorial titles
+   --------------------------------------------------------- */
+.panel-head { padding: 20px 22px 16px !important; }
+.panel-head h3 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+}
+
+/* ---------------------------------------------------------
+   9. LIST ROWS / CARDS — flat hover
+   --------------------------------------------------------- */
+.lrow { border-radius: 12px !important; }
+.lrow:hover { background: var(--chip) !important; }
+.kcard {
+  border-radius: 13px !important;
+  box-shadow: none !important;
+}
+.kcard:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--brand) !important;
+  background: var(--glass-hover) !important;
+}
+
+/* ---------------------------------------------------------
+   10. SIDEBAR LOGO + ACTIVE STATES — flat
+   --------------------------------------------------------- */
+.sb-logo { background: var(--brand) !important; box-shadow: none !important; }
+.sb-item.active { box-shadow: none !important; }
+.sb-item { border-radius: 10px !important; }
+
+/* tabs / chips */
+.tabs { border-radius: 11px !important; }
+.tabs button.on { box-shadow: var(--shadow-sm) !important; }
+.searchbox { border-radius: 10px !important; }
+
+/* badges a touch tighter */
+.badge { font-weight: 700 !important; }
+
+/* ---------------------------------------------------------
+   11. BOTTOM NAV — flat white, hairline top, no blur/shadow
+   --------------------------------------------------------- */
+.bottombar {
+  background: var(--glass-solid) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.bb-ico { border-radius: 10px !important; }
+.bb-item.active .bb-ico { box-shadow: none !important; }
+
+/* drawers / modals flat */
+.drawer { box-shadow: var(--shadow-lg) !important; }
+.modal  { box-shadow: var(--shadow-lg) !important; }
+
+/* ---------------------------------------------------------
+   12. MODERN BADGES — flat rectangle, no pill, no circle dot
+   --------------------------------------------------------- */
+
+/* Kill pulse animation — static dot only */
+.badge.live .bdot {
+  animation: none !important;
+  box-shadow: none !important;
+}
+@keyframes pulse { 0%,100%,50% { box-shadow: none; } }
+
+/* Base badge: flat rect instead of pill */
+.badge {
+  border-radius: 5px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 3px 7px !important;
+  letter-spacing: 0.01em !important;
+  gap: 5px !important;
+}
+
+/* Dot → tiny square */
+.badge .bdot {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 1px !important;
+  flex-shrink: 0;
+}
+
+/* Subtler color tints */
+.badge.ok     { background: color-mix(in oklab, var(--ok)     10%, transparent) !important; }
+.badge.warn   { background: color-mix(in oklab, var(--warn)   11%, transparent) !important; }
+.badge.danger { background: color-mix(in oklab, var(--danger) 10%, transparent) !important; }
+.badge.info   { background: color-mix(in oklab, var(--info)   10%, transparent) !important; }
+.badge.brand  { background: color-mix(in oklab, var(--brand)  10%, transparent) !important; }
+.badge.accent { background: color-mix(in oklab, var(--accent) 10%, transparent) !important; }
+
+/* ---------------------------------------------------------
+   13. IMPORT COLUMN TAGS — monospace neutral, not salmon
+   --------------------------------------------------------- */
+.import-steps .badge.accent,
+.import-drop + div .badge.accent {
+  background: var(--chip-2) !important;
+  color: var(--ink-2) !important;
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+}
+/* Target the expected-columns badges specifically */
+[style*="flexWrap"] .badge.accent,
+.import-drop ~ div .badge.accent {
+  background: var(--chip-2) !important;
+  color: var(--ink-2) !important;
+  font-family: var(--mono) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+}
+
+/* ---------------------------------------------------------
+   14. BANNERS — left-border strip, not pill
+   --------------------------------------------------------- */
+.role-banner {
+  border-radius: 6px !important;
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  border-left-color: var(--accent) !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: var(--chip) !important;
+  padding: 10px 14px !important;
+}
+
+.monitor-banner {
+  border-radius: 6px !important;
+  border-left: 3px solid var(--info) !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: var(--chip) !important;
+  padding: 10px 14px !important;
+}
+
+/* ---------------------------------------------------------
+   15. ROLES CARDS — remove colorful top stripe
+   --------------------------------------------------------- */
+.role-stripe {
+  display: none !important;
+}
+
+/* Role name dot → smaller, cleaner square */
+.role-card h3 .bdot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 2px !important;
+}
+
+/* Permission tags — neutral, flat */
+.ptag {
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  padding: 3px 7px !important;
+  font-weight: 600 !important;
+  background: var(--chip-2) !important;
+  color: var(--ink-2) !important;
+  border: 1px solid var(--border) !important;
+}
+.ptag.manage {
+  background: color-mix(in oklab, var(--brand) 8%, transparent) !important;
+  color: var(--brand-2) !important;
+  border-color: color-mix(in oklab, var(--brand) 18%, transparent) !important;
+}
+
+/* ---------------------------------------------------------
+   12. IMPORT PAGE
+   --------------------------------------------------------- */
+.import-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 4px;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+.import-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.import-tabs button svg { width: 15px; height: 15px; }
+.import-tabs button.on {
+  background: var(--glass-solid);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+/* Progress steps */
+.import-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 18px;
+}
+.import-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 600;
+}
+.import-step.active { color: var(--ink); }
+.import-step.done   { color: var(--brand-2); }
+.step-n {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--chip);
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.step-n svg { width: 13px; height: 13px; }
+.import-step.active .step-n {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.import-step.done .step-n {
+  background: color-mix(in oklab, var(--brand) 12%, transparent);
+  border-color: color-mix(in oklab, var(--brand) 30%, transparent);
+  color: var(--brand-2);
+}
+.step-line {
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+  margin: 0 10px;
+  min-width: 40px;
+}
+
+/* Drop zone */
+.import-drop {
+  border: 2px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+  background: var(--chip);
+}
+.import-drop:hover,
+.import-drop.drag {
+  border-color: var(--brand);
+  background: color-mix(in oklab, var(--brand) 5%, transparent);
+}
+.import-drop-ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--brand) 10%, transparent);
+  color: var(--brand-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.import-drop-ico svg { width: 26px; height: 26px; }
+.import-drop h3 {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 6px;
+}
+.import-drop p {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* Manual grid */
+.import-manual-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+  align-items: start;
+}

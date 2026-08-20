@@ -1,0 +1,188 @@
+/* ============================================================
+   NOVA TYRES — Admin v2 · Bottom-nav layout (redesigned)
+   ============================================================ */
+
+:root { --bottombar-h: 72px; }
+
+/* ---- app layout ---- */
+.app {
+  display: flex; flex-direction: column;
+  height: 100vh;
+  grid-template-columns: unset !important;
+}
+.app.mini { grid-template-columns: unset !important; }
+.sidebar { display: none !important; }
+.main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+.content { padding-bottom: calc(var(--bottombar-h) + 8px) !important; }
+
+/* ======================================================
+   TOPBAR — 3-column: [breadcrumb+title] [logo] [actions]
+   ====================================================== */
+.topbar {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  height: 72px !important;
+  padding: 0 24px !important;
+  background: var(--glass-solid) !important;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 0 !important;
+}
+
+.tb-left  { display: flex; flex-direction: column; gap: 2px; }
+.tb-center { display: flex; align-items: center; justify-content: center; }
+.tb-right  { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+.tb-breadcrumb { font-size: 11px; color: var(--ink-3); font-weight: 500; letter-spacing: 0.01em; }
+.tb-title { min-width: 0; }
+.tb-title h1 {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1 !important;
+}
+
+/* Logo card */
+.tb-logo-card {
+  width: 58px; height: 58px;
+  border-radius: 13px;
+  background: var(--brand);
+  display: grid; place-items: center;
+  box-shadow: 0 6px 20px -6px var(--brand);
+}
+.tb-logo-card svg { width: 42px; height: 42px; }
+
+/* Search pill override */
+.menu-toggle { display: none !important; }
+.tb-search {
+  max-width: 240px !important;
+  border-radius: 999px !important;
+  background: var(--chip) !important;
+  border: 1px solid var(--border) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.tb-search kbd { display: none; }
+
+/* content padding */
+.content { padding-left: 22px; padding-right: 22px; padding-top: 8px; }
+
+/* ======================================================
+   KPI CARDS — horizontal icon + label/value
+   ====================================================== */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 8px; }
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .kpis { grid-template-columns: 1fr; } }
+
+.kpi {
+  padding: 20px 22px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+.kpi-ico {
+  width: 58px !important; height: 58px !important;
+  border-radius: 14px !important;
+  flex-shrink: 0;
+}
+.kpi-ico svg { width: 26px !important; height: 26px !important; }
+.kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi-label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); line-height: 1.2; }
+.kpi-val  { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; font-feature-settings: "tnum"; }
+/* hide old layout helpers on kpi */
+.kpi .kpi-top   { display: none !important; }
+.kpi .kpi-foot  { display: none !important; }
+.kpi .kpi-spark { display: none !important; }
+
+/* ======================================================
+   BOTTOM NAV — full-width white bar
+   ====================================================== */
+.bottombar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 130;
+  height: var(--bottombar-h);
+  display: flex; align-items: center;
+  gap: 0;
+  background: var(--glass-solid);
+  border-top: 1px solid var(--border);
+  border-radius: 0 !important;
+  box-shadow: 0 -4px 20px -8px rgba(16,38,27,.06);
+  padding: 0 12px;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.bottombar::-webkit-scrollbar { display: none; }
+
+/* user avatar at far left */
+.bb-user-btn {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.bb-item {
+  position: relative;
+  flex: 1 1 0; min-width: 58px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  color: var(--ink-2);
+  font-size: 10px; font-weight: 700; letter-spacing: .01em;
+  transition: color .2s;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  padding: 5px 2px;
+  white-space: nowrap;
+}
+
+.bb-ico {
+  width: 42px; height: 34px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  transition: background .2s, color .2s;
+}
+.bb-ico svg { width: 21px; height: 21px; stroke-width: 1.8; }
+
+.bb-item:hover { color: var(--ink); }
+.bb-item:hover .bb-ico { background: var(--chip); }
+.bb-item.active { color: var(--brand); }
+.bb-item.active .bb-ico { background: var(--brand); color: #fff; }
+
+.bb-item .bb-badge {
+  position: absolute; top: 1px; left: calc(50% + 7px);
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 99px;
+  background: var(--accent); color: #fff;
+  font-size: 9px; font-weight: 800;
+  display: grid; place-items: center;
+  line-height: 1; z-index: 2;
+}
+
+.bb-sep { width: 1px; height: 36px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
+.bb-role {
+  flex: 0 0 auto;
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  color: var(--ink-2);
+  transition: background .2s, color .2s;
+  cursor: pointer;
+}
+.bb-role:hover { background: var(--chip); color: var(--brand); }
+.bb-role svg { width: 21px; height: 21px; }
+
+@media (max-width: 1080px) {
+  .bb-item { min-width: 48px; }
+  .bb-item > span.bb-label { display: none; }
+}
+@media (max-width: 860px) {
+  .tb-search { max-width: 160px !important; }
+}

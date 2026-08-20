@@ -47,3 +47,5 @@ graphify-out/
 # Local binaries
 *.exe
 nova-tyres.rar
+apps/customer/.open-next/
+apps/*/.open-next/

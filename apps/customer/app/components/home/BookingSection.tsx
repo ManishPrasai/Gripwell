@@ -155,8 +155,12 @@ export default function BookingSection() {
         </p>
 
         {/* ── Booking card ── */}
-        <div className="rounded-2xl p-4 md:p-6"
+        <div className="rounded-2xl flex flex-col md:block max-h-[calc(100svh-280px)] md:max-h-none"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
+
+          {/* Scrollable content — mobile: fills remaining card height and scrolls;
+              desktop: md:block on parent means flex props have no effect, children flow normally */}
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 pb-2 md:pb-0">
 
           {/* Three input fields */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
@@ -294,8 +298,52 @@ export default function BookingSection() {
 
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 14px' }} />
 
-              {/* Time slot groups */}
-              <div style={{ padding: '14px' }}>
+              {/* ── Mobile: flat 3-col grid, no group headers (below md) ── */}
+              <div className="md:hidden" style={{ padding: '14px' }}>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {ALL_SLOTS.map(slot => {
+                    const booked      = bookedSlots.has(slot)
+                    const past        = isPastSlot(selectedDate, slot)
+                    const unavailable = booked || past
+                    const isChosen    = selectedSlot === slot
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={unavailable}
+                        onClick={() => !unavailable && handleSlotSelect(slot)}
+                        style={{
+                          padding:        '7px 4px',
+                          borderRadius:   '8px',
+                          fontSize:       '12px',
+                          fontWeight:     isChosen ? 600 : 500,
+                          cursor:         unavailable ? 'not-allowed' : 'pointer',
+                          textAlign:      'center',
+                          background:     isChosen ? '#E8572A'
+                                        : booked   ? 'rgba(255,255,255,0.03)'
+                                        : past     ? 'transparent'
+                                        :             'rgba(255,255,255,0.09)',
+                          border:         `1px solid ${isChosen ? '#E8572A'
+                                                     : booked   ? 'rgba(255,255,255,0.06)'
+                                                     : past     ? 'rgba(255,255,255,0.04)'
+                                                     :             'rgba(255,255,255,0.14)'}`,
+                          color:          isChosen ? '#fff'
+                                        : booked   ? 'rgba(255,255,255,0.2)'
+                                        : past     ? 'rgba(255,255,255,0.15)'
+                                        :             'rgba(255,255,255,0.85)',
+                          textDecoration: unavailable ? 'line-through' : 'none',
+                          transition:     'all 0.15s',
+                        }}
+                      >
+                        {fmt12(slot)}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* ── Desktop: grouped layout with Morning/Afternoon/Late Afternoon headers (md+) ── */}
+              <div className="hidden md:block" style={{ padding: '14px' }}>
                 {GROUPS.map(group => {
                   const slotsWithState = group.slots.map(slot => ({
                     slot,
@@ -306,7 +354,6 @@ export default function BookingSection() {
 
                   return (
                     <div key={group.label} className="mb-5 last:mb-0">
-                      {/* Group header */}
                       <div className="flex items-center gap-2 mb-2.5">
                         <i className={`ti ${group.icon}`} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }} aria-hidden="true" />
                         <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
@@ -318,8 +365,6 @@ export default function BookingSection() {
                           </span>
                         )}
                       </div>
-
-                      {/* Slot chips */}
                       <div className="flex flex-wrap gap-2">
                         {slotsWithState.map(({ slot, booked, past }) => {
                           const unavailable = booked || past
@@ -390,6 +435,11 @@ export default function BookingSection() {
             </div>
           )}
 
+          </div>{/* /scrollable content */}
+
+          {/* CTA footer — mobile: always visible at card bottom; desktop: normal flow */}
+          <div className="px-4 pb-4 pt-3 md:px-6 md:pb-6 md:pt-0 border-t border-white/[0.08] md:border-t-0 bg-[#0a0a0a] md:bg-transparent">
+
           {/* CTA */}
           <button
             className="w-full text-white py-4 rounded-xl uppercase tracking-wide transition-opacity hover:opacity-90"
@@ -403,6 +453,7 @@ export default function BookingSection() {
             <a href="tel:1300897337" style={{ color: '#E8572A' }}>1300 TYRES</a>
             {' '}— Mon–Sat 8am–6pm AEST
           </p>
+          </div>{/* /CTA footer */}
         </div>
 
         {/* Step indicators */}

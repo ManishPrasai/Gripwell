@@ -20,5 +20,16 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "msw@2.14.6": true,
+    "prisma@6.19.3": true,
+    "sharp@0.34.5": true,
+    "esbuild@0.25.4": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260701.1": true,
+    "unrs-resolver@1.12.2": true
+  }
 }

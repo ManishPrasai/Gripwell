@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useCart } from '../../context/CartContext'
 
@@ -45,16 +47,166 @@ function scrollToBooking(e: React.MouseEvent<HTMLAnchorElement>) {
   window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' })
 }
 
+/* ── Mobile bottom-sheet menu — portalled to <body>, slides up with a spring,
+   drag-down or overlay-tap to dismiss. Rendered below md only. ── */
+function MobileNavSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  /* Lock body scroll + Escape-to-close while the sheet is open */
+  useEffect(() => {
+    if (!open) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, onClose])
+
+  if (!mounted) return null
+
+  const font = "'DM Sans', sans-serif"
+
+  const shop = [
+    { label: 'Tyres',    href: '/tyres',    icon: 'ti ti-circle-dot' },
+    { label: 'Wheels',   href: '/wheels',   icon: 'ti ti-disc' },
+    { label: 'Packages', href: '/packages', icon: 'ti ti-package' },
+  ]
+  const items = [
+    { label: 'Service',   sub: 'Book & manage servicing', href: '/service',   icon: 'ti ti-tool' },
+    { label: 'Locations', sub: 'Find a store near you',   href: '/locations', icon: 'ti ti-map-pin' },
+    { label: 'Warranty',  sub: 'Coverage & claims',       href: '/warranty',  icon: 'ti ti-shield-check' },
+  ]
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="nav-sheet-overlay"
+          className="fixed inset-0 z-[10055] md:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          onClick={onClose}
+        />
+      )}
+      {open && (
+        <motion.div
+          key="nav-sheet"
+          className="fixed left-0 right-0 bottom-0 z-[10060] md:hidden rounded-t-2xl border-t border-white/10"
+          style={{ background: '#161616', boxShadow: '0 -20px 60px rgba(0,0,0,0.6)', maxHeight: '90svh' }}
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => { if (info.offset.y > 100 || info.velocity.y > 600) onClose() }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+        >
+          {/* relative wrapper gives the absolute handle a containing block without
+              affecting the sheet's own fixed positioning */}
+          <div className="relative">
+          {/* Drag handle — absolute so it floats above content without pushing pills down */}
+          <div className="absolute top-0 left-0 right-0 flex justify-center pt-2.5 pointer-events-none">
+            <div className="w-10 h-1 rounded-full bg-white/20" />
+          </div>
+
+          <div className="px-5 pt-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+            <div className="grid grid-cols-3 gap-2.5">
+              {shop.map(s => (
+                <Link
+                  key={s.href}
+                  href={s.href}
+                  onClick={onClose}
+                  className="flex flex-col items-center justify-center gap-1.5 h-[66px] rounded-xl bg-white/[0.06] border border-white/10 text-white/85 active:scale-95 transition-transform"
+                  style={{ fontFamily: font }}
+                >
+                  <i className={s.icon} style={{ fontSize: '21px' }} aria-hidden="true" />
+                  <span className="text-[12.5px] font-semibold">{s.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Primary nav links */}
+            <div className="mt-5">
+              {items.map(it => (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={onClose}
+                  className="flex items-center gap-3.5 min-h-[52px] py-2 border-b border-white/[0.06] active:bg-white/[0.03] transition-colors"
+                  style={{ fontFamily: font }}
+                >
+                  <span className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-white/[0.06] text-white/80">
+                    <i className={it.icon} style={{ fontSize: '18px' }} aria-hidden="true" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-white font-semibold text-[15px] leading-tight">{it.label}</span>
+                    <span className="block text-white/45 text-[12px] leading-tight mt-0.5">{it.sub}</span>
+                  </span>
+                  <i className="ti ti-chevron-right text-white/30 flex-shrink-0" style={{ fontSize: '18px' }} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+
+            {/* Book Service CTA — above the safe-area inset */}
+            <Link
+              href="/#booking"
+              onClick={e => { scrollToBooking(e); onClose() }}
+              className="mt-5 flex items-center justify-center w-full rounded-xl text-white font-bold active:scale-[0.98] transition-transform"
+              style={{ background: '#E8572A', padding: '14px', fontFamily: font, fontSize: '15px', boxShadow: '0 6px 20px rgba(232,87,42,0.35)' }}
+            >
+              Book Service
+            </Link>
+          </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  )
+}
+
 export default function Navbar() {
   const [scrolled,  setScrolled]  = useState(false)
   const [menuOpen,  setMenuOpen]  = useState(false)
+  const [isMobile,  setIsMobile]  = useState(false)
   const { cartCount } = useCart()
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
 
+  /* Hysteresis prevents oscillation near the threshold on mobile inertial scroll:
+     arm at 80px scrolling down, disarm at 36px scrolling up. */
+  const scrolledRef = useRef(false)
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60)
+    const onScroll = () => {
+      const y = window.scrollY
+      const wasScrolled = scrolledRef.current
+      const next = wasScrolled ? y > 36 : y > 80
+      if (next !== wasScrolled) {
+        scrolledRef.current = next
+        setScrolled(next)
+      }
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
   const links = [
@@ -74,13 +226,13 @@ export default function Navbar() {
         top:                   0,
         left:                  0,
         zIndex:                9999,
-        paddingTop:            scrolled ? '0' : '10px',
+        paddingTop:            0,
         background:           scrolled ? 'rgba(8,8,8,0.92)' : 'rgba(0,0,0,0.15)',
         backdropFilter:       'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderBottom:         scrolled ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
         boxShadow:            scrolled ? '0 4px 32px rgba(0,0,0,0.32)' : 'none',
-        transition:           'background 0.35s ease, box-shadow 0.35s ease, padding-top 0.35s ease, border-color 0.35s ease',
+        transition:           'background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease',
       }}
     >
       <nav className="w-full">
@@ -94,7 +246,7 @@ export default function Navbar() {
           {/* ── Logo — slides right toward pill on scroll ── */}
           <div
             className="flex-1 flex items-center"
-            style={{ transform: scrolled ? 'translateX(24px)' : 'translateX(0)', transition: ANIM }}
+            style={{ transform: scrolled && !isMobile ? 'translateX(24px)' : 'translateX(0)', transition: ANIM }}
           >
             <Link href="/" style={{ textDecoration: 'none' }}>
               <span style={{
@@ -133,7 +285,7 @@ export default function Navbar() {
           {/* ── Right utilities — slides left toward pill on scroll ── */}
           <div
             className="flex-1 flex items-center justify-end gap-4"
-            style={{ transform: scrolled ? 'translateX(-24px)' : 'translateX(0)', transition: ANIM }}
+            style={{ transform: scrolled && !isMobile ? 'translateX(-24px)' : 'translateX(0)', transition: ANIM }}
           >
             {/* Cart */}
             <Link href="/cart" className="relative text-white hover:text-white/70 transition-colors">
@@ -183,59 +335,28 @@ export default function Navbar() {
               <button
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label="Toggle menu"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center' }}
+                aria-expanded={menuOpen}
+                style={{
+                  width:          '32px',
+                  height:         '32px',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  background:     'rgba(255,255,255,0.08)',
+                  border:         '1px solid rgba(255,255,255,0.18)',
+                  borderRadius:   '9px',
+                  cursor:         'pointer',
+                  color:          '#fff',
+                }}
               >
-                <i className={menuOpen ? 'ti ti-x' : 'ti ti-menu-2'} style={{ fontSize: '24px', color: '#fff' }} aria-hidden="true" />
+                <i className={menuOpen ? 'ti ti-x' : 'ti ti-menu-2'} style={{ fontSize: '20px', color: '#fff' }} aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Mobile dropdown — only renders below md breakpoint ── */}
-        {menuOpen && (
-          <div
-            className="md:hidden border-t py-4 mt-1"
-            style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-          >
-            {links.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="block text-white/80 hover:text-white py-3 px-2 uppercase border-b transition-colors"
-                style={{
-                  borderColor:   'rgba(255,255,255,0.07)',
-                  fontFamily:    "'DM Sans', sans-serif",
-                  fontSize:      '14px',
-                  fontWeight:     600,
-                  letterSpacing: '0.06em',
-                  textDecoration:'none',
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              href="/#booking"
-              onClick={e => { scrollToBooking(e); setMenuOpen(false) }}
-              style={{
-                display:       'inline-flex',
-                alignItems:    'center',
-                marginTop:     '12px',
-                background:    '#E8572A',
-                color:         '#fff',
-                fontFamily:    "'DM Sans', sans-serif",
-                fontWeight:     700,
-                fontSize:      '14px',
-                padding:       '10px 22px',
-                borderRadius:  '50px',
-                textDecoration:'none',
-              }}
-            >
-              Book Service
-            </Link>
-          </div>
-        )}
+        {/* ── Mobile bottom sheet — replaces the old dropdown (below md only) ── */}
+        <MobileNavSheet open={menuOpen} onClose={closeMenu} />
         </div>
       </nav>
     </header>

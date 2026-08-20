@@ -1,0 +1,320 @@
+/* ============================================================
+   NOVA TYRES — Admin v4 · "Glass nav + motion" layer
+   Loads LAST (after v3). Goals:
+     • Re-introduce frosted GLASS — on the navbars ONLY
+       (topbar + bottom dock). Every other surface stays flat.
+     • Modern motion: entrance, hover, active states.
+     • Icons stay flat — no gradient/gloss/glow on icon tiles.
+   ============================================================ */
+
+/* ---------------------------------------------------------
+   0. MOTION TOKENS + faint ambiance so glass reads
+   --------------------------------------------------------- */
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --nav-blur: 20px;
+}
+
+[data-theme="light"] {
+  /* faint brand wash — just enough for the glass nav to frost over */
+  --glow-1: rgba(7, 99, 48, 0.055);
+  --glow-2: rgba(255, 104, 23, 0.05);
+  --nav-glass: rgba(255, 255, 255, 0.62);
+  --nav-hairline: rgba(255, 255, 255, 0.75);
+  --nav-edge: rgba(16, 38, 27, 0.08);
+}
+[data-theme="dark"] {
+  --glow-1: rgba(7, 99, 48, 0.12);
+  --glow-2: rgba(255, 104, 23, 0.10);
+  --nav-glass: rgba(20, 27, 23, 0.58);
+  --nav-hairline: rgba(255, 255, 255, 0.06);
+  --nav-edge: rgba(255, 255, 255, 0.07);
+}
+
+/* gentle ambient gradient (still reads as a calm flat canvas) */
+.app-bg {
+  background:
+    radial-gradient(60% 50% at 5% -8%, var(--glow-1), transparent 60%),
+    radial-gradient(55% 45% at 100% 0%, var(--glow-2), transparent 55%),
+    radial-gradient(70% 60% at 50% 118%, var(--glow-1), transparent 62%),
+    var(--bg-b) !important;
+}
+
+/* ---------------------------------------------------------
+   1. NAVBARS — the only frosted-glass surfaces
+   --------------------------------------------------------- */
+.topbar {
+  background: var(--nav-glass) !important;
+  backdrop-filter: blur(var(--nav-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%) !important;
+  border-bottom: 1px solid var(--nav-edge) !important;
+  box-shadow: inset 0 1px 0 var(--nav-hairline) !important;
+  position: relative;
+  z-index: 60;
+  animation: navDrop .55s var(--ease-out) both;
+}
+.bottombar {
+  background: var(--nav-glass) !important;
+  backdrop-filter: blur(var(--nav-blur)) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(var(--nav-blur)) saturate(180%) !important;
+  border-top: 1px solid var(--nav-edge) !important;
+  box-shadow:
+    inset 0 1px 0 var(--nav-hairline),
+    0 -8px 28px -16px rgba(16, 38, 27, .22) !important;
+  animation: navRise .6s var(--ease-out) both;
+}
+
+/* search + top icons sit on glass → make them subtly translucent too */
+.tb-search {
+  background: color-mix(in oklab, var(--chip) 70%, transparent) !important;
+  transition: border-color .2s, background .2s, box-shadow .2s !important;
+}
+.tb-search:focus-within {
+  border-color: var(--brand) !important;
+  background: var(--glass-solid) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 14%, transparent) !important;
+}
+
+@keyframes navDrop { from { transform: translateY(-14px); } to { transform: none; } }
+@keyframes navRise { from { transform: translateY(18px); } to { transform: none; } }
+
+/* ---------------------------------------------------------
+   2. FLAT ICONS — kill gradient / gloss / glow on icon tiles
+   --------------------------------------------------------- */
+.tb-logo-card,
+.sb-logo,
+.bb-item.active .bb-ico,
+.kpi-ico,
+.import-drop-ico,
+.bb-role {
+  background-image: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+.tb-logo-card { background: var(--brand) !important; }
+.sb-logo      { background: var(--brand) !important; }
+
+/* ---------------------------------------------------------
+   3. ENTRANCE MOTION — page + cards
+   Transform-only: a frozen clock / print / capture never hides
+   content (worst case = a few px offset, still fully visible).
+   --------------------------------------------------------- */
+.page-anim { animation: pageIn .45s var(--ease-out) both; }
+@keyframes pageIn { from { transform: translateY(12px); } to { transform: none; } }
+
+/* staggered KPI cards */
+.kpis .kpi {
+  animation: cardIn .5s var(--ease-out) both;
+  transition: transform .26s var(--ease-out), border-color .2s, box-shadow .26s !important;
+}
+.kpis .kpi:nth-child(1) { animation-delay: .04s; }
+.kpis .kpi:nth-child(2) { animation-delay: .10s; }
+.kpis .kpi:nth-child(3) { animation-delay: .16s; }
+.kpis .kpi:nth-child(4) { animation-delay: .22s; }
+
+/* panels rise in softly */
+.content .panel { animation: cardIn .5s var(--ease-out) both; }
+@keyframes cardIn { from { transform: translateY(14px); } to { transform: none; } }
+
+/* ---------------------------------------------------------
+   4. HOVER / ACTIVE MICRO-INTERACTIONS
+   --------------------------------------------------------- */
+.kpi:hover {
+  transform: translateY(-3px) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow) !important;
+}
+.kpi-ico { transition: transform .3s var(--ease-spring) !important; }
+.kpi:hover .kpi-ico { transform: scale(1.08) rotate(-3deg); }
+
+.kcard { transition: transform .26s var(--ease-out), border-color .2s, box-shadow .26s !important; }
+.kcard:hover { transform: translateY(-3px) !important; box-shadow: var(--shadow) !important; }
+
+.lrow { transition: background .18s, transform .18s var(--ease-out) !important; }
+.lrow:hover { transform: translateX(3px); }
+
+.btn  { transition: transform .16s var(--ease-spring), background .2s, box-shadow .2s !important; }
+.btn:hover   { transform: translateY(-1.5px) !important; }
+.btn:active  { transform: translateY(0) scale(.97) !important; }
+
+.tb-icon { transition: background .2s, color .2s, transform .2s var(--ease-spring) !important; }
+.tb-icon:hover { transform: translateY(-1px) !important; }
+
+/* table rows reveal */
+.tbl tbody tr { transition: background .16s; }
+
+/* ---------------------------------------------------------
+   5. BOTTOM NAV — animated active state
+   --------------------------------------------------------- */
+.bb-ico { transition: background .22s, color .22s, transform .3s var(--ease-spring) !important; }
+.bb-item:hover .bb-ico { transform: translateY(-2px); }
+.bb-item.active .bb-ico { transform: translateY(-2px); }
+.bb-item .bb-label { transition: color .2s; }
+
+/* sliding active underline */
+.bb-item::after {
+  content: "";
+  position: absolute;
+  bottom: 4px; left: 50%;
+  width: 0; height: 2.5px; border-radius: 2px;
+  background: var(--brand);
+  transform: translateX(-50%);
+  transition: width .28s var(--ease-out);
+}
+.bb-item.active::after { width: 22px; }
+
+.bb-role { transition: background .2s, color .2s, transform .2s var(--ease-spring) !important; }
+.bb-role:hover { transform: translateY(-1px) scale(1.05); }
+
+/* ---------------------------------------------------------
+   6. TABS / SEGMENTED — smooth
+   --------------------------------------------------------- */
+.tabs button, .import-tabs button, .seg button {
+  transition: background .2s, color .2s, box-shadow .2s !important;
+}
+.badge.live .bdot { animation: none !important; }
+
+/* ---------------------------------------------------------
+   7. RESPECT REDUCED MOTION
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   8. DASHBOARD — two-column layout
+   --------------------------------------------------------- */
+.dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.34fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 6px;
+}
+.dash-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.dash-label {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 2px 0 -4px;
+}
+
+/* ---- Hero cards ---- */
+.hero-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+}
+.hero-card {
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  min-height: 188px;
+  position: relative;
+  overflow: hidden;
+  animation: cardIn .5s var(--ease-out) both;
+}
+.hero-card.primary {
+  background: linear-gradient(145deg, var(--brand-2, #0a7a3c), var(--brand, #076330));
+  box-shadow: 0 16px 34px -18px var(--brand);
+}
+.hero-card.balance {
+  background: linear-gradient(160deg, #FF7E3D, var(--accent, #FF6817));
+  box-shadow: 0 16px 34px -18px var(--accent);
+}
+.hero-card::after {
+  content: "";
+  position: absolute;
+  right: -40px; bottom: -60px;
+  width: 170px; height: 170px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .10);
+}
+.hc-top { display: flex; align-items: center; justify-content: space-between; }
+.hc-top svg { width: 20px; height: 20px; opacity: .85; }
+.hc-label { font-size: 13px; font-weight: 600; opacity: .9; letter-spacing: .01em; }
+.hc-val {
+  font-size: 40px; font-weight: 900; letter-spacing: -0.04em;
+  line-height: 1; margin-top: auto;
+}
+.hc-val.sm { font-size: 30px; }
+.hc-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; font-size: 12px; font-weight: 600; opacity: .92;
+}
+.hc-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255, 255, 255, .2);
+  padding: 4px 9px; border-radius: 99px;
+}
+.hc-pill svg { width: 12px; height: 12px; }
+.hc-spark { height: 40px; margin-top: 12px; color: rgba(255,255,255,.85); }
+.hc-spark svg { width: 100%; height: 100%; display: block; }
+.hero-card.balance .hc-val { margin-top: 10px; }
+
+/* ---- Stat cards (3-up) ---- */
+.stat3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.stat-card {
+  padding: 18px 18px 20px !important;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sc-ico {
+  width: 44px; height: 44px; border-radius: 13px;
+  display: grid; place-items: center;
+  transition: transform .3s var(--ease-spring);
+}
+.stat-card:hover .sc-ico { transform: scale(1.08) rotate(-3deg); }
+.sc-ico svg { width: 21px; height: 21px; }
+.sc-ico.orange { background: color-mix(in oklab, var(--accent) 14%, transparent); color: var(--accent); }
+.sc-ico.blue   { background: color-mix(in oklab, var(--info) 13%, transparent);   color: var(--info); }
+.sc-ico.amber  { background: color-mix(in oklab, var(--warn) 16%, transparent);   color: var(--warn); }
+.sc-ico.green  { background: color-mix(in oklab, var(--brand) 13%, transparent);  color: var(--brand-2); }
+.sc-label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.sc-val { font-size: 30px; font-weight: 900; letter-spacing: -0.035em; line-height: 1; color: var(--ink); margin-top: -2px; }
+
+/* ---- Right-column stat bar ---- */
+.statbar {
+  display: flex; align-items: stretch;
+  padding: 20px 6px !important;
+}
+.sb-cell { flex: 1; display: flex; align-items: center; gap: 16px; padding: 0 18px; }
+.sb-head { flex-shrink: 0; }
+.sb-num { font-size: 30px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: var(--ink); }
+.sb-cap { font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin-top: 4px; }
+.sb-div { width: 1px; background: var(--border); margin: 2px 0; }
+.mini-bars {
+  flex: 1;
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 46px; min-width: 0;
+}
+.mini-bars span {
+  flex: 1;
+  background: var(--brand);
+  border-radius: 2px;
+  min-height: 4px;
+  transition: height .4s var(--ease-out);
+}
+.mini-bars.accent span { background: var(--accent); }
+
+/* ---- Feed panel fills column height ---- */
+.feed-panel { min-height: 0; }
+
+@media (max-width: 880px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .hero-row { grid-template-columns: 1fr; }
+  .stat3 { grid-template-columns: 1fr; }
+}
