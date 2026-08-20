@@ -6,7 +6,7 @@ export default function NewsletterSection() {
   const [email, setEmail]         = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email) return
     setSubmitted(true)
@@ -14,66 +14,74 @@ export default function NewsletterSection() {
 
   return (
     <section
-      className="relative py-32 px-4 overflow-hidden"
-      style={{ background: '#0a0a0a' }}
+      style={{
+        maxWidth: '1180px', margin: '0 auto',
+        padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,40px)',
+        fontFamily: "'DM Sans', sans-serif",
+      }}
     >
-      {/* Background image with bokeh blur */}
+      <style>{`
+        .nv-news-card { display: grid; gap: clamp(24px,4vw,48px); align-items: center; grid-template-columns: repeat(2,1fr); }
+        @media (max-width: 1100px) { .nv-news-card { grid-template-columns: 1fr; } }
+        .nv-news-btn:hover  { background: #FF6817; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
+        .nv-news-btn:active { transform: translateY(0); }
+      `}</style>
+
       <div
-        style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: 'url(/images/newsletter-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.22,
-          filter: 'blur(2px)',
-          transform: 'scale(1.06)',
-        }}
-      />
+        data-reveal
+        className="nv-news-card"
+        style={{ background: '#1C3A2B', borderRadius: '20px', padding: 'clamp(28px,4vw,52px)' }}
+      >
+        <div>
+          <p style={{ margin: '0 0 10px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E8572A' }}>
+            Nova mailing list
+          </p>
+          <h2 style={{ margin: '0 0 12px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(32px,4vw,46px)', letterSpacing: '0.02em', color: '#F1EFE7', lineHeight: 1.02 }}>
+            Deals before they sell out
+          </h2>
+          <p style={{ margin: 0, color: '#9DB0A5', fontSize: '15px', lineHeight: 1.65, maxWidth: '44ch' }}>
+            Member-only discounts, new arrivals and seasonal tyre tips. One email a fortnight — unsubscribe any time.
+          </p>
+        </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto text-center">
-        <p
-          className="uppercase tracking-widest mb-3"
-          style={{ color: '#E8572A', fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(20px, 4vw, 32px)', letterSpacing: '0.2em' }}
-        >
-          Stay in the Loop
-        </p>
-        <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 4vw, 40px)', color: 'white', letterSpacing: '0.02em', lineHeight: 1.1 }} className="mb-2">
-          Deals before they{' '}
-          <em style={{ color: '#E8572A', fontStyle: 'italic' }}>hit the warehouse.</em>
-        </h2>
-        <p className="mb-8" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '15px', fontWeight: 400 }}>
-          Get exclusive discounts, new arrivals and tyre tips delivered to your inbox.
-        </p>
-
-        {submitted ? (
-          <div
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white"
-            style={{ background: '#1C3A2B', border: '1px solid rgba(255,255,255,0.1)', fontSize: '15px', fontWeight: 400 }}
-          >
-            <i className="ti ti-check" style={{ fontSize: '18px', color: '#E8572A' }} aria-hidden="true" />
-            You&apos;re subscribed — deals incoming!
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex gap-2 max-w-md mx-auto">
+        <div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <input
-              type="email"
-              placeholder="your@gmail.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="flex-1 rounded-xl px-4 py-3 outline-none text-white placeholder:text-white/30"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '15px', fontWeight: 400 }}
+              type="email" required value={email}
+              onChange={e => { setEmail(e.target.value); setSubmitted(false) }}
+              placeholder="you@email.com" aria-label="Email address"
+              style={{
+                flex: '1 1 220px', minWidth: 0, background: '#FFFFFF', border: '1px solid #E7E5DE',
+                borderRadius: '10px', padding: '0 18px', height: '54px', fontSize: '15px',
+                color: '#16211B', outline: 'none',
+              }}
             />
             <button
-              type="submit"
-              className="text-white px-6 py-3 rounded-xl transition-opacity hover:opacity-90"
-              style={{ background: '#E8572A', fontSize: '14px', fontWeight: 600 }}
+              type="submit" className="nv-news-btn"
+              style={{
+                background: '#E8572A', color: '#fff', border: 'none', borderRadius: '10px',
+                padding: '0 30px', height: '54px', fontFamily: "'DM Sans', sans-serif",
+                fontSize: '15px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s, box-shadow .2s',
+              }}
             >
               Subscribe
             </button>
           </form>
-        )}
+
+          {submitted ? (
+            <p style={{ margin: '14px 0 0', display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#39C06E', fontSize: '14px', fontWeight: 600, animation: 'novaIn .3s ease both' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              You&apos;re on the list — check your inbox to confirm.
+            </p>
+          ) : (
+            <p style={{ margin: '14px 0 0', fontSize: '12.5px', color: '#9DB0A5' }}>
+              No spam. We never share your address.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   )

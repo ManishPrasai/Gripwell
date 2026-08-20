@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 import { PrismaClient, TyreType } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { hashPassword } from '../lib/auth'
 
 const prisma = new PrismaClient()
 
@@ -171,7 +171,7 @@ async function main() {
   console.log('🌱 Starting database seed...\n')
 
   // ── Super Admin ─────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('admin123456', 12)
+  const passwordHash = await hashPassword('admin123456')
   const superAdmin = await prisma.adminUser.upsert({
     where: { email: 'admin@novatyres.com.au' },
     update: {},
@@ -309,6 +309,219 @@ async function main() {
     console.log(`  → ${w.brand} ${w.model}`)
   }
   console.log('✅ Wheels seeded')
+
+  // ── Store Manager Admin Users ────────────────────────────────────────────────
+  const managerPassword = await hashPassword('manager123456')
+  const MANAGERS = [
+    { first: 'Daniel',  last: 'Mercer',  email: 'daniel.m@novatyres.com.au',  slug: 'springvale' },
+    { first: 'Sophie',  last: 'Kaur',    email: 'sophie.k@novatyres.com.au',  slug: 'dandenong'  },
+    { first: 'Raj',     last: 'Thakur',  email: 'raj.t@novatyres.com.au',     slug: 'bayswater'  },
+    { first: 'Lauren',  last: 'Nguyen',  email: 'lauren.n@novatyres.com.au',  slug: 'alphington' },
+    { first: 'Priya',   last: 'Sharma',  email: 'priya.s@novatyres.com.au',   slug: 'sefton'     },
+    { first: 'Marco',   last: 'Vella',   email: 'marco.v@novatyres.com.au',   slug: 'sunshine'   },
+  ]
+  for (const m of MANAGERS) {
+    const storeId = storeIdMap[m.slug]
+    if (!storeId) continue
+    await prisma.adminUser.upsert({
+      where: { email: m.email },
+      update: { storeId },
+      create: { firstName: m.first, lastName: m.last, email: m.email, passwordHash: managerPassword, role: 'STORE_MANAGER', storeId, isActive: true },
+    })
+  }
+  console.log(`✅ ${MANAGERS.length} store managers seeded`)
+
+  // ── Reviews (uses real customer IDs from customer app) ───────────────────────
+  const CUSTOMER_IDS = [
+    '1468ff72-70de-4d4f-a0b1-67009914bd29',
+    '4e316087-25b8-441d-9af0-d068f206b8fb',
+    '97ea8174-be73-43d0-ab53-594bb6676ab6',
+  ]
+  const REVIEWS_DATA = [
+    { store: 'springvale', rating: 5, title: 'Excellent service', body: 'Same-day log book service, warranty stamp and all — no upsell. Honest and fast.' },
+    { store: 'dandenong',  rating: 5, title: 'Very helpful',      body: 'Free pre-RWC check saved me a fortune. Helpful crew who explained everything clearly.' },
+    { store: 'bayswater',  rating: 5, title: 'Drives like new',   body: 'Ultimate Service and it drives like new. Call-back within the hour as promised.' },
+    { store: 'alphington', rating: 4, title: 'Fast turnaround',   body: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.' },
+    { store: 'sunshine',   rating: 5, title: 'No hidden costs',   body: 'Sorted my brakes same day and were clear about costs upfront. No surprises.' },
+    { store: 'sefton',     rating: 3, title: 'Good work',         body: 'Good work but waited a little longer than quoted. Staff were apologetic.' },
+    { store: 'springvale', rating: 5, title: 'Best prices',       body: 'Best tyre prices in Melbourne. Had 4 Maxxis fitted quickly — professional service.' },
+    { store: 'dandenong',  rating: 4, title: 'Quality job',       body: 'Brake replacement done well. Slightly longer wait but quality work.' },
+    { store: 'bayswater',  rating: 5, title: 'Seamless experience', body: 'Entire service experience was seamless. Will return for next service.' },
+    { store: 'sefton',     rating: 5, title: 'Great communication', body: 'Tyres arrived and fitted perfectly. Great communication throughout.' },
+  ]
+  const reviewBase = new Date()
+  reviewBase.setDate(reviewBase.getDate() - 30)
+  const existingCustomers = await prisma.customer.findMany({ select: { id: true } })
+  const customerIds = existingCustomers.length > 0
+    ? existingCustomers.map(c => c.id)
+    : CUSTOMER_IDS
+  for (let i = 0; i < REVIEWS_DATA.length; i++) {
+    const r = REVIEWS_DATA[i]
+    const storeId = storeIdMap[r.store]
+    const customerId = customerIds[i % customerIds.length]
+    if (!storeId || !customerId) continue
+    const createdAt = new Date(reviewBase.getTime() + i * 3 * 24 * 60 * 60 * 1000)
+    await prisma.review.upsert({
+      where: { id: `review-seed-${i}` },
+      update: {},
+      create: {
+        id: `review-seed-${i}`,
+        customerId, storeId, rating: r.rating,
+        title: r.title, body: r.body,
+        isVerifiedPurchase: true, isApproved: true, createdAt,
+      },
+    })
+  }
+  console.log(`✅ ${REVIEWS_DATA.length} reviews seeded`)
+
+  // ── Appointments (uses real customer IDs + appointment slots) ────────────────
+  const now = new Date()
+  const slots = await prisma.appointmentSlot.findMany({
+    where: { isAvailable: true },
+    orderBy: { date: 'asc' },
+    take: 20,
+  })
+  const allServices = await prisma.service.findMany()
+  const APPT_DATA = [
+    { customer: 0, slot: 0, service: 2, status: 'PENDING',   vehicle: '2021 Toyota RAV4' },
+    { customer: 1, slot: 1, service: 0, status: 'PENDING',   vehicle: '2019 Mazda 3' },
+    { customer: 2, slot: 2, service: 3, status: 'CONFIRMED', vehicle: '2022 Ford Ranger' },
+    { customer: 0, slot: 3, service: 2, status: 'CONFIRMED', vehicle: '2020 VW Golf' },
+    { customer: 1, slot: 4, service: 6, status: 'COMPLETED', vehicle: '2018 Subaru WRX' },
+    { customer: 2, slot: 5, service: 2, status: 'CONFIRMED', vehicle: '2023 Tesla Model 3' },
+    { customer: 0, slot: 6, service: 4, status: 'COMPLETED', vehicle: '2017 Hyundai i30' },
+    { customer: 1, slot: 7, service: 2, status: 'COMPLETED', vehicle: '2021 Kia Sportage' },
+  ]
+  for (let i = 0; i < APPT_DATA.length; i++) {
+    const a = APPT_DATA[i]
+    const slot = slots[a.slot % slots.length]
+    const service = allServices[a.service % allServices.length]
+    const customerId = customerIds[a.customer % customerIds.length]
+    if (!slot || !service || !customerId) continue
+    await prisma.appointment.upsert({
+      where: { id: `appt-seed-${i}` },
+      update: {},
+      create: {
+        id: `appt-seed-${i}`,
+        customerId, storeId: slot.storeId,
+        appointmentSlotId: slot.id, serviceId: service.id,
+        date: slot.date, timeSlot: slot.time,
+        status: a.status as any, notes: null,
+      },
+    })
+  }
+  console.log(`✅ ${APPT_DATA.length} appointments seeded`)
+
+  // ── Enquiries ────────────────────────────────────────────────────────────────
+  const ENQUIRY_DATA = [
+    { store: 'springvale', name: 'Harper Wells',   phone: '0412556030', email: 'harper.w@example.com', message: 'Hi, how much for 4 Michelin Pilot Sport for a Golf GTI?',          status: 'NEW'         },
+    { store: 'springvale', name: 'Marcus Lee',     phone: '0413220884', email: 'marcus.l@example.com', message: 'I need to book a log book service for a 2021 RAV4 this Friday.',   status: 'RESOLVED'    },
+    { store: 'dandenong',  name: 'Tina Alvarez',   phone: '0414905117', email: 'tina.a@example.com',   message: 'How much does a roadworthy cost and do I need to book?',            status: 'RESOLVED'    },
+    { store: 'bayswater',  name: 'Owen Brooks',    phone: '0415663422', email: 'owen.b@example.com',   message: 'My brakes are grinding — front pads need replacing on a Mazda CX-5.',status: 'RESOLVED'   },
+    { store: 'sefton',     name: 'Priya Naidu',    phone: '0417118990', email: 'priya.n@example.com',  message: 'What is the cost for a wheel alignment? I have a 2022 Kia Stinger.',status: 'NEW'         },
+    { store: 'springvale', name: 'Unknown Caller', phone: '0416770201', email: 'unknown@example.com',  message: 'Missed call — no voicemail left. Please call back.',                 status: 'NEW'         },
+    { store: 'alphington', name: 'Bella Martin',   phone: '0418334556', email: 'bella.m@example.com',  message: 'What is included in the 3 year service and how long does it take?', status: 'IN_PROGRESS' },
+    { store: 'dandenong',  name: 'Chris Taylor',   phone: '0419221007', email: 'chris.t@example.com',  message: 'Do you stock Bridgestone and Continental tyres in 225/45R17?',       status: 'RESOLVED'    },
+  ]
+  for (let i = 0; i < ENQUIRY_DATA.length; i++) {
+    const e = ENQUIRY_DATA[i]
+    const storeId = storeIdMap[e.store]
+    if (!storeId) continue
+    const createdAt = new Date(now)
+    createdAt.setHours(now.getHours() - i * 2)
+    await prisma.enquiry.upsert({
+      where: { id: `enq-seed-${i}` },
+      update: {},
+      create: {
+        id: `enq-seed-${i}`,
+        name: e.name, phone: e.phone, email: e.email,
+        message: e.message, type: 'general',
+        source: storeId,            // source field is the store FK in this schema
+        status: e.status as any, createdAt,
+      },
+    })
+  }
+  console.log(`✅ ${ENQUIRY_DATA.length} enquiries seeded`)
+
+  // ── Chat conversations + messages ─────────────────────────────────────────────
+  const CHAT_DATA = [
+    {
+      store: 'springvale', status: 'active',
+      messages: [
+        { senderType: 'CUSTOMER', body: 'Hi, how much for a log book service on a 2021 RAV4?', minsAgo: 60 },
+        { senderType: 'AGENT',    body: 'Morning! A log book service for the RAV4 is $149 incl. parts and a warranty stamp.', minsAgo: 55 },
+        { senderType: 'CUSTOMER', body: 'Great. Can you fit me in this Friday?', minsAgo: 40 },
+        { senderType: 'CUSTOMER', body: 'Also do you do a free safety check with it?', minsAgo: 39 },
+      ],
+    },
+    {
+      store: 'springvale', status: 'active',
+      messages: [
+        { senderType: 'CUSTOMER', body: 'Do I need to book for the free pre-RWC check or can I just drop in?', minsAgo: 90 },
+      ],
+    },
+    {
+      store: 'sefton', status: 'active',
+      messages: [
+        { senderType: 'AGENT',    body: 'Hi, your 4 tyres have arrived and are ready to fit.', minsAgo: 180 },
+        { senderType: 'CUSTOMER', body: 'Perfect — I\'ll come by at 2pm today.', minsAgo: 160 },
+      ],
+    },
+    {
+      store: 'dandenong', status: 'resolved',
+      messages: [
+        { senderType: 'CUSTOMER', body: 'My brakes are squeaking, can you take a look?', minsAgo: 2880 },
+        { senderType: 'AGENT',    body: 'Of course — come in Thursday and we\'ll check the front pads.', minsAgo: 2820 },
+        { senderType: 'CUSTOMER', body: 'Thanks, much quieter now.', minsAgo: 1440 },
+      ],
+    },
+  ]
+  for (let i = 0; i < CHAT_DATA.length; i++) {
+    const cd = CHAT_DATA[i]
+    const storeId = storeIdMap[cd.store]
+    const customerId = customerIds[i % customerIds.length]
+    if (!storeId || !customerId) continue
+    const conv = await prisma.chatConversation.upsert({
+      where: { id: `conv-seed-${i}` },
+      update: {},
+      create: { id: `conv-seed-${i}`, storeId, customerId, status: cd.status },
+    })
+    for (let j = 0; j < cd.messages.length; j++) {
+      const m = cd.messages[j]
+      const createdAt = new Date(now.getTime() - m.minsAgo * 60 * 1000)
+      await prisma.chatMessage.upsert({
+        where: { id: `msg-seed-${i}-${j}` },
+        update: {},
+        create: {
+          id: `msg-seed-${i}-${j}`,
+          conversationId: conv.id,
+          senderType: m.senderType,
+          senderId: m.senderType === 'CUSTOMER' ? customerId : superAdmin.id,
+          body: m.body, isRead: m.minsAgo > 60, createdAt,
+        },
+      })
+    }
+  }
+  console.log(`✅ ${CHAT_DATA.length} chat conversations seeded`)
+
+  // ── PageSEO ───────────────────────────────────────────────────────────────────
+  const SEO_PAGES = [
+    { entityType: 'page', entityId: 'home',      metaTitle: 'Nova Tyres | Warehouse Direct Tyres & Wheels',             metaDesc: 'Nova Tyres offers warehouse-direct pricing on tyres and wheels with professional fitting across 9 Australian locations.' },
+    { entityType: 'page', entityId: 'tyres',     metaTitle: 'Buy Tyres Online | Nova Tyres Australia',                  metaDesc: 'Search and buy tyres by size or brand. Wide range of passenger, SUV and 4WD tyres with same-day fitting.' },
+    { entityType: 'page', entityId: 'wheels',    metaTitle: 'Alloy Wheels Australia | Nova Tyres',                      metaDesc: 'Shop alloy wheels from top brands. Find the perfect set for your car with expert fitting at any Nova Tyres location.' },
+    { entityType: 'page', entityId: 'service',   metaTitle: 'Car Service Melbourne & Sydney | Nova Tyres',              metaDesc: 'Affordable car servicing including log book, yearly and 3/6 year service packages. Warranty-safe with genuine parts.' },
+    { entityType: 'page', entityId: 'locations', metaTitle: 'Nova Tyres Store Locations | Melbourne, Sydney & More',    metaDesc: 'Find your nearest Nova Tyres store across Melbourne, Sydney and Australia. Open 6 days a week.' },
+    { entityType: 'page', entityId: 'warranty',  metaTitle: 'Tyre Warranty & Returns | Nova Tyres',                    metaDesc: 'Nova Tyres warranty and returns policy. All products covered by manufacturer warranty.' },
+    { entityType: 'page', entityId: 'about',     metaTitle: 'About Nova Tyres | Australian Tyre Retailer',             metaDesc: 'Nova Tyres is an Australian tyre and wheel retailer with 9+ locations, 4.8★ rating and 2,000+ verified reviews.' },
+  ]
+  for (const page of SEO_PAGES) {
+    await prisma.pageSEO.upsert({
+      where: { entityType_entityId: { entityType: page.entityType, entityId: page.entityId } },
+      update: { metaTitle: page.metaTitle, metaDesc: page.metaDesc },
+      create: { entityType: page.entityType, entityId: page.entityId, metaTitle: page.metaTitle, metaDesc: page.metaDesc },
+    })
+  }
+  console.log(`✅ ${SEO_PAGES.length} PageSEO records seeded`)
 
   console.log('\n🎉 Seed complete!')
 }

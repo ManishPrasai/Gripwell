@@ -1,0 +1,47 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "nova-tyres-customer",
+	"compatibility_date": "2026-07-07",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"hyperdrive": [
+		{
+			// Edge connection pooling for Supabase Postgres — avoids per-request
+			// connection exhaustion under concurrent load.
+			"binding": "HYPERDRIVE",
+			"id": "0c5a8193e15a4304b2dc8aa888d6ce61",
+			"localConnectionString": "postgresql://postgres.ivkbixzhkhhnwwtcdvds:NovaTyresSecurePass2026@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres"
+		}
+	],
+	"kv_namespaces": [
+		{
+			// Product image storage — same namespace the admin Worker uploads to.
+			// The storefront only reads from it (serving /media/*).
+			"binding": "NOVA_MEDIA",
+			"id": "d6580db3eae349ffa007c59f5b1a5624"
+		}
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Self-reference service binding, the service name must match the worker name
+			// see https://opennext.js.org/cloudflare/caching
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "nova-tyres-customer"
+		}
+	],
+	"images": {
+		// Enable image optimization
+		// see https://opennext.js.org/cloudflare/howtos/image
+		"binding": "IMAGES"
+	}
+}

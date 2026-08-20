@@ -1,0 +1,668 @@
+/* ============================================================
+   NOVA TYRES — Admin v4 · Modern Minimal
+   Loads last. Full visual reset: no blur, no glow, no motion.
+   Flat surfaces · hairline borders · type-led hierarchy.
+   ============================================================ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. TOKEN RESET
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --radius:      8px;
+  --radius-sm:   6px;
+  --radius-xs:   4px;
+  --radius-pill: 999px;
+  --glass-blur:  0px;
+  --glass-alpha: 1;
+  --glass-alpha-2: 1;
+  --topbar-h:    56px;
+  --bottombar-h: 62px;
+  --nav-blur:    0px;
+  --ease:        cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.22, 1, .36, 1);
+}
+
+[data-theme="light"] {
+  --bg-a: #F4F5F3;
+  --bg-b: #F4F5F3;
+  --glow-1: transparent;
+  --glow-2: transparent;
+
+  --glass:       #FFFFFF;
+  --glass-2:     #FFFFFF;
+  --glass-solid: #FFFFFF;
+  --glass-hover: #F8F9F7;
+  --hairline:    transparent;
+
+  --border:        #E4E6E2;
+  --border-strong: #CDD0CB;
+
+  --ink:   #111411;
+  --ink-2: #4B4E49;
+  --ink-3: #8C8F89;
+
+  --chip:   #F0F1EF;
+  --chip-2: #E6E8E4;
+
+  --shadow-sm: none;
+  --shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 12px -6px rgba(0,0,0,.07);
+  --shadow-lg: 0 8px 28px -8px rgba(0,0,0,.13);
+
+  --nav-glass:    #FFFFFF;
+  --nav-hairline: transparent;
+  --nav-edge:     #E4E6E2;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg-a: #0D0D0D;
+  --bg-b: #0D0D0D;
+  --glow-1: transparent;
+  --glow-2: transparent;
+
+  --glass:       #171717;
+  --glass-2:     #171717;
+  --glass-solid: #171717;
+  --glass-hover: #1E1E1E;
+  --hairline:    transparent;
+
+  --border:        #272727;
+  --border-strong: #363636;
+
+  --ink:   #EFEFED;
+  --ink-2: #999C97;
+  --ink-3: #626660;
+
+  --chip:   #1D1D1D;
+  --chip-2: #232323;
+
+  --shadow-sm: none;
+  --shadow:    none;
+  --shadow-lg: 0 8px 28px rgba(0,0,0,.45);
+
+  --nav-glass:    #171717;
+  --nav-hairline: transparent;
+  --nav-edge:     #272727;
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2. BACKGROUND — pure flat
+   ───────────────────────────────────────────────────────────── */
+.app-bg {
+  background: var(--bg-b) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. KILL ALL BLUR / GLOW EVERYWHERE
+   ───────────────────────────────────────────────────────────── */
+.glass, .panel, .topbar, .bottombar,
+.btn.ghost, .tb-search, .drawer, .modal,
+.kcard, .tabs, .filter-chip, .searchbox,
+.tb-icon, .seg, .sidebar, .import-tabs {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. PANELS — white card, hairline border, no shadow
+   ───────────────────────────────────────────────────────────── */
+.panel, .glass {
+  background:    var(--glass-solid) !important;
+  border:        1px solid var(--border) !important;
+  box-shadow:    none !important;
+  border-radius: var(--radius) !important;
+}
+.sidebar {
+  background: var(--glass-solid) !important;
+  border:     1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. TOPBAR — 56 px, flat, hairline bottom
+   ───────────────────────────────────────────────────────────── */
+.topbar {
+  height:        var(--topbar-h) !important;
+  padding:       0 20px !important;
+  background:    var(--glass-solid) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow:    none !important;
+  animation:     none !important;
+  transform:     none !important;
+}
+
+/* Logo card: compact, no glow */
+.tb-logo-card {
+  width:         34px !important;
+  height:        34px !important;
+  border-radius: 8px !important;
+  box-shadow:    none !important;
+  border:        none !important;
+  background:    var(--brand) !important;
+}
+.tb-logo-card svg { width: 24px !important; height: 24px !important; }
+
+/* Breadcrumb */
+.tb-breadcrumb {
+  font-size:      10.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  font-weight:    600 !important;
+  color:          var(--ink-3) !important;
+}
+
+/* Title */
+.tb-title h1 {
+  font-size:      15px !important;
+  font-weight:    700 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+}
+
+/* Search pill */
+.tb-search {
+  width:         210px !important;
+  max-width:     210px !important;
+  border-radius: 6px !important;
+  background:    var(--chip) !important;
+  border:        1px solid var(--border) !important;
+  padding:       7px 12px !important;
+  box-shadow:    none !important;
+}
+.tb-search:focus-within {
+  border-color: var(--brand) !important;
+  background:   var(--glass-solid) !important;
+  box-shadow:   0 0 0 2px color-mix(in oklab, var(--brand) 12%, transparent) !important;
+}
+.tb-search input { font-size: 13px !important; }
+.tb-search kbd    { display: none !important; }
+
+/* Topbar icon buttons */
+.tb-icon {
+  width:         32px !important;
+  height:        32px !important;
+  border-radius: 6px !important;
+  background:    transparent !important;
+  border:        none !important;
+  box-shadow:    none !important;
+  color:         var(--ink-3) !important;
+}
+.tb-icon:hover      { background: var(--chip) !important; transform: none !important; color: var(--ink) !important; }
+.tb-icon svg        { width: 17px !important; height: 17px !important; }
+.tb-icon .dot {
+  width:  7px !important; height: 7px !important;
+  border: 2px solid var(--glass-solid) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. BOTTOM NAV — 62 px, flat, minimal
+   ───────────────────────────────────────────────────────────── */
+.bottombar {
+  height:     var(--bottombar-h) !important;
+  background: var(--glass-solid) !important;
+  border-top: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  animation:  none !important;
+  transform:  none !important;
+  padding:    0 14px !important;
+}
+
+.bb-item {
+  font-size:      9.5px !important;
+  letter-spacing: 0.01em !important;
+  color:          var(--ink-3) !important;
+  gap:            3px !important;
+}
+.bb-item:hover  { color: var(--ink) !important; }
+.bb-item.active { color: var(--brand) !important; }
+
+.bb-ico {
+  width:         34px !important;
+  height:        28px !important;
+  border-radius: 6px !important;
+  background:    transparent !important;
+  color:         inherit !important;
+}
+.bb-item:hover .bb-ico  { background: var(--chip) !important; }
+.bb-item.active .bb-ico {
+  background: color-mix(in oklab, var(--brand) 10%, transparent) !important;
+  color:      var(--brand) !important;
+  box-shadow: none !important;
+}
+.bb-ico svg { width: 17px !important; height: 17px !important; stroke-width: 1.7; }
+
+/* Sliding underline: off */
+.bb-item::after { display: none !important; }
+
+/* User avatar button */
+.bb-user-btn { margin-right: 4px !important; }
+
+/* Role switch button */
+.bb-role {
+  border-radius: 6px !important;
+  background:    transparent !important;
+  color:         var(--ink-3) !important;
+}
+.bb-role:hover { background: var(--chip) !important; transform: none !important; color: var(--brand) !important; }
+.bb-role svg   { width: 17px !important; height: 17px !important; }
+
+/* Nav badge */
+.bb-item .bb-badge {
+  font-size:   8.5px !important;
+  min-width:   14px !important;
+  height:      14px !important;
+  border-radius: 3px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   7. BUTTONS — flat, no shadows, no transform lifts
+   ───────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: 7px !important;
+  box-shadow:    none !important;
+  font-size:     13px !important;
+  font-weight:   600 !important;
+  padding:       8px 14px !important;
+  letter-spacing: 0 !important;
+  transition:    background .15s, color .15s, border-color .15s !important;
+}
+.btn:hover  { transform: none !important; box-shadow: none !important; }
+.btn:active { transform: none !important; }
+
+.btn.accent    { box-shadow: none !important; }
+.btn.accent:hover { background: var(--accent-2) !important; box-shadow: none !important; }
+
+.btn.ghost {
+  background: transparent !important;
+  border:     1px solid var(--border) !important;
+  box-shadow: none !important;
+  color:      var(--ink) !important;
+}
+.btn.ghost:hover { background: var(--chip) !important; box-shadow: none !important; border-color: var(--border-strong) !important; }
+
+.btn.danger    { box-shadow: none !important; }
+.btn.danger:hover { box-shadow: none !important; }
+
+.btn.sm {
+  padding:       6px 11px !important;
+  border-radius: 6px !important;
+  font-size:     12px !important;
+}
+.btn.icon { padding: 8px !important; }
+
+.iconbtn { border-radius: 5px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   8. BADGES — compact, flat rect
+   ───────────────────────────────────────────────────────────── */
+.badge {
+  border-radius: 4px !important;
+  font-size:     11px !important;
+  font-weight:   600 !important;
+  padding:       2px 6px !important;
+  gap:           4px !important;
+}
+.badge .bdot {
+  width:         4px !important;
+  height:        4px !important;
+  border-radius: 1px !important;
+}
+.badge.live .bdot { animation: none !important; box-shadow: none !important; }
+.sb-badge {
+  font-size:     10px !important;
+  padding:       1px 5px !important;
+  border-radius: 3px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   9. KPI CARDS
+   ───────────────────────────────────────────────────────────── */
+.kpi { padding: 18px 20px !important; }
+.kpi-ico {
+  width:         40px !important;
+  height:        40px !important;
+  border-radius: 8px !important;
+}
+.kpi-ico svg { width: 19px !important; height: 19px !important; }
+.kpi-val {
+  font-size:      25px !important;
+  font-weight:    800 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* Kill kpi hover lift + icon spin */
+.kpi:hover {
+  transform:    none !important;
+  box-shadow:   none !important;
+  border-color: var(--border-strong) !important;
+}
+.kpi-ico { transition: none !important; }
+.kpi:hover .kpi-ico { transform: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   10. PANEL HEADS
+   ───────────────────────────────────────────────────────────── */
+.panel-head h3 {
+  font-size:      14px !important;
+  font-weight:    700 !important;
+  letter-spacing: -0.015em !important;
+}
+.panel-head { padding: 16px 18px 12px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   11. TABS / SEGMENTED
+   ───────────────────────────────────────────────────────────── */
+.tabs {
+  border-radius: 7px !important;
+  padding:       3px !important;
+  gap:           2px !important;
+}
+.tabs button {
+  border-radius: 5px !important;
+  font-size:     12.5px !important;
+  padding:       6px 12px !important;
+}
+.tabs button.on { box-shadow: none !important; }
+
+.seg { border-radius: 7px !important; padding: 3px !important; }
+.seg button { border-radius: 5px !important; font-size: 12.5px !important; }
+.seg button.on { box-shadow: none !important; }
+
+.import-tabs {
+  border-radius: 8px !important;
+  padding:       3px !important;
+}
+.import-tabs button { border-radius: 6px !important; font-size: 13px !important; }
+.import-tabs button.on { box-shadow: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   12. SEARCH BOX (page-level)
+   ───────────────────────────────────────────────────────────── */
+.searchbox {
+  border-radius: 7px !important;
+  background:    var(--chip) !important;
+  border:        1px solid var(--border) !important;
+  padding:       8px 13px !important;
+}
+.searchbox:focus-within {
+  border-color: var(--brand) !important;
+  background:   var(--glass-solid) !important;
+  box-shadow:   0 0 0 2px color-mix(in oklab, var(--brand) 10%, transparent) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   13. LIST ROWS
+   ───────────────────────────────────────────────────────────── */
+.lrow {
+  border-radius: 6px !important;
+  transition:    background .14s !important;
+}
+.lrow:hover { background: var(--chip) !important; transform: none !important; }
+.lrow-bar i { background: var(--brand) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   14. KANBAN CARDS
+   ───────────────────────────────────────────────────────────── */
+.kcard {
+  border-radius: 8px !important;
+  box-shadow:    none !important;
+  transition:    background .14s, border-color .14s !important;
+}
+.kcard:hover {
+  transform:    none !important;
+  box-shadow:   none !important;
+  border-color: var(--border-strong) !important;
+  background:   var(--glass-hover) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   15. STORE CARDS
+   ───────────────────────────────────────────────────────────── */
+.store-card {
+  transition: border-color .14s !important;
+}
+.store-card:hover {
+  transform:    none !important;
+  box-shadow:   none !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   16. CHART BARS
+   ───────────────────────────────────────────────────────────── */
+.bar {
+  background:    var(--brand) !important;
+  border-radius: 4px 4px 2px 2px !important;
+}
+.bar.b2 { background: var(--accent) !important; }
+.bar-col:hover .bar { opacity: .75 !important; background: var(--brand-2) !important; }
+
+/* Mini bars */
+.mini-bars span { background: var(--brand) !important; border-radius: 2px !important; }
+.mini-bars.accent span { background: var(--accent) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   17. HERO CARDS (dashboard overview) — keep gradient, drop glow
+   ───────────────────────────────────────────────────────────── */
+.hero-card {
+  border-radius: 10px !important;
+  animation:     none !important;
+}
+.hero-card.primary { box-shadow: none !important; }
+.hero-card.balance { box-shadow: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   18. STAT CARDS
+   ───────────────────────────────────────────────────────────── */
+.stat-card {
+  animation: none !important;
+  transition: border-color .14s !important;
+}
+.stat-card:hover { border-color: var(--border-strong) !important; }
+.sc-ico {
+  border-radius: 8px !important;
+  transition:    none !important;
+}
+.stat-card:hover .sc-ico { transform: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   19. DRAWERS & MODALS
+   ───────────────────────────────────────────────────────────── */
+.drawer {
+  border-left:   1px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow:    var(--shadow-lg) !important;
+}
+.drawer-head { border-bottom: 1px solid var(--border) !important; }
+.drawer-foot { border-top: 1px solid var(--border) !important; }
+.drawer-head h3 { font-size: 16px !important; font-weight: 700 !important; }
+
+.modal {
+  border-radius: 10px !important;
+  box-shadow:    var(--shadow-lg) !important;
+}
+.modal-head { padding: 20px 22px 0 !important; }
+.modal-head h3 { font-size: 16px !important; font-weight: 700 !important; }
+.modal-head .m-ico { border-radius: 8px !important; }
+
+.overlay { background: rgba(0,0,0,.32) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.drawer-bg { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(0,0,0,.32) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   20. FORMS
+   ───────────────────────────────────────────────────────────── */
+.input,
+.field input,
+.field select,
+.field textarea {
+  border-radius: 7px !important;
+  background:    var(--chip) !important;
+  border:        1px solid var(--border) !important;
+  font-size:     13.5px !important;
+}
+.input:focus,
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--brand) !important;
+  background:   var(--glass-solid) !important;
+  box-shadow:   0 0 0 2px color-mix(in oklab, var(--brand) 11%, transparent) !important;
+}
+.field > label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ink-3) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+.switch { border-radius: 999px !important; }
+.switch::after { box-shadow: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   21. TOASTS
+   ───────────────────────────────────────────────────────────── */
+.toast {
+  border-radius: 8px !important;
+  box-shadow:    var(--shadow-lg) !important;
+}
+.toast-ico { border-radius: 6px !important; }
+.toast-txt b   { font-size: 13px !important; }
+.toast-txt span { font-size: 12px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   22. MENUS
+   ───────────────────────────────────────────────────────────── */
+.menu {
+  border-radius: 10px !important;
+  box-shadow:    var(--shadow-lg) !important;
+  animation:     none !important;
+}
+.menu-item { border-radius: 6px !important; font-size: 13px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   23. NOTIFICATIONS
+   ───────────────────────────────────────────────────────────── */
+.notif        { border-radius: 6px !important; }
+.notif-ico    { border-radius: 6px !important; }
+.notif-unreaddot { border-radius: 2px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   24. SIDEBAR (hidden in v2 layout but style anyway)
+   ───────────────────────────────────────────────────────────── */
+.sb-logo     { background: var(--brand) !important; box-shadow: none !important; border-radius: 8px !important; }
+.sb-item     { border-radius: 6px !important; }
+.sb-item.active { box-shadow: none !important; }
+.sb-collapse { border-radius: 50% !important; box-shadow: none !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   25. PAGE LAYOUT
+   ───────────────────────────────────────────────────────────── */
+/* Kill ALL entrance animations.
+   `.page-enter` matters beyond looks: its `pageIn` keyframes animate transform,
+   and a transformed ancestor becomes the containing block for `position: fixed`
+   descendants — which used to make drawers/modals size against the full page
+   height instead of the viewport. Keep it in this list. */
+.page-anim,
+.page-enter,
+.content .panel,
+.kpis .kpi,
+.hero-card,
+.topbar,
+.bottombar {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Page head */
+.pagehead h2 {
+  font-size:      19px !important;
+  font-weight:    800 !important;
+  letter-spacing: -0.025em !important;
+}
+.pagehead p {
+  font-size: 13px !important;
+  color:     var(--ink-3) !important;
+}
+
+/* Dashboard section label */
+.dash-label {
+  font-size:      11px !important;
+  font-weight:    700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color:          var(--ink-3) !important;
+  margin-bottom:  0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   26. BANNERS
+   ───────────────────────────────────────────────────────────── */
+.role-banner {
+  border-radius: 0 6px 6px 0 !important;
+  border-left:   2px solid var(--accent) !important;
+  border-top:    none !important;
+  border-right:  none !important;
+  border-bottom: none !important;
+  background:    var(--chip) !important;
+  padding:       10px 14px !important;
+}
+.monitor-banner {
+  border-radius: 0 6px 6px 0 !important;
+  border-left:   2px solid var(--info) !important;
+  border-top:    none !important;
+  border-right:  none !important;
+  border-bottom: none !important;
+  background:    var(--chip) !important;
+  padding:       10px 14px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   27. MISC MICRO-ELEMENTS
+   ───────────────────────────────────────────────────────────── */
+/* Table rows — no hover transforms */
+.tbl tbody tr { transition: background .12s !important; }
+
+/* Import drop zone */
+.import-drop { border-radius: 8px !important; }
+.import-drop-ico { border-radius: 8px !important; }
+
+/* Capacity bar */
+.cap-bar i { background: var(--brand) !important; }
+.cap-bar i.hot { background: var(--accent) !important; }
+
+/* Donut */
+.donut-wrap {}
+
+/* Rating dist bar */
+.rdist-track i { background: var(--warn) !important; }
+
+/* Settings nav */
+.settings-nav button { border-radius: 6px !important; }
+.settings-nav button.on { box-shadow: none !important; }
+
+/* ctype (call type picker) */
+.ctype { border-radius: 8px !important; }
+.ctype:hover { transform: none !important; }
+.ctype-ico { border-radius: 7px !important; }
+.ctype-check { border-radius: 4px !important; animation: none !important; }
+
+/* profile / account cards */
+.kcard { border-radius: 8px !important; }
+
+/* Step numbers */
+.step-n { border-radius: 50% !important; }
+.import-step.active .step-n { box-shadow: none !important; }
+
+/* Ptag (roles page) */
+.ptag { border-radius: 4px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   28. REDUCED MOTION
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: .01ms !important;
+  }
+}

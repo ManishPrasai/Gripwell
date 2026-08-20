@@ -246,6 +246,10 @@
 :root {
   --nv-shell-max: 1280px;
   --nv-gutter: 16px;
+  /* Sticky header row. The announcement strip above it scrolls away, so anchor
+     targets only need to clear the 66px bar itself. */
+  --navbar-height: 66px;
+  scroll-padding-top: 66px;
 }
 @media (min-width: 640px)  { :root { --nv-gutter: 24px; } }
 @media (min-width: 1024px) { :root { --nv-gutter: 32px; } }
@@ -320,6 +324,58 @@ textarea:focus-visible {
 @keyframes nv-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   NOVA v3 REDESIGN TOKENS
+   The homepage-v3 palette. Green is the brand surface, coral the only
+   accent, cream the page ground — one scale, referenced by name so a
+   future palette change is a single edit here.
+═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --nv-green-900: #002A13;  /* footer ground        */
+  --nv-green-850: #04331B;  /* announcement strip   */
+  --nv-green-800: #0D1A12;  /* hero / category ink  */
+  --nv-green-700: #0F2A1C;  /* "Why Nova" ground    */
+  --nv-green-600: #1C3A2B;  /* cards on cream       */
+  --nv-green-500: #076330;  /* header bar, links    */
+  --nv-green-400: #0A7D3D;  /* link hover           */
+  --nv-coral-600: #E8572A;  /* primary accent       */
+  --nv-coral-500: #FF6817;  /* accent hover         */
+  --nv-coral-300: #FF8A5C;  /* accent on dark       */
+  --nv-cream:     #FAF9F5;  /* page ground          */
+  --nv-cream-200: #F0EFE9;  /* alt band             */
+  --nv-line:      #E7E5DE;  /* hairline on light    */
+  --nv-line-2:    #DEDCD4;  /* stronger hairline    */
+  --nv-ink:       #16211B;  /* body text            */
+  --nv-ink-mute:  #6E7C74;  /* secondary text       */
+  --nv-ink-dim:   #9DB0A5;  /* text on dark         */
+}
+
+/* Section entrance + brand marquee — mirrors the design's novaIn/novaMarquee.
+   The marquee list is rendered twice, so -50% is exactly one full cycle;
+   the extra 8px accounts for the flex gap between the two halves. */
+@keyframes novaIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes novaMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-50% - 8px)); }
+}
+.nv-marquee { animation: novaMarquee 46s linear infinite; }
+.nv-marquee:hover { animation-play-state: paused; }
+
+/* Horizontal rails (store cards) — thin, low-contrast, consistent cross-browser */
+.nv-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nv-line-2) transparent;
+}
+.nv-rail::-webkit-scrollbar { height: 6px; }
+.nv-rail::-webkit-scrollbar-track { background: transparent; }
+.nv-rail::-webkit-scrollbar-thumb {
+  background: var(--nv-line-2);
+  border-radius: 9999px;
 }
 
 /* Accessibility: kill all decorative motion for users who opt out */

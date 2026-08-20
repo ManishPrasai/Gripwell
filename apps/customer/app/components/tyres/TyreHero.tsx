@@ -1,268 +1,241 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { C, FONT, FIELD_LABEL, SELECT, CTA } from '../shop/tokens'
+import { NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF } from '../../../lib/stores'
 
-const WIDTHS   = ['145','155','165','175','185','195','205','215','225','235','245','255','265','275','285','295','305','315']
-const PROFILES = ['25','30','35','40','45','50','55','60','65','70','75','80']
-const RIMS     = ['13','14','15','16','17','18','19','20','21','22','23','24']
-const BRAND_LIST = [
-  'Continental','Pirelli','Yokohama','Maxxis','Black Rhino',
-  'Nitto','Atlander','King Wheels','BFGoodrich','Sonix','ROH','Hankook',
+const WIDTHS   = ['165','175','185','195','205','215','225','235','245','255','265','275','285']
+const PROFILES = ['30','35','40','45','50','55','60','65','70','75','80']
+const RIMS     = ['13','14','15','16','17','18','19','20','21','22']
+
+/* Brands actually carried in the tyre catalogue. The design also listed Nitto,
+   Atlander and Sonix; the first two aren't stocked and Sonix is a wheel brand,
+   so all three would have filtered to nothing. */
+const BRANDS = ['All brands', 'BF Goodrich', 'Continental', 'Hankook', 'Maxxis', 'Nova', 'Pirelli', 'Yokohama']
+
+/* Only the four types the catalogue can actually serve (TyreType enum). */
+const TYPES = [
+  { label: 'All types',   value: '' },
+  { label: 'Passenger',   value: 'PASSENGER' },
+  { label: '4x4 / SUV',   value: 'SUV' },
+  { label: 'Commercial',  value: 'COMMERCIAL' },
+  { label: 'Mud terrain', value: 'MUD_TERRAIN' },
 ]
-const LOCATIONS = ['All Stores','Springvale','Dandenong','Alphington','Bayswater','Sunshine','Geelong','Sefton','Brisbane','Adelaide']
 
-/* ── Shared styles ─────────────────────────────────────────────────────── */
-const LABEL: React.CSSProperties = {
-  fontSize: '13px', fontWeight: 700, color: '#777',
-  marginBottom: '8px', fontFamily: "'DM Sans', sans-serif",
-  textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block',
+const RECENT_KEY = 'nova_recent_tyre_sizes'
+const RECENT_MAX = 4
+
+interface SizeCombo { width: number; profile: number; rimDiameter: number }
+
+function profilesFor(combos: SizeCombo[], w: string): string[] {
+  const m = combos.filter(c => c.width === Number(w))
+  if (!m.length) return PROFILES
+  const set = new Set(m.map(c => String(c.profile)))
+  const out = PROFILES.filter(p => set.has(p))
+  return out.length ? out : PROFILES
 }
 
-const SELECT: React.CSSProperties = {
-  width: '100%', appearance: 'none',
-  background: '#F7F7F7', border: '1.5px solid #E2E2E2',
-  borderRadius: '10px', padding: '13px 40px 13px 16px',
-  fontSize: '17px', fontWeight: 700, color: '#1A1A1A',
-  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", outline: 'none',
-  lineHeight: 1.3,
+function rimsFor(combos: SizeCombo[], w: string, p: string): string[] {
+  const m = combos.filter(c => c.width === Number(w) && c.profile === Number(p))
+  if (!m.length) return RIMS
+  const set = new Set(m.map(c => String(c.rimDiameter)))
+  const out = RIMS.filter(r => set.has(r))
+  return out.length ? out : RIMS
 }
 
-const FIND_BTN: React.CSSProperties = {
-  background: '#E8572A', color: '#fff',
-  fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
-  fontSize: '15px', letterSpacing: '0.06em',
-  padding: '0 28px', borderRadius: '10px',
-  textDecoration: 'none', whiteSpace: 'nowrap',
-  height: '52px', display: 'flex', alignItems: 'center',
-  justifyContent: 'center', flexShrink: 0,
-  border: 'none', cursor: 'pointer',
-}
-
-const CHIP: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: '4px',
-  background: '#F0F0F0', borderRadius: '6px',
-  padding: '4px 10px', fontSize: '12px',
-  color: '#444', fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
-}
-
-/* ── Select box ──────────────────────────────────────────────────────────── */
-function SizeSelect({ label, value, options, onChange }: {
-  label: string; value: string; options: string[]; onChange: (v: string) => void
-}) {
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <label style={LABEL}>{label}</label>
-      <div style={{ position: 'relative' }}>
-        <select value={value} onChange={e => onChange(e.target.value)} style={SELECT}>
-          {options.map(o => <option key={o} value={o}>{o}</option>)}
-        </select>
-        <i className="ti ti-chevron-down" style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', fontSize: '17px', color: '#999', pointerEvents: 'none' }} aria-hidden="true" />
-      </div>
-    </div>
-  )
-}
-
-/* ── Recent-search chips ─────────────────────────────────────────────────── */
-function RecentRow({ items, onRemove, onClear }: {
-  items: string[]; onRemove: (v: string) => void; onClear: () => void
-}) {
-  if (!items.length) return null
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '14px' }}>
-      <i className="ti ti-clock-hour-4" style={{ fontSize: '13px', color: '#ccc' }} aria-hidden="true" />
-      <span style={{ fontSize: '12px', color: '#bbb', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
-        Recent Searches
-      </span>
-      {items.map(s => (
-        <span key={s} style={CHIP}>
-          {s}
-          <button onClick={() => onRemove(s)} style={{ color: '#bbb', background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: '15px' }} aria-label={`Remove ${s}`}>×</button>
-        </span>
-      ))}
-      <button onClick={onClear} style={{ fontSize: '12px', color: '#E8572A', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: "'DM Sans', sans-serif" }}>
-        Clear all
-      </button>
-    </div>
-  )
-}
-
-/* ── Component ───────────────────────────────────────────────────────────── */
 export default function TyreHero() {
-  const [tab,          setTab]          = useState<'size' | 'brand'>('size')
-  const [width,        setWidth]        = useState('205')
-  const [profile,      setProfile]      = useState('55')
-  const [rim,          setRim]          = useState('16')
-  const [brand,        setBrand]        = useState('')
-  const [location,     setLocation]     = useState('')
-  const [locOpen,      setLocOpen]      = useState(false)
-  const [sizeRecent,   setSizeRecent]   = useState(['205/55R16', '265/55R16', '205/55R'])
-  const [brandRecent,  setBrandRecent]  = useState(['Continental', 'Pirelli'])
+  const router = useRouter()
+  const [mode, setMode]       = useState<'size' | 'brand'>('size')
+  const [width, setWidth]     = useState('205')
+  const [profile, setProfile] = useState('55')
+  const [rim, setRim]         = useState('16')
+  const [brand, setBrand]     = useState('All brands')
+  const [type, setType]       = useState('')
+  const [recent, setRecent]   = useState<string[]>([])
 
-  const sizeHref  = `/tyres/results?width=${width}&profile=${profile}&rim=${rim}`
-  const brandHref = brand ? `/tyres/results?brand=${encodeURIComponent(brand)}` : '/tyres'
+  /* Recent searches are real: written on submit, read back on mount. */
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY)
+      const arr = raw ? JSON.parse(raw) : []
+      if (Array.isArray(arr)) setRecent(arr.filter((s): s is string => typeof s === 'string').slice(0, RECENT_MAX))
+    } catch {}
+  }, [])
+
+  function persistRecent(next: string[]) {
+    setRecent(next)
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+  }
+
+  const [combos, setCombos] = useState<SizeCombo[]>([])
+  useEffect(() => {
+    fetch('/api/tyres/sizes')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d.sizes)) setCombos(d.sizes) })
+      .catch(() => {})
+  }, [])
+
+  const availProfiles = useMemo(() => profilesFor(combos, width), [combos, width])
+  const availRims     = useMemo(() => rimsFor(combos, width, profile), [combos, width, profile])
+
+  function onWidth(next: string) {
+    setWidth(next)
+    const ps = profilesFor(combos, next)
+    const nextP = ps.includes(profile) ? profile : ps[0]
+    if (nextP !== profile) setProfile(nextP)
+    const rs = rimsFor(combos, next, nextP)
+    if (!rs.includes(rim)) setRim(rs[0])
+  }
+
+  function onProfile(next: string) {
+    setProfile(next)
+    const rs = rimsFor(combos, width, next)
+    if (!rs.includes(rim)) setRim(rs[0])
+  }
+
+  function searchBySize() {
+    const label = `${width}/${profile}R${rim}`
+    persistRecent([label, ...recent.filter(r => r !== label)].slice(0, RECENT_MAX))
+    router.push(`/tyres/results?width=${width}&profile=${profile}&rim=${rim}`)
+  }
+
+  function searchByBrand() {
+    const params = new URLSearchParams()
+    if (brand !== 'All brands') params.set('brand', brand)
+    if (type) params.set('type', type)
+    router.push(`/tyres/results${params.toString() ? `?${params}` : ''}`)
+  }
+
+  function applyRecent(label: string) {
+    const m = label.match(/(\d+)\/(\d+)R(\d+)/)
+    if (!m) return
+    setMode('size'); setWidth(m[1]); setProfile(m[2]); setRim(m[3])
+    router.push(`/tyres/results?width=${m[1]}&profile=${m[2]}&rim=${m[3]}`)
+  }
+
+  const tab = (on: boolean): React.CSSProperties => ({
+    border: 'none', cursor: 'pointer', padding: '14px 26px',
+    font: `800 clamp(19px,2vw,24px) ${FONT}`, textTransform: 'uppercase',
+    letterSpacing: '.5px', borderRadius: '4px 4px 0 0',
+    background: on ? C.orange : 'rgba(255,255,255,.85)',
+    color: on ? '#fff' : C.muted2,
+  })
 
   return (
-    <>
+    <section style={{ position: 'relative', background: '#0B1F14', overflow: 'hidden', fontFamily: FONT }}>
       <style>{`
-        @keyframes widgetFade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-        .wf { animation: widgetFade 0.3s ease-in-out; }
-        .loc-opt:hover { background: #F5F5F5 !important; }
+        .ft-fields { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .ft-cta:hover { background: ${C.orangeDark}; }
+        .ft-chip:hover { border-color: ${C.green}; color: ${C.green}; }
       `}</style>
 
-      <section
-        className="relative overflow-hidden"
-        style={{ background: '#111', minHeight: '460px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-      >
-        <Image src="/images/tyres-bg.jpg" alt="" fill priority style={{ objectFit: 'cover', opacity: 0.5 }} />
-        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+      {/* Background plate */}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.5 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/tyres-bg.jpg" alt="" aria-hidden="true"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(4,51,27,.55),rgba(4,51,27,.82))' }} />
 
-        <div className="relative z-10 px-4" style={{ paddingTop: '100px', paddingBottom: '40px' }}>
+      <div style={{ position: 'relative', maxWidth: '1600px', margin: '0 auto', padding: 'clamp(36px,5vw,72px) clamp(16px,3vw,64px)' }}>
+        <div style={{ maxWidth: '880px', margin: '0 auto' }}>
 
-          {/* ── Widget card ── */}
-          <div
-            className="mx-auto rounded-2xl overflow-visible"
-            style={{ maxWidth: '700px', background: '#fff', boxShadow: '0 28px 72px rgba(0,0,0,0.30)', borderRadius: '16px' }}
-          >
-
-            {/* Tab strip */}
-            <div style={{ display: 'flex', borderRadius: '16px 16px 0 0', overflow: 'hidden', borderBottom: '1px solid #EDEDED' }}>
-              {(['size', 'brand'] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    flex: 1, padding: '16px 0', border: 'none', cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px',
-                    letterSpacing: '0.03em',
-                    background:
-                      t === tab
-                        ? t === 'brand' ? '#E8572A' : '#ffffff'
-                        : '#F2F2F2',
-                    color:
-                      t === tab
-                        ? t === 'brand' ? '#ffffff' : '#1A1A1A'
-                        : '#AAAAAA',
-                    transition: 'background 0.3s ease-in-out, color 0.3s ease-in-out',
-                  }}
-                >
-                  By {t === 'size' ? 'Size' : 'Brand'}
-                </button>
-              ))}
-            </div>
-
-            {/* ── Input row: all four groups always in DOM, width-animated ── */}
-            <div style={{ padding: '22px 24px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-
-                {/*
-                  Size group — max-width collapses to 0 when brand tab active.
-                  overflow:hidden clips the internal content during the morph.
-                */}
-                <div style={{
-                  flex: 1, display: 'flex', gap: '12px',
-                  maxWidth: tab === 'size' ? '800px' : '0px',
-                  overflow: 'hidden',
-                  opacity: tab === 'size' ? 1 : 0,
-                  transition: 'max-width 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease-in-out',
-                  pointerEvents: tab === 'size' ? 'auto' : 'none',
-                }}>
-                  <SizeSelect label="Width"   value={width}   options={WIDTHS}   onChange={setWidth} />
-                  <SizeSelect label="Profile" value={profile} options={PROFILES} onChange={setProfile} />
-                  <SizeSelect label="Rim"     value={rim}     options={RIMS}     onChange={setRim} />
-                </div>
-
-                {/*
-                  Brand group — expands from 0 to full width when brand tab active.
-                */}
-                <div style={{
-                  flex: 1, minWidth: 0,
-                  maxWidth: tab === 'brand' ? '800px' : '0px',
-                  overflow: 'hidden',
-                  opacity: tab === 'brand' ? 1 : 0,
-                  transition: 'max-width 0.42s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease-in-out',
-                  pointerEvents: tab === 'brand' ? 'auto' : 'none',
-                }}>
-                  <div style={{ width: '100%', minWidth: '200px' }}>
-                    <label style={LABEL}>Select a Brand</label>
-                    <div style={{ position: 'relative' }}>
-                      <select value={brand} onChange={e => setBrand(e.target.value)} style={SELECT}>
-                        <option value="">Choose a brand</option>
-                        {BRAND_LIST.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
-                      <i className="ti ti-chevron-down" style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', fontSize: '17px', color: '#999', pointerEvents: 'none' }} aria-hidden="true" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* FIND TYRES — always visible */}
-                <Link href={tab === 'size' ? sizeHref : brandHref} style={FIND_BTN}>
-                  FIND TYRES
-                </Link>
-              </div>
-
-              {/* Recent searches — per-tab */}
-              <div style={{ minHeight: '44px' }}>
-                {tab === 'size' && (
-                  <RecentRow
-                    items={sizeRecent}
-                    onRemove={v => setSizeRecent(p => p.filter(x => x !== v))}
-                    onClear={() => setSizeRecent([])}
-                  />
-                )}
-                {tab === 'brand' && (
-                  <RecentRow
-                    items={brandRecent}
-                    onRemove={v => setBrandRecent(p => p.filter(x => x !== v))}
-                    onClear={() => setBrandRecent([])}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Bottom spacer */}
-            <div style={{ height: '20px' }} />
+          <div style={{ textAlign: 'center', marginBottom: '18px' }}>
+            <h1 style={{ font: `800 clamp(30px,4vw,48px)/1.05 ${FONT}`, color: '#fff', margin: 0 }}>Find your tyres</h1>
+            <p style={{ fontSize: 'clamp(14px,1.5vw,16.5px)', color: C.onDark, margin: '8px 0 0' }}>
+              Two ways to search — by the size printed on your tyre, or by a brand you trust.
+            </p>
           </div>
 
-          {/* ── Need help + location bar ── */}
-          <div style={{ maxWidth: '700px', margin: '16px auto 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="ti ti-phone" style={{ fontSize: '15px', color: 'rgba(255,255,255,0.85)' }} aria-hidden="true" />
-              <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '14px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
-                Need help? Contact us
-              </span>
-            </div>
+          <div style={{ display: 'flex' }}>
+            <button type="button" onClick={() => setMode('size')}  style={tab(mode === 'size')}>By Size</button>
+            <button type="button" onClick={() => setMode('brand')} style={tab(mode === 'brand')}>By Brand</button>
+          </div>
 
-            {/* Choose location with dropdown */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setLocOpen(v => !v)}
-                style={{ background: '#E8572A', color: '#fff', fontSize: '13px', fontWeight: 700, padding: '8px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', fontFamily: "'DM Sans', sans-serif" }}
-              >
-                {location || 'Choose location'}
-                <i className={`ti ti-chevron-${locOpen ? 'up' : 'down'}`} style={{ fontSize: '12px' }} aria-hidden="true" />
-              </button>
+          <div style={{ background: '#fff', borderRadius: '0 4px 4px 4px', boxShadow: '0 16px 40px rgba(0,0,0,.3)', padding: 'clamp(16px,2.2vw,26px)' }}>
 
-              {locOpen && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', borderRadius: '12px', boxShadow: '0 12px 40px rgba(0,0,0,0.18)', overflow: 'hidden', zIndex: 100, minWidth: '190px', border: '1px solid #EBEBEB' }}>
-                  {LOCATIONS.map(loc => (
-                    <button
-                      key={loc}
-                      className="loc-opt"
-                      onClick={() => { setLocation(loc === 'All Stores' ? '' : loc); setLocOpen(false) }}
-                      style={{ display: 'block', width: '100%', padding: '11px 18px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: loc === 'All Stores' ? 700 : 400, color: '#1A1A1A', borderBottom: loc !== LOCATIONS[LOCATIONS.length - 1] ? '1px solid #F5F5F5' : 'none' }}
-                    >
-                      {loc}
+            {mode === 'size' ? (
+              <>
+                <div className="ft-fields">
+                  <label style={{ flex: 1, minWidth: '110px' }}>
+                    <span style={FIELD_LABEL}>1. Width</span>
+                    <select style={SELECT} value={width} onChange={e => onWidth(e.target.value)}>
+                      {WIDTHS.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </label>
+                  <label style={{ flex: 1, minWidth: '110px' }}>
+                    <span style={FIELD_LABEL}>2. Profile</span>
+                    <select style={SELECT} value={profile} onChange={e => onProfile(e.target.value)}>
+                      {availProfiles.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </label>
+                  <label style={{ flex: 1, minWidth: '110px' }}>
+                    <span style={FIELD_LABEL}>3. Rim size</span>
+                    <select style={SELECT} value={rim} onChange={e => setRim(e.target.value)}>
+                      {availRims.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </label>
+                  <button className="ft-cta" onClick={searchBySize} style={{ ...CTA, flex: 1, minWidth: '160px' }}>Find Tyres</button>
+                </div>
+                <div style={{ marginTop: '14px', fontSize: '13.5px', color: C.muted }}>
+                  Your size looks like <strong style={{ color: C.ink }}>245 / 70 / R16</strong> — width, profile and rim, printed on your tyre&apos;s side wall.
+                  Can&apos;t find it? <a href={NOVA_SWITCHBOARD_HREF} style={{ fontWeight: 700 }}>Call us</a>, we&apos;ll read it for you.
+                </div>
+              </>
+            ) : (
+              <div className="ft-fields">
+                <label style={{ flex: 2, minWidth: '200px' }}>
+                  <span style={FIELD_LABEL}>1. Brand</span>
+                  <select style={SELECT} value={brand} onChange={e => setBrand(e.target.value)}>
+                    {BRANDS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </label>
+                <label style={{ flex: 1.4, minWidth: '150px' }}>
+                  <span style={FIELD_LABEL}>
+                    2. Type <span style={{ textTransform: 'none', color: C.muted3 }}>(optional)</span>
+                  </span>
+                  <select style={SELECT} value={type} onChange={e => setType(e.target.value)}>
+                    {TYPES.map(o => <option key={o.label} value={o.value}>{o.label}</option>)}
+                  </select>
+                </label>
+                <button className="ft-cta" onClick={searchByBrand} style={{ ...CTA, flex: 1, minWidth: '160px' }}>Find Tyres</button>
+              </div>
+            )}
+
+            {/* Recent searches — only rendered once the visitor has some */}
+            {recent.length > 0 && (
+              <div style={{ borderTop: `1px solid ${C.line2}`, marginTop: '16px', paddingTop: '12px', display: 'flex', gap: '8px 12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: C.ink3 }}>Recent searches</span>
+                {recent.map(label => (
+                  <span key={label} className="ft-chip"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: C.wash, border: `1px solid ${C.line}`, borderRadius: '2px', padding: '6px 10px 6px 12px', fontSize: '13px', fontWeight: 600, color: C.ink2 }}>
+                    <button type="button" onClick={() => applyRecent(label)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', color: 'inherit' }}>
+                      {label}
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                    <button type="button" aria-label={`Remove ${label}`}
+                      onClick={() => persistRecent(recent.filter(r => r !== label))}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.muted2, lineHeight: 1 }}>
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                <button type="button" onClick={() => persistRecent([])}
+                  style={{ marginLeft: 'auto', background: C.ink, color: '#fff', border: 'none', borderRadius: '12px', padding: '6px 14px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}>
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
+          <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '14.5px', color: C.onDark }}>
+            Need help? Contact us — <a href={NOVA_SWITCHBOARD_HREF} style={{ color: C.onDarkWarm, fontWeight: 700, textDecoration: 'none' }}>{NOVA_SWITCHBOARD}</a>
+            {' '}or <Link href="/#locations" style={{ color: C.onDarkWarm, fontWeight: 700, textDecoration: 'none' }}>choose a location →</Link>
+          </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }

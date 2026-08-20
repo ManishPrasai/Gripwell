@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, Fragment } from 'react'
+import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import './account.css'
 
@@ -18,25 +18,42 @@ const IFile   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICal    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
 const IEdit   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
 const IEmail  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+const IPhone  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+const ICar    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13m-14 0h14m-14 0v4h2v-2m10 2h2v-4"/><circle cx="7.5" cy="15" r="1"/><circle cx="16.5" cy="15" r="1"/></svg>
 
 /* ── Data ── */
-interface UserData { firstName: string; lastName: string; email: string; phone: string | null; profileImage: string | null; createdAt: string }
+interface UserData { firstName: string; lastName: string; email: string; phone: string | null; profileImage: string | null; isVerified?: boolean; createdAt: string }
 
-const INIT_STORES = [
-  { id: 'sefton', name: 'Sefton', online: true, unread: 0, messages: [
-    { id: 1, side: 'inbound' as const, text: 'Hi! Your fitting appointment is confirmed for tomorrow at 10 AM. Please arrive 15 minutes early.', time: '8:52 AM', day: 'Today' },
-  ]},
-  { id: 'springvale', name: 'Springvale', online: true, unread: 1, messages: [
-    { id: 1, side: 'inbound' as const, text: 'Your tyres have arrived at the store. Would you like to book a fitting appointment?', time: '10:30 AM', day: 'Today' },
-  ]},
-  { id: 'bayswater', name: 'Bayswater', online: false, unread: 0, messages: [] },
-]
+interface GarageVehicle {
+  id: string; name: string; make: string; model: string; year: number
+  variant: string; bodyType: string | null; rego: string | null; isPrimary: boolean
+}
+interface HistoryItem {
+  id: string; date: string; status: string; service: string
+  store: string; vehicle: string | null; notes: string | null
+}
+interface OrderLine { id: string; name: string; type: string; qty: number; unitPrice: number; totalPrice: number }
+interface OrderRecord {
+  id: string; status: string; payment: string; total: number
+  createdAt: string; store: string; items: OrderLine[]
+}
+interface Overview {
+  garage:  GarageVehicle[]
+  history: HistoryItem[]
+  orders:  OrderRecord[]
+  stats:   { servicesDone: number; vehicles: number; orders: number; avgRating: number | null; reviewCount: number }
+}
 
-const ORDERS = [
-  { id: 'NV-20260612', title: '2 × Hankook Kinergy', vehicle: 'Customer Vehicle', date: '12 Jun 2026', location: 'Sefton', status: 'completed', amount: '$322', iconColor: 'green' as const, lines: [
-    { label: 'Hankook Kinergy Eco 2 ×1', value: '$98.00' }, { label: 'Yokohama Geolandar A/T ×1', value: '$199.00' }, { label: 'Fitting & balancing', value: '$25.00' },
-  ]},
-]
+const EMPTY_OVERVIEW: Overview = {
+  garage: [], history: [], orders: [],
+  stats: { servicesDone: 0, vehicles: 0, orders: 0, avgRating: null, reviewCount: 0 },
+}
+
+const money = (n: number) => `$${n.toFixed(2)}`
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })
+const stampDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
 
 const ICON_STYLES = {
   green:  { background: 'color-mix(in oklab, #076330 12%, transparent)', color: '#076330' },
@@ -82,17 +99,155 @@ function Modal({ type, onClose, onSuccess, email }: { type: string; onClose: () 
   )
 }
 
-/* ── Account Tab ── */
-function AccountTab({ user, onRequest }: { user: UserData; onRequest: () => void }) {
+/* ── Profile tab ──
+   The dashboard landing: who you are, your garage, and what we've done for you.
+   Everything here is real — the design's loyalty tier and points panel are
+   omitted because there is no loyalty model to read them from. */
+function ProfileTab({ user, data, loading, onRequest }: {
+  user: UserData; data: Overview; loading: boolean; onRequest: () => void
+}) {
+  const initials = `${user.firstName[0] || ''}${user.lastName[0] || ''}`.toUpperCase()
   const memberSince = new Date(user.createdAt).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+  const memberYear  = new Date(user.createdAt).getFullYear()
+
   const fields = [
     { label: 'Full name', value: `${user.firstName} ${user.lastName}` },
     { label: 'Phone', value: user.phone || 'Not set' },
     { label: 'Email address', value: user.email },
     { label: 'Member since', value: memberSince },
   ]
+
+  const stats = [
+    { v: String(data.stats.servicesDone), k: 'Services done' },
+    { v: String(data.stats.vehicles),     k: 'Vehicles' },
+    { v: String(data.stats.orders),       k: 'Orders' },
+    {
+      v: data.stats.avgRating != null ? data.stats.avgRating.toFixed(1) : '—',
+      k: data.stats.avgRating != null ? 'Avg. rating given' : 'No ratings yet',
+      star: data.stats.avgRating != null,
+    },
+  ]
+
   return (
     <div>
+      {/* cover + header */}
+      <div className="prof-cover" />
+      <div className="prof-head">
+        <div className="prof-avatar-wrap">
+          <div className="prof-avatar">
+            {user.profileImage
+              ? <img src={user.profileImage} alt={`${user.firstName} ${user.lastName}`} referrerPolicy="no-referrer" />
+              : initials}
+          </div>
+        </div>
+
+        <div className="prof-identity">
+          <div className="prof-name-row">
+            <h1>{user.firstName} {user.lastName}</h1>
+            {user.isVerified && (
+              <svg className="prof-verified" viewBox="0 0 24 24" fill="currentColor" aria-label="Verified account">
+                <title>Verified account</title>
+                <path d="M12 1l2.6 1.9 3.2-.2 1 3 2.6 1.8-1 3 1 3-2.6 1.8-1 3-3.2-.2L12 23l-2.6-1.9-3.2.2-1-3L2.6 16.5l1-3-1-3 2.6-1.8 1-3 3.2.2z"/>
+                <path d="M9.5 12.5l1.8 1.8 3.7-3.8" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </div>
+          <div className="prof-handle">Nova member since {memberYear}</div>
+          <div className="prof-meta">
+            <span><IEmail />{user.email}</span>
+            {user.phone && <span><IPhone />{user.phone}</span>}
+            <span><ICal />Joined {memberSince}</span>
+          </div>
+        </div>
+
+        <div>
+          <button className="btn-acc ghost" style={{ padding: '10px 18px', fontSize: '13.5px' }} onClick={onRequest}>
+            <IEdit /> Edit profile
+          </button>
+        </div>
+      </div>
+
+      {/* stats */}
+      <div className="stat-row">
+        {stats.map(s => (
+          <div className="stat-cell" key={s.k}>
+            <div className="v">{loading ? '·' : s.v}{s.star && <small>★</small>}</div>
+            <div className="k">{s.k}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* garage */}
+      <section className="p-section">
+        <div className="p-section-head">
+          <h2>My Garage</h2>
+          {data.garage.length > 0 && <span className="count-pill">{data.garage.length}</span>}
+        </div>
+        {loading ? (
+          <div className="prof-empty"><p>Loading your garage…</p></div>
+        ) : data.garage.length === 0 ? (
+          <div className="prof-empty">
+            <p>
+              No vehicles saved yet. Add one when you book a service and we&apos;ll keep its
+              fitment, rego and history here.<br />
+              <a href="/service">Book a service →</a>
+            </p>
+          </div>
+        ) : (
+          <div className="garage-grid">
+            {data.garage.map(v => (
+              <article className="vehicle-card" key={v.id}>
+                <div className="vt">
+                  <h3>{v.name}</h3>
+                  {v.rego ? <span className="rego">{v.rego}</span> : v.isPrimary ? <span className="vbadge">Primary</span> : null}
+                </div>
+                <div className="vmeta">
+                  <div><span className="lab">Year</span><span className="val">{v.year}</span></div>
+                  <div><span className="lab">Variant</span><span className="val">{v.variant}</span></div>
+                  {v.bodyType && <div><span className="lab">Body</span><span className="val">{v.bodyType}</span></div>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* service history */}
+      <section className="p-section">
+        <div className="p-section-head"><h2>Service history</h2></div>
+        {loading ? (
+          <div className="prof-empty"><p>Loading your history…</p></div>
+        ) : data.history.length === 0 ? (
+          <div className="prof-empty">
+            <p>
+              Nothing here yet — your bookings and fittings will appear as a timeline.<br />
+              <a href="/service">Book your first service →</a>
+            </p>
+          </div>
+        ) : (
+          <div className="timeline">
+            {data.history.map(h => {
+              const done = h.status === 'COMPLETED'
+              const cancelled = h.status === 'CANCELLED' || h.status === 'NO_SHOW'
+              return (
+                <div className={`tl-item${done ? '' : ' muted'}`} key={h.id}>
+                  <div className="tl-date">{stampDate(h.date)} · {h.store.toUpperCase()}</div>
+                  <div className="tl-title">{h.service}{h.vehicle ? ` — ${h.vehicle}` : ''}</div>
+                  {h.notes && <div className="tl-desc">{h.notes}</div>}
+                  {!done && (
+                    <span className={`tl-status${cancelled ? ' cancelled' : ' pending'}`}>
+                      {h.status.replace('_', ' ').toLowerCase()}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* account details */}
+      <section className="p-section">
       <div className="acc-section-head"><h2>Account details</h2></div>
       <div className="acc-card">
         <div className="acc-fields">{fields.map(f => (<div className="acc-field" key={f.label}><label>{f.label}</label><div className="acc-field-val">{f.value}</div></div>))}</div>
@@ -102,51 +257,143 @@ function AccountTab({ user, onRequest }: { user: UserData; onRequest: () => void
           <button className="btn-acc ghost" style={{ padding: '11px 20px', fontSize: '13.5px', flexShrink: 0 }} onClick={onRequest}><IEdit /> Request changes</button>
         </div>
       </div>
+      </section>
     </div>
   )
 }
 
-/* ── Orders Tab ── */
-function OrderItem({ order }: { order: typeof ORDERS[0] }) {
+/* ── Orders Tab ──
+   Real orders from /api/account/overview. The status pill reuses the existing
+   .order-status classes, so an unmapped status still renders readably. */
+const ORDER_TONE: Record<string, keyof typeof ICON_STYLES> = {
+  FITTED: 'green', CONFIRMED: 'blue', PENDING: 'accent', CANCELLED: 'accent', REFUNDED: 'accent',
+}
+
+function OrderItem({ order }: { order: OrderRecord }) {
   const [open, setOpen] = useState(false)
+  const title = order.items.length
+    ? `${order.items[0].name}${order.items.length > 1 ? ` +${order.items.length - 1} more` : ''}`
+    : 'Order'
+  const statusLabel = order.status.charAt(0) + order.status.slice(1).toLowerCase()
+
   return (
     <div className={`order-item${open ? ' open' : ''}`}>
       <button className="order-head" onClick={() => setOpen(!open)}>
-        <div className="order-icon" style={ICON_STYLES[order.iconColor]}><IWrench /></div>
-        <div><div className="order-title">{order.title} — {order.vehicle}</div><div className="order-meta">#{order.id} · {order.date} · {order.location}</div></div>
-        <span className={`order-status ${order.status}`}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
-        <div className="order-amount">{order.amount}<small>incl. GST</small></div>
+        <div className="order-icon" style={ICON_STYLES[ORDER_TONE[order.status] ?? 'green']}><IWrench /></div>
+        <div>
+          <div className="order-title">{title}</div>
+          <div className="order-meta">#{order.id.slice(0, 8).toUpperCase()} · {shortDate(order.createdAt)} · {order.store}</div>
+        </div>
+        <span className={`order-status ${order.status === 'FITTED' ? 'completed' : order.status.toLowerCase()}`}>{statusLabel}</span>
+        <div className="order-amount">{money(order.total)}<small>incl. GST</small></div>
       </button>
       <div className="order-body"><div className="order-body-inner"><div className="order-body-pad">
-        <div className="order-lines">{order.lines.map((l, i) => (<div className="order-line" key={i}><span>{l.label}</span><span>{l.value}</span></div>))}</div>
-        <div className="order-acts"><button className="acc-btn-sm"><IFile /> Invoice</button><button className="acc-btn-sm primary"><ICal /> Book again</button></div>
+        <div className="order-lines">
+          {order.items.map(l => (
+            <div className="order-line" key={l.id}>
+              <span>{l.name} ×{l.qty}</span><span>{money(l.totalPrice)}</span>
+            </div>
+          ))}
+        </div>
+        <div className="order-acts">
+          <a className="acc-btn-sm" href="/service"><ICal /> Book again</a>
+        </div>
       </div></div></div>
     </div>
   )
 }
-function OrdersTab() {
-  return (<div><div className="acc-section-head"><h2>Recent orders</h2><span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{ORDERS.length} orders</span></div><div className="order-list">{ORDERS.map(o => <OrderItem key={o.id} order={o} />)}</div></div>)
+
+function OrdersTab({ orders, loading }: { orders: OrderRecord[]; loading: boolean }) {
+  return (
+    <div>
+      <div className="acc-section-head">
+        <h2>Recent orders</h2>
+        {!loading && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{orders.length} {orders.length === 1 ? 'order' : 'orders'}</span>}
+      </div>
+      {loading ? (
+        <div className="prof-empty"><p>Loading your orders…</p></div>
+      ) : orders.length === 0 ? (
+        <div className="prof-empty">
+          <p>No orders yet.<br /><a href="/tyres">Shop tyres →</a></p>
+        </div>
+      ) : (
+        <div className="order-list">{orders.map(o => <OrderItem key={o.id} order={o} />)}</div>
+      )}
+    </div>
+  )
 }
 
-/* ── Messages Tab ── */
-function MessagesTab({ initials }: { initials: string }) {
-  const [stores, setStores] = useState(INIT_STORES)
-  const [activeId, setActiveId] = useState('sefton')
+/* ── Messages Tab ──
+   Real conversations from /api/chat — messages land in the store's admin inbox
+   and staff replies come back here (polled every 10s). */
+function MessagesTab({ initials, token }: { initials: string; token: string | null }) {
+  const [stores, setStores] = useState<{ id: string; slug: string; name: string; unread: number; messages: any[] }[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const msgsRef = useRef<HTMLDivElement>(null)
+
+  const load = useCallback(async (spinner = false) => {
+    if (spinner) setLoading(true)
+    try {
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+      const [sRes, cRes] = await Promise.all([
+        fetch('/api/stores').then(r => r.json()).catch(() => ({ stores: [] })),
+        fetch('/api/chat', { headers }).then(r => r.json()).catch(() => ({ conversations: [] })),
+      ])
+      const convos: any[] = cRes.conversations ?? []
+      // Show every store so a customer can open a new chat, and merge in any
+      // existing thread. Stores they've already messaged sort first.
+      const merged = (sRes.stores ?? []).map((s: any) => {
+        const c = convos.find(x => x.storeId === s.id)
+        return { id: s.id, slug: s.slug, name: s.name.replace(/^Nova Tyres\s+/i, ''), unread: c?.unread ?? 0, messages: c?.messages ?? [] }
+      }).sort((a: any, b: any) => (b.messages.length ? 1 : 0) - (a.messages.length ? 1 : 0))
+      setStores(merged)
+      setActiveId(prev => prev ?? merged.find((s: any) => s.messages.length)?.id ?? merged[0]?.id ?? null)
+    } catch {
+      if (spinner) setError("Couldn't load your messages.")
+    } finally {
+      if (spinner) setLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => { load(true) }, [load])
+  /* 30s, and only while the tab is visible — each poll builds a fresh
+     PrismaClient + WASM engine server-side, so tight intervals stack memory. */
+  useEffect(() => {
+    const t = setInterval(() => { if (!document.hidden) load(false) }, 30000)
+    return () => clearInterval(t)
+  }, [load])
+
   const active = stores.find(s => s.id === activeId) || stores[0]
 
   function selectStore(id: string) { setActiveId(id); setStores(prev => prev.map(s => s.id === id ? { ...s, unread: 0 } : s)) }
-  function send() {
-    const text = input.trim(); if (!text) return
-    const out = { id: Date.now(), side: 'outbound' as const, text, time: nowTime() }
-    setStores(prev => prev.map(s => s.id === activeId ? { ...s, messages: [...s.messages, out] } : s)); setInput('')
-    setTimeout(() => {
-      const reply = { id: Date.now() + 1, side: 'inbound' as const, text: 'Thanks for your message! A team member will reply shortly (Mon–Fri 8 AM–6 PM).', time: nowTime() }
-      setStores(prev => prev.map(s => s.id === activeId ? { ...s, messages: [...s.messages, reply] } : s))
-    }, 1100)
+
+  async function send() {
+    const text = input.trim(); if (!text || !active || sending) return
+    setSending(true); setError(null)
+    const temp = { id: 'tmp-' + Date.now(), side: 'outbound' as const, text, time: nowTime() }
+    setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: [...s.messages, temp] } : s))
+    setInput('')
+    try {
+      const headers: HeadersInit = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      const r = await fetch('/api/chat', { method: 'POST', headers, body: JSON.stringify({ storeSlug: active.slug, body: text }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d?.error || 'Failed to send')
+      setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: s.messages.map(m => m.id === temp.id ? d.message : m) } : s))
+    } catch (e: any) {
+      setStores(prev => prev.map(s => s.id === active.id ? { ...s, messages: s.messages.filter(m => m.id !== temp.id) } : s))
+      setInput(text)
+      setError(e?.message || "Couldn't send. Please try again.")
+    } finally { setSending(false) }
   }
-  useEffect(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight }, [active.messages])
+
+  useEffect(() => { if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight }, [active?.messages])
+
+  if (loading) return <div className="chat-wrap"><div className="chat-empty"><p>Loading your messages…</p></div></div>
+  if (!active)  return <div className="chat-wrap"><div className="chat-empty"><p>No stores available right now.</p></div></div>
 
   let lastDay: string | null = null
   const msgNodes = active.messages.map(msg => {
@@ -160,10 +407,11 @@ function MessagesTab({ initials }: { initials: string }) {
     <div>
       <div className="acc-section-head"><h2>Messages</h2>{totalUnread > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{totalUnread} unread</span>}</div>
       <div className="chat-wrap">
-        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Nova Tyres — {active.name}</div><div className={`chat-agent-status${active.online ? '' : ' offline'}`}>{active.online ? '● Online' : '○ Offline'}</div></div></div>
-        <div className="chat-stores">{stores.map(store => (<button key={store.id} className={`chat-store-btn${activeId === store.id ? ' active' : ''}`} onClick={() => selectStore(store.id)}><span className={`chat-store-dot${!store.online ? ' offline' : ''}`} />{store.name}{store.unread > 0 && <span className="chat-store-unread">{store.unread}</span>}</button>))}</div>
-        <div className="chat-messages" ref={msgsRef}>{msgNodes.length === 0 ? (<div className="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages from {active.name} yet.</p></div>) : msgNodes}</div>
-        <div className="chat-input-row"><input type="text" className="chat-input" placeholder={`Message ${active.name}…`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} /><button className="chat-send" onClick={send}><ISend /></button></div>
+        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Nova Tyres — {active.name}</div><div className="chat-agent-status">Typically replies Mon–Fri, 8 AM–6 PM</div></div></div>
+        <div className="chat-stores">{stores.map(store => (<button key={store.id} className={`chat-store-btn${activeId === store.id ? ' active' : ''}`} onClick={() => selectStore(store.id)}><span className="chat-store-dot" />{store.name}{store.unread > 0 && <span className="chat-store-unread">{store.unread}</span>}</button>))}</div>
+        <div className="chat-messages" ref={msgsRef}>{msgNodes.length === 0 ? (<div className="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages with {active.name} yet — send one below.</p></div>) : msgNodes}</div>
+        {error && <div style={{ padding: '8px 14px', background: '#FFF4F0', color: '#C0431B', fontSize: '12.5px', fontFamily: "'DM Sans', sans-serif" }}>{error}</div>}
+        <div className="chat-input-row"><input type="text" className="chat-input" placeholder={`Message ${active.name}…`} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} /><button className="chat-send" onClick={send} disabled={sending || !input.trim()}><ISend /></button></div>
       </div>
     </div>
   )
@@ -184,12 +432,12 @@ function SecurityTab({ email, onResetPw, onRequest }: { email: string; onResetPw
 }
 
 /* ── Sidebar ── */
-function Sidebar({ tab, setTab, user, msgUnread }: { tab: string; setTab: (t: string) => void; user: UserData; msgUnread: number }) {
+function Sidebar({ tab, setTab, user, msgUnread, orderCount }: { tab: string; setTab: (t: string) => void; user: UserData; msgUnread: number; orderCount: number }) {
   const router = useRouter()
   const initials = `${user.firstName[0] || ''}${user.lastName[0] || ''}`.toUpperCase()
   const navItems = [
-    { id: 'account', label: 'Account details', icon: <IUser />, badge: null },
-    { id: 'orders', label: 'Orders', icon: <IOrders />, badge: ORDERS.length },
+    { id: 'profile', label: 'My profile', icon: <ICar />, badge: null },
+    { id: 'orders', label: 'Orders', icon: <IOrders />, badge: orderCount || null },
     { id: 'messages', label: 'Messages', icon: <IMsg />, badge: msgUnread || null },
     { id: 'security', label: 'Password & security', icon: <ILock />, badge: null },
   ]
@@ -217,24 +465,61 @@ function Sidebar({ tab, setTab, user, msgUnread }: { tab: string; setTab: (t: st
 /* ── Main ── */
 export default function AccountPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('account')
+  const [tab, setTab] = useState('profile')
   const [modal, setModal] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  /* Kept so the Messages tab can call /api/chat as this customer — without it
+     the API would treat them as an anonymous guest. */
+  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/refresh', { method: 'POST' })
       .then(r => r.json())
       .then(data => {
         if (!data.accessToken) { router.push('/login?from=/account'); return }
+        setToken(data.accessToken)
         return fetch('/api/auth/me', { headers: { Authorization: `Bearer ${data.accessToken}` } }).then(r => r.json())
       })
       .then(data => { if (data?.customer) setUser(data.customer) })
       .catch(() => router.push('/login?from=/account'))
       .finally(() => setLoading(false))
   }, [router])
+
+  /* Garage, service history, orders and the headline stats — one round trip,
+     fetched once the access token is in hand. */
+  const [overview, setOverview] = useState<Overview>(EMPTY_OVERVIEW)
+  const [overviewLoading, setOverviewLoading] = useState(true)
+  useEffect(() => {
+    if (!token) return
+    let cancelled = false
+    fetch('/api/account/overview', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (!cancelled && d && !d.error) setOverview({ ...EMPTY_OVERVIEW, ...d }) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setOverviewLoading(false) })
+    return () => { cancelled = true }
+  }, [token])
+
+  /* Real unread count for the sidebar badge — store replies awaiting the customer.
+     Only polled while the Messages tab is closed (that tab does its own, fresher
+     fetch), and paused when the tab is hidden, to keep Worker load down. */
+  const [msgUnread, setMsgUnread] = useState(0)
+  useEffect(() => {
+    if (!token || tab === 'messages') return
+    const poll = () => {
+      if (document.hidden) return
+      fetch('/api/chat', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json())
+        .then(d => setMsgUnread((d.conversations ?? []).reduce((n: number, c: any) => n + (c.unread || 0), 0)))
+        .catch(() => {})
+    }
+    poll()
+    const t = setInterval(poll, 60000)
+    return () => clearInterval(t)
+  }, [token, tab])
 
   function showToast(msg: string) { setToast(msg); if (toastTimer.current) clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 2800) }
 
@@ -246,11 +531,11 @@ export default function AccountPage() {
   return (
     <>
       <div className="acc-wrap">
-        <Sidebar tab={tab} setTab={setTab} user={user} msgUnread={1} />
+        <Sidebar tab={tab} setTab={setTab} user={user} msgUnread={msgUnread} orderCount={overview.orders.length} />
         <div className="acc-main">
-          {tab === 'account' && <AccountTab user={user} onRequest={() => setModal('details')} />}
-          {tab === 'orders' && <OrdersTab />}
-          {tab === 'messages' && <MessagesTab initials={initials} />}
+          {tab === 'profile' && <ProfileTab user={user} data={overview} loading={overviewLoading} onRequest={() => setModal('details')} />}
+          {tab === 'orders' && <OrdersTab orders={overview.orders} loading={overviewLoading} />}
+          {tab === 'messages' && <MessagesTab initials={initials} token={token} />}
           {tab === 'security' && <SecurityTab email={user.email} onResetPw={() => setModal('password')} onRequest={() => setModal('details')} />}
         </div>
       </div>

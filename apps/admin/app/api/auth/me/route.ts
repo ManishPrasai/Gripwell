@@ -3,8 +3,7 @@ import { prisma, verifyAccessToken } from '@nova/database'
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization')
-    const token = authHeader?.replace('Bearer ', '')
+    const token = req.cookies.get('admin_access_token')?.value
 
     if (!token) {
       return NextResponse.json(
@@ -29,9 +28,12 @@ export async function GET(req: NextRequest) {
         firstName: true,
         lastName: true,
         email: true,
+        phone: true,
+        notificationPrefs: true,
         role: true,
         storeId: true,
         isActive: true,
+        mustChangePassword: true,
         lastLoginAt: true,
         store: {
           select: {

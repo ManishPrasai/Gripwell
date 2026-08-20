@@ -4,156 +4,100 @@ import {
   verifyPassword,
   generateAccessToken,
   generateRefreshToken,
-  hashRefreshToken
+  hashRefreshToken,
 } from '@nova/database'
+import { checkLoginRateLimit, clearLoginRateLimit } from '../../../../lib/rateLimit'
+import { sendLoginLockoutAlert } from '../../../../lib/email'
+import { signTotpPendingToken } from '../../../../lib/totp'
+import { validate, LoginSchema } from '../../../../lib/validate'
+import { logAction } from '../../../../lib/audit'
+import { resolveAccess } from '../../../../lib/access'
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json()
+    /* ── Zod validation ──────────────────────────────────────────────────── */
+    const { data, error } = await validate(req, LoginSchema)
+    if (error) return error
 
-    const ipAddress =
-      req.headers.get('x-forwarded-for') ||
+    const { email, password } = data
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       req.headers.get('x-real-ip') ||
       'unknown'
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
-    }
-
-    // Check rate limiting — 5 failed attempts in 15 minutes
-    const recentFailedAttempts = await prisma.loginAttempt.count({
-      where: {
-        email: email.toLowerCase(),
-        success: false,
-        attemptedAt: {
-          gte: new Date(Date.now() - 15 * 60 * 1000)
-        }
+    /* ── Redis sliding-window rate limit (per IP) ────────────────────────── */
+    const rateLimit = await checkLoginRateLimit(ip)
+    if (!rateLimit.allowed) {
+      if (rateLimit.locked) {
+        sendLoginLockoutAlert({ ip, attemptedEmail: email, lockedUntil: rateLimit.resetAt }).catch(() => {})
       }
-    })
-
-    if (recentFailedAttempts >= 5) {
       return NextResponse.json(
-        { error: 'Too many failed attempts. Try again in 15 minutes.' },
-        { status: 429 }
+        { error: 'Too many login attempts. Please try again in 15 minutes.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 1000)) } }
       )
     }
 
-    // Find admin
+    /* ── Lookup admin account ────────────────────────────────────────────── */
     const admin = await prisma.adminUser.findUnique({
-      where: { email: email.toLowerCase() },
-      include: { store: true }
+      where: { email },
+      include: { store: true, customRole: true },
     })
 
     if (!admin || !admin.isActive) {
-      await prisma.loginAttempt.create({
-        data: {
-          email: email.toLowerCase(),
-          ipAddress,
-          success: false,
-          failReason: 'account_not_found'
-        }
-      })
-
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+      await prisma.loginAttempt.create({ data: { email, ipAddress: ip, success: false, failReason: 'account_not_found' } })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    // Verify password
+    /* ── Verify password ─────────────────────────────────────────────────── */
     const passwordValid = await verifyPassword(password, admin.passwordHash)
-
     if (!passwordValid) {
-      await prisma.loginAttempt.create({
-        data: {
-          email: email.toLowerCase(),
-          ipAddress,
-          success: false,
-          failReason: 'wrong_password'
-        }
-      })
-
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+      await prisma.loginAttempt.create({ data: { email, ipAddress: ip, success: false, failReason: 'wrong_password' } })
+      await logAction({ adminId: admin.id, action: 'LOGIN_FAILED', entityType: 'AdminUser', entityId: admin.id, ip })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    // Generate tokens
-    const accessToken = generateAccessToken({
-      id: admin.id,
-      email: admin.email,
-      type: 'admin',
-      role: admin.role,
-      storeId: admin.storeId || undefined
-    })
+    /* ── Password verified — TOTP gate ───────────────────────────────────── */
+    if (admin.totpEnabled) {
+      await clearLoginRateLimit(ip)
+      const tempToken = signTotpPendingToken(admin.id, admin.email)
+      return NextResponse.json({ requiresTotp: true, tempToken })
+    }
 
-    const refreshToken = generateRefreshToken()
+    /* ── No TOTP — issue full session ────────────────────────────────────── */
+    await clearLoginRateLimit(ip)
+
+    const access           = resolveAccess(admin)
+    const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined, scope: access.scope, perms: access.perms })
+    const refreshToken     = generateRefreshToken()
     const refreshTokenHash = hashRefreshToken(refreshToken)
-    const userAgent = req.headers.get('user-agent') || ''
+    const userAgent        = req.headers.get('user-agent') || ''
 
-    // Create session
     await prisma.adminSession.create({
       data: {
-        adminId: admin.id,
-        refreshTokenHash,
-        userAgent,
-        ipAddress,
+        adminId: admin.id, refreshTokenHash, userAgent, ipAddress: ip,
         deviceType: userAgent.includes('Mobile') ? 'mobile' : 'desktop',
-        isActive: true,
-        lastUsedAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
+        isActive: true, lastUsedAt: new Date(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     })
+    await prisma.adminUser.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } })
+    await prisma.loginAttempt.create({ data: { email, ipAddress: ip, success: true, failReason: null } })
 
-    // Update last login
-    await prisma.adminUser.update({
-      where: { id: admin.id },
-      data: { lastLoginAt: new Date() }
-    })
+    /* ── Audit log ───────────────────────────────────────────────────────── */
+    await logAction({ adminId: admin.id, action: 'LOGIN', entityType: 'AdminUser', entityId: admin.id, ip })
 
-    // Log attempt
-    await prisma.loginAttempt.create({
-      data: {
-        email: email.toLowerCase(),
-        ipAddress,
-        success: true,
-        failReason: null
-      }
-    })
-
+    const cookieOpts = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/' }
     const response = NextResponse.json({
       success: true,
-      accessToken,
-      admin: {
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        role: admin.role,
-        storeId: admin.storeId,
-        store: admin.store
-      }
+      mustChangePassword: admin.mustChangePassword,
+      admin: { id: admin.id, firstName: admin.firstName, lastName: admin.lastName, email: admin.email, role: admin.role, storeId: admin.storeId, store: admin.store },
     })
-
-    response.cookies.set('admin_refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/'
-    })
-
+    response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 30 * 60           })
+    response.cookies.set('admin_refresh_token', refreshToken, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 })
     return response
 
   } catch (error) {
     console.error('Admin login error:', error)
-    return NextResponse.json(
-      { error: 'Something went wrong' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

@@ -25,8 +25,9 @@
   --shadow: 0 4px 12px rgba(7,99,48,.07), 0 24px 50px -30px rgba(7,99,48,.20);
 }
 
-.acc-wrap { max-width: 1100px; margin-inline: auto; padding: 120px 24px 80px; display: grid; grid-template-columns: 264px 1fr; gap: 24px; align-items: start; }
-.acc-sidebar { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 10px; }
+/* Top padding clears the sticky 66px header, not the old fixed navbar. */
+.acc-wrap { max-width: 1100px; margin-inline: auto; padding: 36px 24px 80px; display: grid; grid-template-columns: 264px 1fr; gap: 24px; align-items: start; }
+.acc-sidebar { position: sticky; top: 82px; display: flex; flex-direction: column; gap: 10px; }
 .acc-id-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
 .acc-avatar { width: 68px; height: 68px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--accent-ink); flex-shrink: 0; overflow: hidden; }
 .acc-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -179,4 +180,151 @@
   .order-amount { display: none; }
   .chat-wrap { height: 440px; }
   .sec-item { flex-wrap: wrap; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PROFILE DASHBOARD
+   Ported from the Profile.html design. The design's drag-drop cover photo
+   and avatar uploader are replaced by a brand banner and the customer's
+   existing profileImage — Customer has no cover field to persist to.
+═══════════════════════════════════════════════════════════════════════ */
+
+.prof-cover {
+  height: clamp(120px, 18vw, 190px);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background:
+    radial-gradient(120% 140% at 12% 0%, rgba(255,104,23,.42) 0%, transparent 55%),
+    linear-gradient(120deg, #04331B 0%, #076330 58%, #0A7D3D 100%);
+  position: relative;
+  overflow: hidden;
+}
+/* Faint tread arcs so the banner reads as Nova rather than a plain gradient */
+.prof-cover::after {
+  content: "";
+  position: absolute; inset: -40% -10% auto auto;
+  width: 420px; height: 420px; border-radius: 50%;
+  border: 44px solid rgba(255,255,255,.05);
+  box-shadow: 0 0 0 26px rgba(255,255,255,.035);
+}
+
+.prof-head {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 0 clamp(18px, 2.4vw, 28px) clamp(18px, 2.4vw, 24px);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px 20px;
+  align-items: end;
+}
+.prof-avatar-wrap { margin-top: -46px; }
+.prof-avatar {
+  width: 104px; height: 104px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 36px;
+  border: 5px solid var(--card); overflow: hidden;
+  box-shadow: 0 10px 26px -14px rgba(7,99,48,.7);
+}
+.prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.prof-identity { padding-bottom: 2px; min-width: 0; }
+.prof-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.prof-name-row h1 {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(22px, 3vw, 30px); text-transform: uppercase;
+  letter-spacing: -.02em; line-height: 1.05; color: var(--text);
+}
+.prof-verified { width: 19px; height: 19px; color: var(--green); flex-shrink: 0; }
+.prof-handle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.prof-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; }
+.prof-meta span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-mid); }
+.prof-meta svg { width: 14px; height: 14px; color: var(--text-dim); flex-shrink: 0; }
+
+.stat-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--line); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); overflow: hidden; margin-top: 14px;
+}
+.stat-cell { background: var(--card); padding: 16px 14px; text-align: center; }
+.stat-cell .v {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(22px, 3vw, 30px); line-height: 1; color: var(--text);
+}
+.stat-cell .v small { font-size: .55em; color: var(--accent); margin-left: 2px; }
+.stat-cell .k {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-dim); margin-top: 6px;
+}
+
+.p-section { margin-top: 26px; }
+.p-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.p-section-head h2 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(18px, 2vw, 22px); letter-spacing: -.02em; line-height: 1;
+}
+.count-pill {
+  min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--green-soft);
+  color: var(--green); font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+}
+
+.garage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.vehicle-card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 16px;
+  transition: border-color .2s, transform .2s var(--ease);
+}
+.vehicle-card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.vt { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.vt h3 { font-family: var(--font-display); font-weight: 800; font-size: 17px; letter-spacing: -.01em; color: var(--text); }
+.rego {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 4px; padding: 3px 8px; color: var(--text-mid); white-space: nowrap;
+}
+.vbadge {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; background: var(--accent-soft); color: var(--accent);
+  border-radius: 4px; padding: 3px 7px;
+}
+.vmeta { display: grid; gap: 8px; margin-top: 12px; }
+.vmeta > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.vmeta .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.vmeta .val { font-size: 13px; font-weight: 600; color: var(--text-mid); text-align: right; }
+
+.timeline { display: grid; gap: 0; border-left: 2px solid var(--line); padding-left: 18px; margin-left: 6px; }
+.tl-item { position: relative; padding: 0 0 20px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-item::before {
+  content: ""; position: absolute; left: -25px; top: 3px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--card);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.tl-item.muted::before { background: var(--text-dim); box-shadow: none; }
+.tl-date { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
+.tl-title { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 3px; }
+.tl-desc { font-size: 13px; line-height: 1.55; color: var(--text-mid); margin-top: 3px; }
+.tl-status {
+  display: inline-block; margin-top: 6px; font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  border-radius: 4px; padding: 3px 7px;
+  background: var(--green-soft); color: var(--green);
+}
+.tl-status.pending   { background: var(--accent-soft); color: var(--accent); }
+.tl-status.cancelled { background: color-mix(in oklab, #ff6b6b 12%, transparent); color: #d0453a; }
+
+.prof-empty {
+  background: var(--card); border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm); padding: 26px 20px; text-align: center;
+}
+.prof-empty p { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+.prof-empty a { color: var(--green); font-weight: 700; text-decoration: none; }
+
+@media (max-width: 720px) {
+  .prof-head { grid-template-columns: 1fr; align-items: start; }
+  .prof-avatar-wrap { margin-top: -40px; }
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
 }
