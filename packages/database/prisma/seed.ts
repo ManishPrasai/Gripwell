@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 import { PrismaClient, TyreType } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { hashPassword } from '../lib/auth'
 
 const prisma = new PrismaClient()
 
@@ -171,7 +171,7 @@ async function main() {
   console.log('🌱 Starting database seed...\n')
 
   // ── Super Admin ─────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('admin123456', 12)
+  const passwordHash = await hashPassword('admin123456')
   const superAdmin = await prisma.adminUser.upsert({
     where: { email: 'admin@novatyres.com.au' },
     update: {},
@@ -311,7 +311,7 @@ async function main() {
   console.log('✅ Wheels seeded')
 
   // ── Store Manager Admin Users ────────────────────────────────────────────────
-  const managerPassword = await bcrypt.hash('manager123456', 12)
+  const managerPassword = await hashPassword('manager123456')
   const MANAGERS = [
     { first: 'Daniel',  last: 'Mercer',  email: 'daniel.m@novatyres.com.au',  slug: 'springvale' },
     { first: 'Sophie',  last: 'Kaur',    email: 'sophie.k@novatyres.com.au',  slug: 'dandenong'  },

@@ -1,281 +1,255 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { STORES } from '../../../lib/stores'
 
-/* ── Data ────────────────────────────────────────────────────────────────── */
+/* ── Link groups ─────────────────────────────────────────────────────────── */
+
+const sizeLinks = ['205/55R16', '225/45R17', '235/55R18', '245/70R16', '265/65R17']
+  .map(label => ({ label, href: `/tyres/results?size=${encodeURIComponent(label)}` }))
 
 const quickLinks = [
   { label: 'Home',        href: '/' },
   { label: 'Find Tyres',  href: '/tyres' },
   { label: 'Find Wheels', href: '/wheels' },
   { label: 'Service',     href: '/service' },
-  { label: 'Locations',   href: '/locations' },
+  { label: 'Locations',   href: '/#locations' },
   { label: 'Warranty',    href: '/warranty' },
 ]
 
-const tyreSizes = [
-  { label: 'Home',        href: '/' },
-  { label: 'Find Tyres',  href: '/tyres' },
-  { label: 'Find Wheels', href: '/wheels' },
-  { label: 'Service',     href: '/service' },
-  { label: 'Locations',   href: '/locations' },
-]
+const modelLinks = [
+  'Continental CrossContact A/T',
+  'Nitto Terra Grappler G2',
+  'Hankook Kinergy Eco 2',
+  'Pirelli Scorpion ATR',
+  'Maxxis Bravo AT-771',
+].map(label => ({ label, href: `/tyres/results?q=${encodeURIComponent(label)}` }))
 
-const topTyreModels = [
-  { label: 'Home',        href: '/' },
-  { label: 'Find Tyres',  href: '/tyres' },
-  { label: 'Find Wheels', href: '/wheels' },
-  { label: 'Service',     href: '/service' },
-  { label: 'Locations',   href: '/locations' },
-]
+const serviceLinks = [
+  'Free pre-RWC check',
+  'Free safety inspection',
+  'Log book service',
+  'Yearly service',
+  '3 year service',
+  'Ultimate service',
+].map(label => ({ label, href: '/service' }))
 
-const stores = [
-  'Springvale – VIC',
-  'Dandenong – VIC',
-  'Alphington – VIC',
-  'Bayswater – VIC',
-  'Sunshine – VIC',
-  'Geelong – VIC',
-  'Sefton – NSW',
-]
-
-const services = [
-  'Free Pre-RWC Check',
-  'Free Safety Inspection',
-  'Log Book Service',
-  'Yearly Service',
-  '3 Year Service',
-  '6 Year Service',
-  'Ultimate Service',
-]
-
+/* Payment marks — real brand artwork from public/images/footer */
 const payments = [
-  { name: 'Stripe',      src: '/images/footer/payment-stripe.png' },
-  { name: 'VISA',        src: '/images/footer/payment-visa.png' },
-  { name: 'Mastercard',  src: '/images/footer/payment-mastercard.png' },
-  { name: 'Apple Pay',   src: '/images/footer/payment-applepay.png' },
-  { name: 'Afterpay',    src: '/images/footer/payment-afterpay.png' },
-  { name: 'Klarna',      src: '/images/footer/payment-klarna.png' },
+  { name: 'VISA',       src: '/images/footer/payment-visa.png' },
+  { name: 'Mastercard', src: '/images/footer/payment-mastercard.png' },
+  { name: 'Apple Pay',  src: '/images/footer/payment-applepay.png' },
+  { name: 'Afterpay',   src: '/images/footer/payment-afterpay.png' },
+  { name: 'Klarna',     src: '/images/footer/payment-klarna.png' },
+  { name: 'Stripe',     src: '/images/footer/payment-stripe.png' },
 ]
 
-const socialConnect = [
-  { name: 'Product Review', src: '/images/footer/social-productreview.png', href: '#', wide: true },
-  { name: 'LinkedIn',       src: '/images/footer/social-linkedin.png',      href: '#', wide: false },
-  { name: 'Yelp',           src: '/images/footer/social-yelp.png',          href: '#', wide: false },
-  { name: 'Facebook',       src: '/images/footer/social-facebook.png',      href: '#', wide: false },
-  { name: 'Instagram',      src: '/images/footer/social-instagram.png',     href: '#', wide: false },
-]
+/* ── Shared styles ───────────────────────────────────────────────────────── */
 
-const legalLinks = ['Warranty & Returns', 'Privacy & Policy', 'Terms of Service']
+const colHeading: React.CSSProperties = {
+  fontFamily:    "'Bebas Neue', sans-serif",
+  fontSize:      '23px',
+  letterSpacing: '0.03em',
+  color:         '#FFFFFF',
+  marginBottom:  '14px',
+}
 
-/* ── Shared link style ───────────────────────────────────────────────────── */
-const linkStyle: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.52)',
-  fontSize: '14px',
-  fontWeight: 400,
+const footLink = 'nv-footlink'
+
+/* Brand-coloured social tiles, matching the design's 42px chip row */
+const socialTile: React.CSSProperties = {
+  display:        'inline-flex',
+  alignItems:     'center',
+  justifyContent: 'center',
+  width:          '42px',
+  height:         '42px',
+  borderRadius:   '10px',
+  color:          '#FFFFFF',
   textDecoration: 'none',
-  display: 'block',
-  lineHeight: 1,
-}
-
-/* ── Section heading styles ─────────────────────────────────────────────── */
-const capsHeading: React.CSSProperties = {
-  color: '#ffffff',
-  fontSize: '12px',
-  fontWeight: 600,
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
-  marginBottom: '16px',
-}
-
-const largeHeading: React.CSSProperties = {
-  color: '#ffffff',
-  fontSize: '19px',
-  fontWeight: 600,
-  marginBottom: '16px',
-  lineHeight: 1.2,
 }
 
 /* ── Component ───────────────────────────────────────────────────────────── */
 export default function Footer() {
   return (
-    <footer style={{ background: '#1C3A2B' }}>
+    <footer
+      style={{
+        background: '#002A13',
+        color:      '#F1EFE7',
+        padding:    'clamp(44px,5.5vw,72px) clamp(16px,4vw,40px) 26px',
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <style>{`
+        .nv-footlink {
+          font-size: 14px;
+          font-weight: 600;
+          color: #9DB0A5;
+          text-decoration: none;
+          transition: color .2s;
+        }
+        .nv-footlink:hover { color: #E8572A; }
+        .nv-social { transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .2s; }
+        .nv-social:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -12px rgba(0,0,0,0.8); }
+        .nv-legal { color: #9DB0A5; text-decoration: none; transition: color .2s; font-size: 13.5px; }
+        .nv-legal:hover { color: #FFB07A; }
+      `}</style>
 
-      {/* ── Main 4-column grid ── */}
-      <div className="max-w-7xl mx-auto px-6 py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
+      <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
+        <div
+          style={{
+            display:             'grid',
+            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,240px),1fr))',
+            gap:                 'clamp(30px,3.6vw,46px) clamp(22px,2.8vw,44px)',
+          }}
+        >
 
-          {/* ── Col 1: Brand + Tyre Sizes ── */}
-          <div>
-            {/* Logo */}
-            <div style={{ marginBottom: '14px' }}>
-              <Image
-                src="/images/footer/logo.png"
-                alt="Nova Tyres Logo"
-                width={110}
-                height={110}
-                style={{ objectFit: 'contain' }}
+          {/* ── Col 1: brand · tyre sizes · social ── */}
+          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/nova-wordmark-light.png"
+                alt="Nova Tyres"
+                style={{ display: 'block', width: 'min(100%,220px)', height: 'auto', marginBottom: '12px' }}
               />
+              <p style={{ margin: 0, fontSize: '14.5px', color: '#CFE5D8' }}>
+                Best deals on tyres &amp; wheels.
+              </p>
             </div>
-            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
-              Nova Tyres
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px', marginBottom: '36px' }}>
-              Best Deals on Tyres &amp; Wheels
-            </p>
 
-            {/* Tyre Sizes */}
-            <p style={largeHeading}>Tyre Sizes</p>
-            <ul className="space-y-2.5">
-              {tyreSizes.map(l => (
-                <li key={l.label}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+            <div>
+              <div style={colHeading}>Tyre sizes</div>
+              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+                {sizeLinks.map(l => (
+                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                ))}
+              </div>
+            </div>
 
-          {/* ── Col 2: Quick Links + Top Tyre Models ── */}
-          <div>
-            <p style={capsHeading}>Quick Links</p>
-            <ul className="space-y-2.5 mb-10">
-              {quickLinks.map(l => (
-                <li key={l.href}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div>
+              <div style={colHeading}>Connect with us</div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <a href="https://facebook.com/Novatyres.Official" aria-label="Facebook" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, background: '#1877F2' }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z"/></svg>
+                </a>
+                <a href="https://instagram.com/novatyres" aria-label="Instagram" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, background: 'linear-gradient(45deg,#F09433,#DC2743,#BC1888)' }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07Zm0 5.68a4.16 4.16 0 1 0 0 8.32 4.16 4.16 0 0 0 0-8.32Zm0 6.86a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Zm5.3-7.02a.97.97 0 1 1-1.94 0 .97.97 0 0 1 1.94 0Z"/></svg>
+                </a>
+                <a href="https://tiktok.com/@novatyres" aria-label="TikTok" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, background: '#010101' }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 2h-3.1v13.4a2.55 2.55 0 1 1-1.83-2.45V9.78a5.85 5.85 0 1 0 4.93 5.77V9.2a7 7 0 0 0 4.07 1.3V7.4a4.02 4.02 0 0 1-4.07-3.86V2Z"/></svg>
+                </a>
+                <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, background: '#0A66C2' }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2.9 21h4.16V9.4H2.9V21Zm7.02 0h4.16v-6.3c0-1.66.6-2.66 2.02-2.66 1.32 0 1.86.94 1.86 2.7V21H22.1v-6.9c0-3.4-1.82-4.98-4.24-4.98-1.96 0-2.84 1.08-3.33 1.84V9.4H9.92c.06 1.16 0 11.6 0 11.6Z"/></svg>
+                </a>
 
-            <p style={largeHeading}>Top Tyre Models</p>
-            <ul className="space-y-2.5">
-              {topTyreModels.map(l => (
-                <li key={l.label + 'model'}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* ── Col 3: Our Stores + Service ── */}
-          <div>
-            <p style={capsHeading}>Our Stores</p>
-            <ul className="space-y-2.5 mb-10">
-              {stores.map(s => (
-                <li key={s}>
-                  <Link href="/locations" style={linkStyle} className="hover:text-white transition-colors">
-                    {s}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <p style={largeHeading}>Service</p>
-            <ul className="space-y-2.5">
-              {services.map(s => (
-                <li key={s}>
-                  <Link href="/service" style={linkStyle} className="hover:text-white transition-colors">
-                    {s}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* ── Col 4: About + Payments ── */}
-          <div>
-            <p style={{ ...largeHeading, fontSize: '22px' }}>About Nova Tyres</p>
-            <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '14px', lineHeight: 1.75, marginBottom: '32px' }}>
-              <Link href="/" style={{ color: '#E8572A', textDecoration: 'underline' }}>Nova Tyres</Link>
-              {' '}is an Australian tyre and wheel retailer offering affordable
-              products, professional fitting, balancing, alignments, and
-              automotive services for passenger, SUV, 4WD, and commercial
-              vehicles across multiple locations nationwide.
-            </p>
-
-            <p style={capsHeading}>Payments</p>
-            <div className="flex flex-wrap gap-2">
-              {payments.map(p => (
-                <div
-                  key={p.name}
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '6px',
-                    padding: '5px 10px',
-                    height: '34px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Image
-                    src={p.src}
-                    alt={p.name}
-                    width={52}
-                    height={22}
-                    style={{ objectFit: 'contain', height: '20px', width: 'auto' }}
-                  />
-                </div>
-              ))}
+                {/* Review-platform marks use the real logo artwork we ship */}
+                <a href="https://www.productreview.com.au" aria-label="ProductReview" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, width: 'auto', padding: '0 10px', background: '#FFFFFF' }}>
+                  <Image src="/images/footer/social-productreview.png" alt="ProductReview"
+                    width={120} height={26} style={{ objectFit: 'contain', height: '22px', width: 'auto' }} />
+                </a>
+                <a href="https://www.yelp.com" aria-label="Yelp" target="_blank" rel="noopener noreferrer"
+                  className="nv-social" style={{ ...socialTile, width: 'auto', padding: '0 12px', background: '#FFFFFF' }}>
+                  <Image src="/images/footer/social-yelp.png" alt="Yelp"
+                    width={60} height={26} style={{ objectFit: 'contain', height: '22px', width: 'auto' }} />
+                </a>
+              </div>
             </div>
           </div>
 
-        </div>
-      </div>
+          {/* ── Col 2: quick links · top models ── */}
+          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
+            <div>
+              <div style={colHeading}>Quick links</div>
+              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+                {quickLinks.map(l => (
+                  <Link key={l.href} href={l.href} className={footLink}>{l.label}</Link>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={colHeading}>Top tyre models</div>
+              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+                {modelLinks.map(l => (
+                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      {/* ── Connect With Us ── */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}>
-        <div className="max-w-7xl mx-auto px-6 py-10 text-center">
-          <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 500, marginBottom: '24px' }}>
-            Connect With Us
-          </p>
-          <div className="flex items-center justify-center gap-5 flex-wrap">
-            {socialConnect.map(s => (
-              <a
-                key={s.name}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-opacity hover:opacity-80"
-              >
-                <Image
-                  src={s.src}
-                  alt={s.name}
-                  width={s.wide ? 140 : 62}
-                  height={62}
-                  style={{ objectFit: 'contain', height: '60px', width: 'auto' }}
-                />
-              </a>
-            ))}
+          {/* ── Col 3: stores · service ── */}
+          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
+            <div>
+              <div style={colHeading}>Our stores</div>
+              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+                {STORES.map(s => (
+                  <Link key={s.id} href="/#locations" className={footLink}>
+                    {s.short} – {s.state}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={colHeading}>Service</div>
+              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+                {serviceLinks.map(l => (
+                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Col 4: about · payments ── */}
+          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
+            <div>
+              <div style={colHeading}>About Nova Tyres</div>
+              <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#9DB0A5', textWrap: 'pretty' }}>
+                <Link href="/" style={{ color: '#FFFFFF', fontWeight: 700, textDecoration: 'none' }}>Nova Tyres</Link>
+                {' '}is an Australian tyre and wheel retailer offering affordable products,
+                professional fitting, balancing, alignments and automotive services for
+                passenger, SUV, 4WD and commercial vehicles across {STORES.length} locations.
+              </p>
+            </div>
+            <div>
+              <div style={colHeading}>Payments</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', maxWidth: '260px' }}>
+                {payments.map(p => (
+                  <span key={p.name} aria-label={p.name}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      width: '60px', height: '32px', borderRadius: '5px',
+                      background: '#FFFFFF', overflow: 'hidden',
+                    }}
+                  >
+                    <Image src={p.src} alt={p.name} width={52} height={22}
+                      style={{ objectFit: 'contain', height: '20px', width: 'auto' }} />
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Bottom bar ── */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4">
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: '13px' }}>
-            @ 2026 Nova Tyres All rights reserved
-          </p>
-          <div className="flex items-center gap-6 flex-wrap">
-            {legalLinks.map(label => (
-              <Link
-                key={label}
-                href="#"
-                style={{ color: 'rgba(255,255,255,0.38)', fontSize: '13px', textDecoration: 'none' }}
-                className="hover:text-white transition-colors"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
+        {/* ── Bottom bar ── */}
+        <div style={{ height: '1px', background: 'rgba(250,249,245,0.14)', marginTop: 'clamp(32px,4vw,50px)' }} />
+        <div
+          style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            gap: '12px', flexWrap: 'wrap', paddingTop: '20px',
+            fontSize: '13.5px', color: '#9DB0A5',
+          }}
+        >
+          <span>© {new Date().getFullYear()} Nova Tyres. All rights reserved.</span>
+          <span style={{ display: 'flex', gap: '8px 28px', flexWrap: 'wrap' }}>
+            <Link href="/warranty" className="nv-legal">Warranty &amp; returns</Link>
+            <Link href="/privacy" className="nv-legal">Privacy policy</Link>
+            <Link href="/terms" className="nv-legal">Terms of service</Link>
+          </span>
         </div>
       </div>
-
     </footer>
   )
 }

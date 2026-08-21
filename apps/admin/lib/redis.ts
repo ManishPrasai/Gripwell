@@ -13,8 +13,20 @@ import Redis from 'ioredis'
 
 let _redis: Redis | null = null
 
+/**
+ * There is no reachable Redis on Cloudflare Workers (the dev-default
+ * redis://localhost gets inlined at build time and localhost is unroutable),
+ * and a failed ioredis connection there crashes the isolate. Skip it entirely —
+ * the rate limiter falls back to the DB-backed counter.
+ */
+function isCloudflareWorkers(): boolean {
+  return typeof navigator !== 'undefined' &&
+    (navigator as any).userAgent === 'Cloudflare-Workers'
+}
+
 export function getAdminRedis(): Redis | null {
   if (!process.env.REDIS_URL) return null
+  if (isCloudflareWorkers()) return null
 
   if (!_redis) {
     _redis = new Redis(process.env.REDIS_URL, {

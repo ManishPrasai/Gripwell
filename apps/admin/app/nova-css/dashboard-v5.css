@@ -558,8 +558,13 @@
 /* ─────────────────────────────────────────────────────────────
    25. PAGE LAYOUT
    ───────────────────────────────────────────────────────────── */
-/* Kill ALL entrance animations */
+/* Kill ALL entrance animations.
+   `.page-enter` matters beyond looks: its `pageIn` keyframes animate transform,
+   and a transformed ancestor becomes the containing block for `position: fixed`
+   descendants — which used to make drawers/modals size against the full page
+   height instead of the viewport. Keep it in this list. */
 .page-anim,
+.page-enter,
 .content .panel,
 .kpis .kpi,
 .hero-card,

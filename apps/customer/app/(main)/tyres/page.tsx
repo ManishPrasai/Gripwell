@@ -4,10 +4,17 @@ import BrandsWeServe     from '../../components/tyres/BrandsWeServe'
 import FittingLocations  from '../../components/tyres/FittingLocations'
 import TyreInfoBar       from '../../components/tyres/TyreInfoBar'
 import TyreFAQ           from '../../components/tyres/TyreFAQ'
+import { pageMetadata }  from '../../../lib/seo'
+import { STORES }        from '../../../lib/stores'
+import type { Metadata } from 'next'
 
-export const metadata = {
-  title: 'Find Tyres — Nova Tyres',
-  description: 'Search by size or brand. Find the perfect tyres for your vehicle from our huge range across 9 Australian locations.',
+export const dynamic = 'force-dynamic'   // always reflect live PageSEO from admin
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata('tyres', {
+    title: 'Find Tyres — Nova Tyres',
+    description: `Search by size or brand. Find the perfect tyres for your vehicle from our huge range across ${STORES.length} Australian stores.`,
+  })
 }
 
 export default function FindTyresPage() {

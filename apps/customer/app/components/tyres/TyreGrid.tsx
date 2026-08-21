@@ -73,27 +73,28 @@ function mapTyre(t: ApiTyre): TyreProduct {
 
 const SORT_OPTIONS = ['Default', 'Price: Low to High', 'Price: High to Low', 'Name: A–Z']
 
-/* ── Brand logo with text fallback ───────────────────────────────────────── */
+/* ── Brand logo with text fallback (bare — no border chip) ────────────────── */
 function BrandLogoImg({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
   if (err) return (
-    <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#333' }}>{brand}</span>
+    <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#0A0F0C' }}>{brand}</span>
   )
   return (
     <Image src={src} alt={brand} width={80} height={20}
-      style={{ objectFit: 'contain', height: '18px', width: 'auto', maxWidth: '80px' }}
+      style={{ objectFit: 'contain', height: '18px', width: 'auto', maxWidth: '84px' }}
       onError={() => setErr(true)}
     />
   )
 }
 
-/* ── Single product card ──────────────────────────────────────────────────── */
+/* ── Single product card (industrial-bold look, rounded) ──────────────────── */
 function TyreCard({ product }: { product: TyreProduct }) {
   const [hovered,   setHovered]   = useState(false)
   const [justAdded, setJustAdded] = useState(false)
   const { addToCart } = useCart()
 
   function handleAdd(e: React.MouseEvent) {
+    e.preventDefault()
     e.stopPropagation()
     addToCart({ id: product.slug, productType: 'tyre', brand: product.brand, brandLogo: product.brandLogo, model: product.model, size: product.size, spec: product.spec, price: product.price, image: product.image })
     setJustAdded(true)
@@ -101,156 +102,161 @@ function TyreCard({ product }: { product: TyreProduct }) {
   }
 
   return (
-    <div
+    <Link
+      href={`/tyres/${product.slug}`}
+      style={{ textDecoration: 'none' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background:   '#fff',
-        borderRadius: '12px',
-        border:       '1px solid #E5E5E5',
-        overflow:     'hidden',
-        position:     'relative',
-        boxShadow:    hovered ? '0 8px 32px rgba(0,0,0,0.10)' : '0 1px 4px rgba(0,0,0,0.05)',
-        transition:   'box-shadow 0.25s ease, transform 0.25s ease',
-        transform:    hovered ? 'translateY(-3px)' : 'translateY(0)',
-        display:      'flex',
-        flexDirection: 'column',
-      }}
     >
-      {/* SALE badge */}
-      {product.isSale && (
-        <div style={{
-          position:     'absolute',
-          top:          '12px',
-          left:         '12px',
-          background:   '#E8572A',
-          color:        '#fff',
-          fontSize:     '11px',
-          fontWeight:   800,
-          letterSpacing:'0.08em',
-          padding:      '4px 10px',
-          borderRadius: '4px',
-          fontFamily:   "'DM Sans', sans-serif",
-          zIndex:        2,
-        }}>
-          SALE
-        </div>
-      )}
-
-      {/* Add to cart button */}
-      <button
-        onClick={handleAdd}
-        aria-label="Add to cart"
+      <div
         style={{
-          position:     'absolute',
-          top:          '12px',
-          right:        '12px',
-          width:        '34px',
-          height:       '34px',
-          borderRadius: '50%',
-          background:   justAdded ? '#22c55e' : '#fff',
-          border:       justAdded ? 'none' : '1px solid #E5E5E5',
-          boxShadow:    '0 1px 6px rgba(0,0,0,0.1)',
+          background:   '#fff',
+          borderRadius: '16px',              /* keep our rounded corners */
+          border:       `1px solid ${hovered ? 'rgba(7,99,48,0.45)' : 'rgba(7,99,48,0.16)'}`,
+          overflow:     'hidden',
+          position:     'relative',
+          height:       '100%',
           display:      'flex',
-          alignItems:   'center',
-          justifyContent:'center',
-          cursor:       'pointer',
-          zIndex:        2,
-          transition:   'background 0.2s ease',
+          flexDirection:'column',
+          boxShadow:    hovered ? '0 16px 34px rgba(17,24,20,0.14)' : '0 4px 14px rgba(17,24,20,0.08)',
+          transform:    hovered ? 'translateY(-8px)' : 'translateY(0)',
+          transition:   'transform 0.4s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease, border-color 0.3s ease',
         }}
       >
-        <i
-          className={justAdded ? 'ti ti-check' : 'ti ti-shopping-cart'}
-          style={{ fontSize: '15px', color: justAdded ? '#fff' : '#E8572A' }}
-          aria-hidden="true"
-        />
-      </button>
+        {/* ── Photo — full tyre, 3:2 ── */}
+        <div style={{ position: 'relative', aspectRatio: '3 / 2', background: '#fff', overflow: 'hidden' }}>
+          {/* SALE badge */}
+          {product.isSale && (
+            <span style={{
+              position:      'absolute',
+              top:           '12px',
+              left:          '12px',
+              zIndex:         4,
+              fontFamily:    "'DM Sans', sans-serif",
+              fontWeight:     700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              fontSize:      '11.5px',
+              color:         '#fff',
+              background:    '#FF6817',
+              padding:       '6px 13px',
+              borderRadius:  '4px',
+            }}>
+              Sale
+            </span>
+          )}
 
-      {/* Tyre image */}
-      <div style={{ padding: '48px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '1', maxHeight: '180px' }}>
+          {/* Add to cart */}
+          <button
+            onClick={handleAdd}
+            aria-label="Add to cart"
+            style={{
+              position:      'absolute',
+              top:           '12px',
+              right:         '12px',
+              zIndex:         4,
+              width:         '40px',
+              height:        '40px',
+              borderRadius:  '50%',
+              display:       'grid',
+              placeItems:    'center',
+              color:         justAdded ? '#fff' : '#FF6817',
+              background:    justAdded ? '#076330' : '#fff',
+              border:        '1px solid rgba(7,99,48,0.16)',
+              boxShadow:     '0 2px 6px rgba(17,24,20,0.12)',
+              cursor:        'pointer',
+              transform:     hovered ? 'scale(1.06)' : 'scale(1)',
+              transition:    'transform 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s ease, color 0.2s ease',
+            }}
+          >
+            <i className={justAdded ? 'ti ti-check' : 'ti ti-shopping-cart'} style={{ fontSize: '17px' }} aria-hidden="true" />
+          </button>
+
           <Image
             src={product.image}
             alt={`${product.brand} ${product.model}`}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            style={{ objectFit: 'contain' }}
+            style={{ objectFit: 'contain', padding: '10px' }}
           />
         </div>
-      </div>
 
-      {/* Info section */}
-      <div style={{ padding: '8px 16px 16px', display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        {/* ── Body ── */}
+        <div style={{ padding: '12px 15px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', flex: 1, minWidth: 0 }}>
 
-        {/* Brand logo */}
-        <div style={{ marginBottom: '6px' }}>
-          <BrandLogoImg src={product.brandLogo} brand={product.brand} />
-        </div>
+          {/* Bare brand logo — no rectangle chip */}
+          <div style={{ height: '22px', display: 'flex', alignItems: 'center' }}>
+            <BrandLogoImg src={product.brandLogo} brand={product.brand} />
+          </div>
 
-        {/* Model name */}
-        <p style={{
-          color:      '#1A1A1A',
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize:   '14px',
-          fontWeight:  700,
-          lineHeight:  1.3,
-          marginBottom:'2px',
-        }}>
-          {product.model}
-        </p>
-
-        {/* Size + spec */}
-        <p style={{
-          color:      '#888',
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize:   '12px',
-          fontWeight:  500,
-          marginBottom:'10px',
-        }}>
-          {product.size}&nbsp;&nbsp;{product.spec}
-        </p>
-
-        {/* Price + VIEW MORE */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-          <p style={{
-            color:      '#1A1A1A',
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize:   '17px',
-            fontWeight:  800,
+          {/* Model name */}
+          <h3 style={{
+            fontFamily:    "'DM Sans', sans-serif",
+            fontWeight:     800,
+            fontSize:      '18px',
+            lineHeight:     1.15,
+            letterSpacing: '-0.01em',
+            color:         '#0A0F0C',
+            whiteSpace:    'nowrap',
+            overflow:      'hidden',
+            textOverflow:  'ellipsis',
+            maxWidth:      '100%',
           }}>
-            A${product.price.toFixed(2)}
-          </p>
+            {product.model}
+          </h3>
 
-          <Link
-            href={`/tyres/${product.slug}`}
-            className="inline-flex items-center gap-1"
-            style={{
-              background:    '#E8572A',
-              color:         '#fff',
-              fontFamily:    "'DM Sans', sans-serif",
-              fontSize:      '12px',
-              fontWeight:     700,
-              letterSpacing: '0.04em',
-              padding:       '7px 14px',
-              borderRadius:  '6px',
-              textDecoration:'none',
-              whiteSpace:    'nowrap',
-            }}
-          >
-            VIEW MORE
-            <i className="ti ti-arrow-right" style={{ fontSize: '12px' }} aria-hidden="true" />
-          </Link>
+          {/* Size + spec */}
+          <span style={{
+            fontFamily:   "'DM Sans', sans-serif",
+            fontSize:     '13px',
+            fontWeight:    500,
+            color:        '#2E3A32',
+            whiteSpace:   'nowrap',
+            overflow:     'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth:     '100%',
+          }}>
+            {product.size}&nbsp;&nbsp;{product.spec}
+          </span>
+
+          {/* Divider */}
+          <span style={{ width: '100%', height: '1px', background: 'rgba(7,99,48,0.16)', margin: '3px 0 1px' }} />
+
+          {/* Price + View more */}
+          <div style={{ width: '100%', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', paddingTop: '9px', flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '24px', letterSpacing: '-0.01em', color: '#E23B2E' }}>
+              A${product.price.toFixed(2)}
+            </span>
+            <span style={{
+              display:      'inline-flex',
+              alignItems:   'center',
+              gap:          '6px',
+              padding:      '9px 15px',
+              borderRadius: '8px',
+              background:   '#076330',
+              color:        '#fff',
+              fontFamily:   "'DM Sans', sans-serif",
+              fontWeight:    800,
+              fontSize:     '13.5px',
+              whiteSpace:   'nowrap',
+              filter:       hovered ? 'brightness(1.08)' : 'none',
+              transition:   'filter 0.2s ease',
+            }}>
+              View more
+              <i className="ti ti-arrow-right" style={{ fontSize: '14px' }} aria-hidden="true" />
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
 /* ── Skeleton card ────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ height: '320px', borderRadius: '12px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
-      <div style={{ height: '180px', background: '#F0F0F0', margin: '16px 16px 0' }} />
+    <div style={{ height: '320px', borderRadius: '16px', border: '1px solid rgba(7,99,48,0.16)', background: '#fff', overflow: 'hidden' }}>
+      <div style={{ height: '170px', background: '#F0F0F0', margin: '16px 16px 0' }} />
       <div style={{ padding: '14px 16px' }}>
         <div style={{ width: '64px', height: '18px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '10px' }} />
         <div style={{ width: '80%', height: '14px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '8px' }} />
@@ -291,6 +297,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
   const [loading,       setLoading]       = useState(true)
   const [selectedBrand, setSelectedBrand] = useState(initialBrand || 'All Brands')
   const [sortBy,        setSortBy]        = useState('Default')
+  const [onSaleOnly,    setOnSaleOnly]    = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams({ limit: '50' })
@@ -313,6 +320,8 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
     () => ['All Brands', ...Array.from(new Set(allProducts.map(p => p.brand)))],
     [allProducts]
   )
+
+  const saleCount = useMemo(() => allProducts.filter(p => p.isSale).length, [allProducts])
 
   /*
     Size query built from URL params — e.g. "205/55R16".
@@ -338,18 +347,24 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
     return exact.length > 0 ? exact : brandFiltered
   }, [brandFiltered, sizeQuery])
 
+  /* Sale filter */
+  const saleFiltered = useMemo(() =>
+    onSaleOnly ? sizeFiltered.filter(p => p.isSale) : sizeFiltered,
+    [sizeFiltered, onSaleOnly]
+  )
+
   const exactSizeMatch = sizeQuery
     ? allProducts.some(p => p.size === sizeQuery)
     : true
 
   /* Sort */
   const products = useMemo(() => {
-    const arr = [...sizeFiltered]
+    const arr = [...saleFiltered]
     if (sortBy === 'Price: Low to High')  arr.sort((a, b) => a.price - b.price)
     if (sortBy === 'Price: High to Low') arr.sort((a, b) => b.price - a.price)
     if (sortBy === 'Name: A–Z')          arr.sort((a, b) => a.model.localeCompare(b.model))
     return arr
-  }, [sizeFiltered, sortBy])
+  }, [saleFiltered, sortBy])
 
 
   return (
@@ -372,8 +387,45 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
             </span>
           </nav>
 
-          {/* Dropdowns */}
+          {/* Controls */}
           <div className="flex items-center gap-3">
+            {/* On-sale toggle */}
+            <button
+              type="button"
+              onClick={() => setOnSaleOnly(v => !v)}
+              aria-pressed={onSaleOnly}
+              style={{
+                display:      'inline-flex',
+                alignItems:   'center',
+                gap:          '7px',
+                padding:      '9px 16px',
+                borderRadius: '8px',
+                cursor:       'pointer',
+                fontFamily:   "'DM Sans', sans-serif",
+                fontSize:     '14px',
+                fontWeight:    700,
+                border:       onSaleOnly ? '1px solid #FF6817' : '1px solid #D5D5D5',
+                background:   onSaleOnly ? '#FF6817' : '#fff',
+                color:        onSaleOnly ? '#fff' : '#1A1A1A',
+                transition:   'background 0.18s ease, color 0.18s ease, border-color 0.18s ease',
+              }}
+            >
+              <i className="ti ti-discount-2" style={{ fontSize: '16px' }} aria-hidden="true" />
+              On sale
+              {saleCount > 0 && (
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  background: onSaleOnly ? 'rgba(255,255,255,0.25)' : '#F0F0F0',
+                  color: onSaleOnly ? '#fff' : '#888',
+                  borderRadius: '999px',
+                  padding: '1px 7px',
+                }}>
+                  {saleCount}
+                </span>
+              )}
+            </button>
+
             <div style={{ position: 'relative' }}>
               <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={selectStyle}>
                 {brands.map(b => <option key={b} value={b}>{b}</option>)}
@@ -390,13 +442,20 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
         </div>
 
         {/* ── Active filter chips ── */}
-        {(sizeQuery || selectedBrand !== 'All Brands') && (
+        {(sizeQuery || selectedBrand !== 'All Brands' || onSaleOnly) && (
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {sizeQuery && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1A1A1A', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
                 <i className="ti ti-ruler-2" style={{ fontSize: '13px' }} aria-hidden="true" />
                 {sizeQuery}
                 <Link href="/tyres/results" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginLeft: '2px' }}>×</Link>
+              </span>
+            )}
+            {onSaleOnly && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FF6817', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                <i className="ti ti-discount-2" style={{ fontSize: '13px' }} aria-hidden="true" />
+                On sale
+                <button onClick={() => setOnSaleOnly(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.75)', padding: 0, lineHeight: 1, marginLeft: '2px' }}>×</button>
               </span>
             )}
             {selectedBrand !== 'All Brands' && (
@@ -425,7 +484,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
           </div>
         ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '16px' }}>
-            No tyres found. Try a different filter.
+            {onSaleOnly ? 'No tyres on sale right now. Try clearing the “On sale” filter.' : 'No tyres found. Try a different filter.'}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

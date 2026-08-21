@@ -159,10 +159,12 @@ function StripePaymentForm({
         return
       }
 
+      let ck: { email?: string; name?: string; storeName?: string } = {}
+      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
       const res  = await fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null }),
+        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null, email: ck.email, name: ck.name, storeName: ck.storeName }),
       })
       const data = await res.json()
 
@@ -283,10 +285,12 @@ export default function CheckoutPage() {
     if (status === 'succeeded' && piId) {
       // Redirect-based method (PayPal / Afterpay / Klarna) returned successfully.
       // Call the success route to record the order, then navigate to confirmation.
+      let ck: { email?: string; name?: string; storeName?: string } = {}
+      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
       fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paymentIntentId: piId }),
+        body:    JSON.stringify({ paymentIntentId: piId, email: ck.email, name: ck.name, storeName: ck.storeName }),
       })
         .then(r => r.json())
         .then(data => {
@@ -329,8 +333,23 @@ export default function CheckoutPage() {
   async function advanceToPayment() {
     setPayIntentLoading(true)
     setPayIntentError(null)
+    // Persist contact + store for the order confirmation email (survives redirect flows).
     try {
-      const res  = await fetch('/api/checkout/create-payment-intent', { method: 'POST' })
+      let storeName = ''
+      try { storeName = (JSON.parse(localStorage.getItem('nova_selected_store') || '{}') as { name?: string }).name || '' } catch {}
+      localStorage.setItem('nova_checkout', JSON.stringify({
+        email: contact.email, name: `${contact.firstName} ${contact.lastName}`.trim(), storeName,
+      }))
+    } catch {}
+    try {
+      // Carry the cart's fitting choice so the server charges the right total.
+      let fitting: { vehicleType?: string; method?: string; storeId?: string; fitCount?: number } = {}
+      try { fitting = JSON.parse(localStorage.getItem('nova_fitting') || '{}') } catch {}
+      const res  = await fetch('/api/checkout/create-payment-intent', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ vehicleType: fitting.vehicleType, method: fitting.method, storeId: fitting.storeId, fitCount: fitting.fitCount }),
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to initialize payment')
       setClientSecret(data.clientSecret)
@@ -353,7 +372,7 @@ export default function CheckoutPage() {
   // ── Order confirmed screen (fallback — normally replaced by navigation) ────
   if (placed) {
     return (
-      <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', maxWidth: '420px', padding: '0 24px' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#EDF7F1', border: '2px solid #19D26A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#076330" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -371,7 +390,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '96px', paddingBottom: '72px' }}>
+    <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '40px', paddingBottom: '72px' }}>
 
       {/* ── Page heading ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '36px', paddingTop: '16px' }}>

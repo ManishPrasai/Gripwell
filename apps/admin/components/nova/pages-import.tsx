@@ -7,20 +7,15 @@ import * as React from "react";
 import { useState, useRef } from "react";
 import { Icon } from "./icons";
 import { toast } from "./ui";
+import { adminFetch } from "../../lib/adminFetch";
+import { ImageSlot } from "./image-upload";
 
-const IMPORT_CATS = ["Tyres", "Wheels", "Oils", "Parts"];
+const IMPORT_CATS = ["Tyres", "Wheels"];
 const IMPORT_FIELDS: [string, string, boolean][] = [
-  ["name", "Product name", true], ["brand", "Brand", false], ["category", "Category", false],
+  ["name", "Product name / model", true], ["brand", "Brand", false], ["category", "Category", false],
+  ["size", "Tyre size (e.g. 225/45R17)", false], ["type", "Tyre type", false],
   ["price", "Price", false], ["stock", "Stock quantity", false], ["description", "Description", false], ["sku", "SKU", false],
 ];
-
-function ImgSlot({ height, placeholder, style }: { height: number; placeholder: string; style?: React.CSSProperties }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height, borderRadius: 12, border: "1px dashed var(--border)", color: "var(--ink-3)", fontSize: 13, background: "var(--chip)", cursor: "pointer", ...style }}>
-      {placeholder}
-    </div>
-  );
-}
 
 function parseCSVText(text: string) {
   const lines = text.trim().split(/\r?\n/);
@@ -34,12 +29,14 @@ function parseCSVText(text: string) {
 }
 
 function autoMap(headers: string[]) {
-  const m: any = { name: "", brand: "", category: "", price: "", stock: "", description: "", sku: "" };
+  const m: any = { name: "", brand: "", category: "", size: "", type: "", price: "", stock: "", description: "", sku: "" };
   headers.forEach((h) => {
     const l = h.toLowerCase();
-    if (!m.name && (l.includes("name") || l.includes("title"))) m.name = h;
+    if (!m.name && (l.includes("name") || l.includes("model") || l.includes("title"))) m.name = h;
     if (!m.brand && l.includes("brand")) m.brand = h;
-    if (!m.category && (l.includes("cat") || l.includes("type"))) m.category = h;
+    if (!m.category && (l.includes("cat") || l === "type" || l.includes("product type"))) m.category = h;
+    if (!m.size && (l.includes("size") || l.includes("dimension"))) m.size = h;
+    if (!m.type && (l.includes("tyre type") || l.includes("tire type") || l.includes("terrain"))) m.type = h;
     if (!m.price && l.includes("price")) m.price = h;
     if (!m.stock && (l.includes("stock") || l.includes("qty") || l.includes("quantity"))) m.stock = h;
     if (!m.description && (l.includes("desc"))) m.description = h;
@@ -61,10 +58,10 @@ function StepUpload({ onParsed }: { onParsed: (text: string, name?: string) => v
 
   function downloadTemplate() {
     const csv = [
-      "name,brand,category,price,stock,sku,description",
-      'Michelin Pilot Sport 4,Michelin,Tyres,420,12,MCH-PS4-225,"High-performance summer tyre for sport cars"',
-      'Pirelli P Zero,Pirelli,Tyres,380,8,PIR-PZ-245,"Ultra-high performance tyre"',
-      'Castrol EDGE 5W-30,Castrol,Oils,65,30,CAS-E5W30-5L,"Full synthetic engine oil 5L"',
+      "name,brand,category,size,type,price,stock,sku,description",
+      'Pilot Sport 4,Michelin,Tyres,225/45R17,Passenger,420,12,MCH-PS4-225,"High-performance summer tyre for sport cars"',
+      'P Zero,Pirelli,Tyres,245/40R18,Passenger,380,8,PIR-PZ-245,"Ultra-high performance tyre"',
+      'Scorpion ATR,Pirelli,Tyres,265/65R17,SUV,310,10,PIR-SC-265,"All-terrain SUV tyre"',
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
@@ -94,7 +91,7 @@ function StepUpload({ onParsed }: { onParsed: (text: string, name?: string) => v
         <div style={{ marginTop: 14 }}>
           <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", marginBottom: 8 }}>Expected columns</div>
           <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            {["name", "brand", "category", "price", "stock", "sku", "description"].map((c) => (
+            {["name", "brand", "category", "size", "type", "price", "stock", "sku", "description"].map((c) => (
               <span key={c} className="badge accent dotless" style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{c}</span>
             ))}
           </div>
@@ -149,29 +146,29 @@ function StepMap({ headers, rows, mapping, setMapping, onBack, onNext }: any) {
   );
 }
 
-function StepPreview({ preview, onBack, onConfirm }: any) {
+function StepPreview({ preview, onBack, onConfirm, importing }: any) {
   return (
     <div>
       <div className="role-banner" style={{ marginBottom: 14, background: "color-mix(in oklab, var(--ok) 10%, transparent)", borderColor: "color-mix(in oklab, var(--ok) 25%, transparent)" }}>
         <Icon name="checkCircle" style={{ color: "var(--ok)" }} />
-        <span>Ready to import <b>{preview.length} product{preview.length !== 1 ? "s" : ""}</b>. Review and confirm.</span>
+        <span>Ready to import <b>{preview.length} product{preview.length !== 1 ? "s" : ""}</b>. Only <b>Tyres</b> and <b>Wheels</b> are written to the catalog; other rows are skipped.</span>
         <span className="spacer"></span>
-        <button className="btn sm" onClick={onConfirm}><Icon name="check" />Import all</button>
+        <button className="btn sm" disabled={importing} onClick={onConfirm}><Icon name="check" />{importing ? "Importing…" : "Import all"}</button>
       </div>
       <div className="panel">
         <div className="table-wrap">
           <table className="tbl">
-            <thead><tr><th>Product</th><th>Brand</th><th>Category</th><th>Price</th><th>Stock</th><th>SKU</th><th>Description</th></tr></thead>
+            <thead><tr><th>Product</th><th>Brand</th><th>Category</th><th>Size</th><th>Price</th><th>Stock</th><th>SKU</th></tr></thead>
             <tbody>
               {preview.map((p: any, i: number) => (
                 <tr key={i}>
                   <td className="cell-main">{p.name}</td>
                   <td className="muted">{p.brand || "—"}</td>
                   <td><span className="badge accent dotless" style={{ fontSize: 11 }}>{p.cat || "—"}</span></td>
+                  <td className="mono muted" style={{ fontSize: 12 }}>{p.size || "—"}</td>
                   <td className="mono">{p.price ? "$" + p.price : "—"}</td>
                   <td className="mono">{p.stock || "—"}</td>
                   <td className="mono muted" style={{ fontSize: 12 }}>{p.sku || "—"}</td>
-                  <td className="muted" style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.description || "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -179,25 +176,47 @@ function StepPreview({ preview, onBack, onConfirm }: any) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 14, justifyContent: "flex-end" }}>
-        <button className="btn ghost" onClick={onBack}><Icon name="chevL" />Back</button>
-        <button className="btn" onClick={onConfirm}><Icon name="check" />Confirm &amp; import</button>
+        <button className="btn ghost" disabled={importing} onClick={onBack}><Icon name="chevL" />Back</button>
+        <button className="btn" disabled={importing} onClick={onConfirm}><Icon name="check" />{importing ? "Importing…" : "Confirm & import"}</button>
       </div>
     </div>
   );
 }
 
-function StepDone({ count, onReset, onNav }: any) {
+function StepDone({ count, result, onReset, onNav }: any) {
+  const skipped = result?.skipped ?? 0;
+  const errs = result?.errors ?? [];
   return (
-    <div className="panel" style={{ padding: 52, textAlign: "center" }}>
-      <div style={{ width: 68, height: 68, borderRadius: "50%", background: "color-mix(in oklab, var(--ok) 12%, transparent)", color: "var(--ok)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
-        <Icon name="checkCircle" style={{ width: 34, height: 34 }} />
+    <div>
+      <div className="panel" style={{ padding: 52, textAlign: "center" }}>
+        <div style={{ width: 68, height: 68, borderRadius: "50%", background: `color-mix(in oklab, var(--${count > 0 ? "ok" : "accent"}) 12%, transparent)`, color: `var(--${count > 0 ? "ok" : "accent"})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+          <Icon name={count > 0 ? "checkCircle" : "alert"} style={{ width: 34, height: 34 }} />
+        </div>
+        <h3 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>{count > 0 ? "Import complete" : "Nothing imported"}</h3>
+        <p style={{ color: "var(--ink-2)", marginTop: 6 }}>
+          <b>{count}</b> product{count !== 1 ? "s" : ""} added to your inventory{skipped ? <> · <b>{skipped}</b> row{skipped !== 1 ? "s" : ""} skipped</> : null}.
+        </p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24 }}>
+          <button className="btn ghost" onClick={onReset}><Icon name="refresh" />Import more</button>
+          <button className="btn" onClick={() => onNav && onNav("inventory")}><Icon name="box" />View inventory</button>
+        </div>
       </div>
-      <h3 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>Import complete</h3>
-      <p style={{ color: "var(--ink-2)", marginTop: 6 }}>{count} product{count !== 1 ? "s" : ""} added to your inventory.</p>
-      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24 }}>
-        <button className="btn ghost" onClick={onReset}><Icon name="refresh" />Import more</button>
-        <button className="btn" onClick={() => onNav("inventory")}><Icon name="box" />View inventory</button>
-      </div>
+
+      {errs.length > 0 && (
+        <div className="panel" style={{ marginTop: 14 }}>
+          <div style={{ padding: "14px 18px 4px", fontSize: 14, fontWeight: 800 }}>Skipped rows <span className="badge warn dotless" style={{ marginLeft: 6 }}>{errs.length}</span></div>
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead><tr><th>Row</th><th>Product</th><th>Reason</th></tr></thead>
+              <tbody>
+                {errs.map((e: any, i: number) => (
+                  <tr key={i}><td className="mono muted">{e.row}</td><td className="cell-main">{e.name}</td><td className="muted">{e.reason}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -218,12 +237,17 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
     setHeaders(h); setCsvRows(r); setMapping(autoMap(h)); setStep("map");
   }
 
+  const [importResult, setImportResult] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
+
   function buildPreview() {
-    const mapped = csvRows.slice(0, 200).map((r, i) => ({
+    const mapped = csvRows.slice(0, 500).map((r, i) => ({
       id: Date.now() + i,
       name: r[mapping.name] || "Unnamed",
       brand: r[mapping.brand] || "",
       cat: r[mapping.category] || "Tyres",
+      size: r[mapping.size] || "",
+      type: r[mapping.type] || "",
       price: parseFloat(r[mapping.price]) || 0,
       stock: parseInt(r[mapping.stock]) || 0,
       sku: r[mapping.sku] || "",
@@ -232,24 +256,71 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
     setPreview(mapped); setStep("preview");
   }
 
-  function confirmImport() {
-    setImportCount(preview.length);
-    toast({ kind: "ok", title: preview.length + " products imported", body: "Added to inventory." });
-    setStep("done");
+  async function confirmImport() {
+    if (importing) return;
+    setImporting(true);
+    const products = preview.map((p) => ({
+      name: p.name, brand: p.brand, category: p.cat, size: p.size, type: p.type,
+      price: p.price, stock: p.stock, sku: p.sku, description: p.description,
+    }));
+    try {
+      const res: any = await adminFetch("/api/admin/products/import", "POST", { products });
+      setImportResult(res); setImportCount(res.created);
+      if (res.created > 0) toast({ kind: "ok", title: res.created + " product" + (res.created !== 1 ? "s" : "") + " imported", body: res.skipped ? res.skipped + " row(s) skipped — see details." : "Added to inventory." });
+      else toast({ kind: "err", title: "Nothing imported", body: res.skipped + " row(s) had errors." });
+      ctx?.refetch?.();
+      setStep("done");
+    } catch (e: any) {
+      toast({ kind: "err", title: "Import failed", body: e?.message || "Please try again." });
+    } finally {
+      setImporting(false);
+    }
   }
 
-  function resetCsv() { setHeaders([]); setCsvRows([]); setMapping({}); setPreview([]); setStep("upload"); }
+  function resetCsv() { setHeaders([]); setCsvRows([]); setMapping({}); setPreview([]); setImportResult(null); setStep("upload"); }
 
-  const emptyForm = { name: "", brand: "", category: "Tyres", price: "", stock: "", sku: "", description: "", status: "active" };
+  const emptyForm = { name: "", brand: "", category: "Tyres", size: "", type: "Passenger", diameter: "", pcd: "", material: "Alloy", price: "", stock: "", sku: "", description: "", status: "active" };
   const [form, setForm] = useState<any>(emptyForm);
   const [added, setAdded] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  // Images are uploaded as soon as they're picked; these are the resulting
+  // /media/... paths, sent with the product so they're attached on create.
+  // [0] is the main photo, [1..3] the extra angles.
+  const [images, setImages] = useState<(string | null)[]>([null, null, null, null]);
+  const setImageAt = (n: number, url: string | null) =>
+    setImages((prev) => prev.map((u, i) => (i === n ? url : u)));
 
-  function addProduct() {
+  async function addProduct() {
     if (!form.name.trim()) { toast({ kind: "err", title: "Name required", body: "Enter a product name to continue." }); return; }
-    const product = { ...form, id: Date.now(), price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0 };
-    setAdded((prev) => [product, ...prev]);
-    toast({ kind: "ok", title: "Product added", body: form.name + " saved to inventory." });
-    setForm(emptyForm);
+    if (form.category === "Tyres" && !form.size.trim()) { toast({ kind: "err", title: "Tyre size required", body: "e.g. 225/45R17" }); return; }
+    if (form.category === "Wheels" && !String(form.diameter).trim()) { toast({ kind: "err", title: "Diameter required", body: "Enter the wheel diameter in inches." }); return; }
+    if (saving) return;
+    setSaving(true);
+    try {
+      const res: any = await adminFetch("/api/admin/products/import", "POST", {
+        products: [{
+          name: form.name, brand: form.brand, category: form.category,
+          size: form.size, type: form.type,
+          diameter: form.diameter, pcd: form.pcd, material: form.material,
+          price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0,
+          sku: form.sku, description: form.description,
+          imageUrls: images.filter(Boolean),
+        }],
+      });
+      if (res.created > 0) {
+        setAdded((prev) => [{ ...form, id: Date.now(), image: images[0], price: parseFloat(form.price) || 0, stock: parseInt(form.stock) || 0 }, ...prev]);
+        toast({ kind: "ok", title: "Product added", body: form.name + " saved to inventory." });
+        ctx?.refetch?.();
+        setForm(emptyForm);
+        setImages([null, null, null, null]);
+      } else {
+        toast({ kind: "err", title: "Couldn't add product", body: res.errors?.[0]?.reason || "Check the details and try again." });
+      }
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't add product", body: e?.message || "Please try again." });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -282,8 +353,8 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
 
           {step === "upload" && <StepUpload onParsed={handleParsed} />}
           {step === "map" && <StepMap headers={headers} rows={csvRows} mapping={mapping} setMapping={setMapping} onBack={resetCsv} onNext={buildPreview} />}
-          {step === "preview" && <StepPreview preview={preview} onBack={() => setStep("map")} onConfirm={confirmImport} />}
-          {step === "done" && <StepDone count={importCount} onReset={resetCsv} onNav={nav} />}
+          {step === "preview" && <StepPreview preview={preview} onBack={() => setStep("map")} onConfirm={confirmImport} importing={importing} />}
+          {step === "done" && <StepDone count={importCount} result={importResult} onReset={resetCsv} onNav={nav} />}
         </div>
       )}
 
@@ -304,6 +375,33 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
                 </select>
               </div>
             </div>
+
+            {form.category === "Tyres" && (
+              <div className="form-grid">
+                <div className="field"><label>Tyre size <span style={{ color: "var(--accent)" }}>*</span></label>
+                  <input value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} placeholder="225/45R17" />
+                </div>
+                <div className="field"><label>Tyre type</label>
+                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                    {["Passenger", "SUV", "Commercial", "Mud Terrain"].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {form.category === "Wheels" && (
+              <div className="form-grid" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+                <div className="field"><label>Diameter (in) <span style={{ color: "var(--accent)" }}>*</span></label>
+                  <input type="number" min="10" max="30" value={form.diameter} onChange={(e) => setForm({ ...form, diameter: e.target.value })} placeholder="18" />
+                </div>
+                <div className="field"><label>PCD</label><input value={form.pcd} onChange={(e) => setForm({ ...form, pcd: e.target.value })} placeholder="5x114.3" /></div>
+                <div className="field"><label>Material</label>
+                  <select value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })}>
+                    {["Alloy", "Steel", "Forged", "Carbon"].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="form-grid">
               <div className="field"><label>Price ($)</label><input type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" /></div>
@@ -326,19 +424,30 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
               </div>
             </div>
 
-            <button className="btn block" style={{ marginTop: 10 }} onClick={addProduct}><Icon name="plus" />Add to inventory</button>
+            <button className="btn block" style={{ marginTop: 10 }} disabled={saving} onClick={addProduct}><Icon name="plus" />{saving ? "Adding…" : "Add to inventory"}</button>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div className="panel" style={{ padding: 24 }}>
               <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 16 }}>Product image</div>
-              <ImgSlot height={230} placeholder="Drop a product photo here" style={{ borderRadius: 14 }} />
-              <p style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10, textAlign: "center" }}>Recommended: 800 × 800 px · PNG or JPEG</p>
+              <ImageSlot
+                value={images[0]} onChange={(url) => setImageAt(0, url)}
+                height={230} placeholder="Drop a product photo here, or click to browse"
+                style={{ borderRadius: 14 }}
+              />
+              <p style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 10, textAlign: "center" }}>
+                Recommended: 800 × 800 px · JPEG, PNG or WebP
+              </p>
 
               <div style={{ marginTop: 18 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-2)", marginBottom: 10 }}>Additional images</div>
                 <div style={{ display: "flex", gap: 10 }}>
-                  {[1, 2, 3].map((n) => (<ImgSlot key={n} height={80} placeholder="+" style={{ flex: 1, borderRadius: 10 }} />))}
+                  {[1, 2, 3].map((n) => (
+                    <ImageSlot
+                      key={n} compact value={images[n]} onChange={(url) => setImageAt(n, url)}
+                      height={80} placeholder="+" style={{ flex: 1, borderRadius: 10 }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -352,7 +461,12 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
                 <div style={{ paddingBottom: 8 }}>
                   {added.map((p) => (
                     <div className="lrow" key={p.id}>
-                      <span className="prod-thumb"><Icon name={p.category === "Tyres" ? "tyre" : p.category === "Wheels" ? "wheel" : p.category === "Oils" ? "oil" : "part"} /></span>
+                      <span className="prod-thumb">
+                        {p.image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 }} />
+                          : <Icon name={p.category === "Tyres" ? "tyre" : p.category === "Wheels" ? "wheel" : p.category === "Oils" ? "oil" : "part"} />}
+                      </span>
                       <div className="lrow-main">
                         <b>{p.name}</b>
                         <span>{p.brand ? p.brand + " · " : ""}{p.category} · ${p.price}</span>

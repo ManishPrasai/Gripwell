@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters", "queryCompiler"]
 }
 
 datasource db {
@@ -232,10 +231,27 @@ model Store {
   chatAgents        ChatAgent[]
   chatHours         ChatOperatingHours[]
   reviews           Review[]
+  fittingPrices     StoreFittingPrice[]
 
   @@index([slug])
   @@index([suburb])
   @@index([state])
+}
+
+// Per-store fitting/balancing price by vehicle type. A missing row means the
+// store uses the app-wide default (see apps/customer/lib/fitting.ts).
+model StoreFittingPrice {
+  id          String   @id @default(uuid())
+  storeId     String
+  vehicleType String   // 'passenger' | 'suv' | 'commercial' | 'truck'
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, vehicleType])
+  @@index([storeId])
 }
 
 model StoreHours {
@@ -310,7 +326,7 @@ model AppointmentSlot {
 model CartItem {
   id          String   @id @default(uuid())
   customerId  String
-  productType String   // 'tyre' | 'wheel'
+  productType String // 'tyre' | 'wheel'
   productId   String
   quantity    Int      @default(1)
   createdAt   DateTime @default(now())
@@ -708,6 +724,9 @@ model Review {
   body               String?
   isVerifiedPurchase Boolean  @default(false)
   isApproved         Boolean  @default(false)
+  reply              String?
+  repliedAt          DateTime?
+  repliedById        String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -786,17 +805,37 @@ model RegoLookupCache {
 // ADMIN
 // ─────────────────────────────────────
 
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  color       String?
+  scope       String   @default("store")   // 'all' | 'store'
+  isBuiltIn   Boolean  @default(false)      // built-in roles cannot be deleted
+  permissions Json     @default("{}")       // { stores|bookings|messages|inventory|staff|reviews|website|finance|roles : 0|1|2 }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  admins AdminUser[]
+
+  @@index([scope])
+}
+
 model AdminUser {
   id           String    @id @default(uuid())
   storeId      String?
+  roleId       String?           // custom role (fine-grained perms); null → derive from `role` enum
   firstName    String
   lastName     String
   email        String    @unique
   passwordHash String
-  role         AdminRole
+  role         AdminRole         // coarse scope backstop: SUPER_ADMIN=all, STORE_MANAGER=store
+  mustChangePassword Boolean @default(false)
   isActive     Boolean   @default(true)
   deletedAt    DateTime?
   lastLoginAt  DateTime?
+  phone        String?
+  notificationPrefs Json?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -804,6 +843,7 @@ model AdminUser {
   totpSecret   String?           // AES-256-GCM encrypted TOTP secret
   totpEnabled  Boolean   @default(false)
 
+  customRole         Role?                @relation(fields: [roleId], references: [id])
   store              Store?               @relation(fields: [storeId], references: [id])
   sessions           AdminSession[]
   actionLogs         AdminActionLog[]

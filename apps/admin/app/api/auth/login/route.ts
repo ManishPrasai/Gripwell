@@ -11,6 +11,7 @@ import { sendLoginLockoutAlert } from '../../../../lib/email'
 import { signTotpPendingToken } from '../../../../lib/totp'
 import { validate, LoginSchema } from '../../../../lib/validate'
 import { logAction } from '../../../../lib/audit'
+import { resolveAccess } from '../../../../lib/access'
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     /* ── Lookup admin account ────────────────────────────────────────────── */
     const admin = await prisma.adminUser.findUnique({
       where: { email },
-      include: { store: true },
+      include: { store: true, customRole: true },
     })
 
     if (!admin || !admin.isActive) {
@@ -65,7 +66,8 @@ export async function POST(req: NextRequest) {
     /* ── No TOTP — issue full session ────────────────────────────────────── */
     await clearLoginRateLimit(ip)
 
-    const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined })
+    const access           = resolveAccess(admin)
+    const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined, scope: access.scope, perms: access.perms })
     const refreshToken     = generateRefreshToken()
     const refreshTokenHash = hashRefreshToken(refreshToken)
     const userAgent        = req.headers.get('user-agent') || ''
@@ -87,6 +89,7 @@ export async function POST(req: NextRequest) {
     const cookieOpts = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/' }
     const response = NextResponse.json({
       success: true,
+      mustChangePassword: admin.mustChangePassword,
       admin: { id: admin.id, firstName: admin.firstName, lastName: admin.lastName, email: admin.email, role: admin.role, storeId: admin.storeId, store: admin.store },
     })
     response.cookies.set('admin_access_token',  accessToken,  { ...cookieOpts, maxAge: 30 * 60           })

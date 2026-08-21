@@ -49,3 +49,7 @@ graphify-out/
 nova-tyres.rar
 apps/customer/.open-next/
 apps/*/.open-next/
+
+# Wrangler local state
+.wrangler/
+**/.wrangler/

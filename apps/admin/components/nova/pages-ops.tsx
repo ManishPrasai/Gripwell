@@ -5,11 +5,14 @@
 import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, StockBadge, Stars, Tooltip, Drawer, Modal, ConfirmModal,
-  toast, SearchBox, EmptyState, PanelHead,
+  toast, SearchBox, EmptyState, PanelHead, usePager, Pager,
 } from "./ui";
+import { downloadCSV } from "../../lib/csv";
+import { ProductGallery } from "./image-upload";
 
 type Ctx = any;
 
@@ -23,6 +26,10 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [edit, setEdit] = useState<any>(null);
   const [del, setDel] = useState<any>(null);
 
+  // Server truth wins once a refetch lands, so an image added in the drawer
+  // shows up in the table instead of waiting for a full page reload.
+  React.useEffect(() => { setRows(D.products); }, [D.products]);
+
   const cats = ["All", "Tyres", "Wheels", "Oils", "Parts"];
   const lowCount = rows.filter((p) => p.stock <= p.low).length;
   const list = rows.filter((p) =>
@@ -30,11 +37,45 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (!lowOnly || p.stock <= p.low) &&
     (p.name + p.brand + p.spec).toLowerCase().includes(q.toLowerCase())
   );
+  const pager = usePager(list, 12);
 
-  function saveEdit() {
-    setRows((prev) => prev.map((p) => p.id === edit.id ? edit : p));
-    toast({ kind: "ok", title: "Saved", body: edit.name + " updated." });
+  function exportCSV() {
+    if (!rows.length) { toast({ kind: "info", title: "Nothing to export", body: "No products in inventory yet." }); return; }
+    downloadCSV("nova-inventory", ["Product", "Brand", "Category", "Spec", "Price", "Stock", "Status"],
+      rows.map((p) => [p.name, p.brand, p.cat, p.spec ?? "", Number(p.price).toFixed(2), p.stock, p.status]));
+    toast({ kind: "ok", title: "Exported", body: `${rows.length} products downloaded as CSV.` });
+  }
+
+  async function saveEdit() {
+    const target = edit; const prevRows = rows;
+    setRows((prev) => prev.map((p) => p.id === target.id ? target : p));  // optimistic
     setEdit(null);
+    if (!target.id) { toast({ kind: "ok", title: "Saved", body: target.name + " updated." }); return; }
+    try {
+      await adminFetch(`/api/admin/products/${target.id}`, "PATCH", {
+        price: +target.price, stock: +target.stock, status: target.status,
+      });
+      toast({ kind: "ok", title: "Saved", body: target.name + " updated." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);  // rollback
+      toast({ kind: "err", title: "Couldn't save", body: e?.message || "Please try again." });
+    }
+  }
+
+  async function deleteProduct(p: any) {
+    const prevRows = rows;
+    setRows((prev) => prev.filter((x) => x.id !== p.id));  // optimistic
+    setDel(null);
+    if (!p.id) { toast({ kind: "ok", title: "Deleted", body: p.name + " removed." }); return; }
+    try {
+      await adminFetch(`/api/admin/products/${p.id}`, "DELETE");
+      toast({ kind: "ok", title: "Deleted", body: p.name + " removed." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);  // rollback
+      toast({ kind: "err", title: "Couldn't delete", body: e?.message || "Please try again." });
+    }
   }
 
   return (
@@ -42,8 +83,9 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
       <div className="pagehead">
         <div className="ph-txt"><h2>Products &amp; Inventory</h2><p>Tyres, wheels, oils and parts across all stores.</p></div>
         <div className="ph-actions">
-          <button className="btn ghost" onClick={() => toast({ kind: "info", title: "Import", body: "Upload a CSV of products." })}><Icon name="download" />Import</button>
-          <button className="btn" onClick={() => toast({ kind: "info", title: "New product", body: "Product editor would open here." })}><Icon name="plus" />Add product</button>
+          <button className="btn ghost" onClick={exportCSV}><Icon name="download" />Export</button>
+          <button className="btn ghost" onClick={() => ctx.go?.("import")}><Icon name="box" />Import</button>
+          <button className="btn" onClick={() => ctx.go?.("import")}><Icon name="plus" />Add product</button>
         </div>
       </div>
 
@@ -72,9 +114,17 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <table className="tbl">
               <thead><tr><th>Product</th><th>Brand</th><th>Price</th><th>Stock</th><th>Availability</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                {list.map((p) => (
+                {pager.slice.map((p) => (
                   <tr key={p.id}>
-                    <td><div className="cell-flex"><span className="prod-thumb"><Icon name={p.icon} /></span><div><div className="cell-main">{p.name}</div><div className="cell-sub mono">{p.spec}</div></div></div></td>
+                    <td><div className="cell-flex">
+                      <span className="prod-thumb">
+                        {p.image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 }} />
+                          : <Icon name={p.icon} />}
+                      </span>
+                      <div><div className="cell-main">{p.name}</div><div className="cell-sub mono">{p.spec}</div></div>
+                    </div></td>
                     <td className="nowrap">{p.brand}</td>
                     <td className="mono">${p.price}</td>
                     <td>
@@ -96,10 +146,14 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
           </div>
         )}
       </div>
+      <Pager pager={pager} unit="products" />
 
       {edit && (
         <Drawer title={edit.name} sub={edit.brand + " · " + edit.cat} onClose={() => setEdit(null)}
           foot={<React.Fragment><button className="btn ghost" style={{ flex: 1 }} onClick={() => setEdit(null)}>Cancel</button><button className="btn" style={{ flex: 1 }} onClick={saveEdit}><Icon name="check" />Save changes</button></React.Fragment>}>
+          {/* Images save on their own (the product already exists), unlike the
+              fields below which apply on "Save changes". */}
+          {edit.id && <ProductGallery productId={edit.id} onChanged={() => ctx.refetch?.()} />}
           <div className="field"><label>Product name</label><input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></div>
           <div className="field"><label>Specification</label><input value={edit.spec} onChange={(e) => setEdit({ ...edit, spec: e.target.value })} /></div>
           <div className="form-grid">
@@ -115,7 +169,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
       )}
 
       {del && <ConfirmModal danger title={"Delete " + del.name + "?"} body="This removes the product from inventory and your website. This can't be undone."
-        confirmLabel="Delete product" onConfirm={() => { setRows((prev) => prev.filter((p) => p.id !== del.id)); toast({ kind: "ok", title: "Deleted", body: del.name + " removed." }); setDel(null); }} onClose={() => setDel(null)} />}
+        confirmLabel="Delete product" onConfirm={() => deleteProduct(del)} onClose={() => setDel(null)} />}
     </div>
   );
 }
@@ -145,17 +199,57 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
   const filtered = rows.filter((b) => (b.customer + b.vehicle + b.service + b.ref).toLowerCase().includes(q.toLowerCase()));
 
-  function advance(b: any) {
+  async function advance(b: any) {
     const nx = BK_NEXT[b.status]; if (!nx) return;
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: nx } : r));
     setActive((a: any) => a && a.ref === b.ref ? { ...a, status: nx } : a);
     toast({ kind: "ok", title: b.ref + " moved", body: "Now " + BK_COLS.find((c) => c.key === nx)?.label + "." });
+    if (!b.id) return;
+    try {
+      // The "Complete" column maps to COMPLETED in the DB.
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", { status: "COMPLETED" });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);
+      toast({ kind: "err", title: "Couldn't update booking", body: e?.message || "Please try again." });
+    }
   }
 
-  function cancelBooking(b: any) {
+  async function persistReschedule(b: any): Promise<boolean> {
+    if (!b.id) return true;   // mock row — nothing to persist
+    const body: any = {};
+    if (rdDate) body.date = new Date(rdDate).toISOString();
+    if (rdTime) body.timeSlot = rdTime;
+    try {
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", body);
+      ctx.refetch?.();
+      return true;
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't reschedule", body: e?.message || "Please try again." });
+      return false;
+    }
+  }
+
+  async function cancelBooking(b: any) {
+    const prevRows = rows;
+    // Optimistic — move to the Cancelled column immediately.
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: "done" } : r));
     setActive(null);
-    toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+
+    // Mock rows (fallback data) have no real id — nothing to persist.
+    if (!b.id) {
+      toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+      return;
+    }
+    try {
+      await adminFetch(`/api/admin/bookings/${b.id}`, "PATCH", { status: "CANCELLED" });
+      toast({ kind: "warn", title: b.ref + " cancelled", body: b.customer + "'s booking has been cancelled." });
+      ctx.refetch?.();  // revalidate ctx.D from the server so it survives refresh
+    } catch (e: any) {
+      setRows(prevRows);  // rollback on failure
+      toast({ kind: "err", title: "Couldn't cancel booking", body: e?.message || "Please try again." });
+    }
   }
 
   function makeLabel() {
@@ -164,19 +258,25 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     if (rdTime) { const [h, m] = rdTime.split(":"); const ap = +h >= 12 ? "pm" : "am"; parts.push(((+h % 12) || 12) + ":" + m + ap); }
     return parts.join(" · ");
   }
-  function saveReschedule(b: any) {
+  async function saveReschedule(b: any) {
     if (!rdDate && !rdTime) { toast({ kind: "warn", title: "No date set", body: "Pick a new date or time first." }); return; }
     const label = makeLabel();
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, time: label } : r));
     setActive((a: any) => a && a.ref === b.ref ? { ...a, time: label } : a);
-    toast({ kind: "ok", title: "Rescheduled", body: b.ref + " updated to " + label + "." });
+    const ok = await persistReschedule(b);
+    if (ok) toast({ kind: "ok", title: "Rescheduled", body: b.ref + " updated to " + label + "." });
+    else setRows(prevRows);
   }
-  function rescheduleAndMove(b: any) {
+  async function rescheduleAndMove(b: any) {
     if (!rdDate && !rdTime) { toast({ kind: "warn", title: "No date set", body: "Pick a new date or time first." }); return; }
     const label = makeLabel();
+    const prevRows = rows;
     setRows((prev) => prev.map((r) => r.ref === b.ref ? { ...r, status: "ready", time: label } : r));
     setActive(null);
-    toast({ kind: "ok", title: b.ref + " rescheduled", body: "Moved to Rescheduled · " + label + "." });
+    const ok = await persistReschedule(b);
+    if (ok) toast({ kind: "ok", title: b.ref + " rescheduled", body: "Moved to Rescheduled · " + label + "." });
+    else setRows(prevRows);
   }
 
   function openBooking(b: any) {
@@ -383,15 +483,28 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (rating === "all" || r.rating === +rating) &&
     (r.author + r.text + r.store).toLowerCase().includes(q.toLowerCase())
   );
+  const pager = usePager(list, 8);
   const avg = (rows.reduce((s, r) => s + r.rating, 0) / (rows.length || 1)).toFixed(1);
   const dist = [5, 4, 3, 2, 1].map((n) => ({ n, c: rows.filter((r) => r.rating === n).length }));
   const maxd = Math.max(...dist.map((d) => d.c), 1);
   const unanswered = rows.filter((r) => !r.reply).length;
 
-  function sendReply() {
-    setRows((prev) => prev.map((r) => r === reply ? { ...r, reply: replyText } : r));
-    toast({ kind: "ok", title: "Reply posted", body: "Your response to " + reply.author + " is live." });
+  async function sendReply() {
+    const target = reply; const text = replyText;
+    const key = target.id;
+    // Optimistic — show the reply immediately.
+    setRows((prev) => prev.map((r) => (key ? r.id === key : r === target) ? { ...r, reply: text } : r));
     setReply(null); setReplyText("");
+
+    if (!key) { toast({ kind: "ok", title: "Reply posted", body: "Your response to " + target.author + " is live." }); return; }
+    try {
+      await adminFetch(`/api/admin/reviews/${key}`, "PATCH", { reply: text });
+      toast({ kind: "ok", title: "Reply posted", body: "Your response to " + target.author + " is live." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows((prev) => prev.map((r) => r.id === key ? { ...r, reply: null } : r));  // rollback
+      toast({ kind: "err", title: "Couldn't post reply", body: e?.message || "Please try again." });
+    }
   }
 
   return (
@@ -427,7 +540,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
       {list.length === 0 ? <div className="panel"><EmptyState icon="star" title="No reviews" text="Nothing matches that filter." /></div> : (
         <div className="grid-2" style={{ gridTemplateColumns: "1fr 1fr", alignItems: "start" }}>
-          {list.map((r, i) => (
+          {pager.slice.map((r, i) => (
             <div className="panel rev-card" key={i}>
               <div className="rev-card-top">
                 <Avatar init={r.init} color={r.av} />
@@ -444,6 +557,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
           ))}
         </div>
       )}
+      <Pager pager={pager} unit="reviews" />
 
       {reply && (
         <Modal wide onClose={() => setReply(null)}>

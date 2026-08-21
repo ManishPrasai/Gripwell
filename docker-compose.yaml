@@ -1,25 +1,47 @@
-version: "3.8"
-
 services:
-  # 1. Your Nova Tyres Application Web Server
+  # 1. Customer-facing storefront (apps/customer)
   web:
     build:
       context: .
-      dockerfile: Dockerfileincrease the vertical space between each section and make the trust pill close to the section separator but not too close and move the hero search section 5% narrower and 20px closer to trust signal. Increase trust signal typography by 15–20%. keep the divider between hero and bottom white exactly wher  it is.
+      dockerfile: Dockerfile
+      args:
+        APP: customer
     container_name: nova_tyres_web
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=development
-      # Update the database URL below depending on if you use Prisma/Mongoose
+      - NODE_ENV=production
       - DATABASE_URL=postgresql://nova_admin:tyres_secure_pass@postgres_db:5432/nova_tyres_db
       - REDIS_URL=redis://redis_cache:6379
     depends_on:
       - postgres_db
       - redis_cache
 
-  # 2. Local Isolated PostgreSQL Database (Matches your pgAdmin shortcut!)
+  # 2. Admin panel (apps/admin)
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: admin
+    container_name: nova_tyres_admin
+    restart: always
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://nova_admin:tyres_secure_pass@postgres_db:5432/nova_tyres_db
+      - REDIS_URL=redis://redis_cache:6379
+    depends_on:
+      - postgres_db
+      - redis_cache
+
+  # 3. Local Isolated PostgreSQL Database (Matches your pgAdmin shortcut!)
   postgres_db:
     image: postgres:15-alpine
     container_name: nova_tyres_db
@@ -33,7 +55,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # 3. Redis Caching Engine (Matches Phase 1 of your project tracker!)
+  # 4. Redis Caching Engine (Matches Phase 1 of your project tracker!)
   redis_cache:
     image: redis:7-alpine
     container_name: nova_tyres_redis

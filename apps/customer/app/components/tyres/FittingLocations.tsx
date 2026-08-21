@@ -2,224 +2,94 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import StoreChat from '../chat/StoreChat'
+import { C, FONT, CONTAINER, SECTION_PAD, KICKER, H2, CTA_GHOST } from '../shop/tokens'
+import { STORES, telHref, fullAddress, type Store } from '../../../lib/stores'
 
-const STORES = [
-  {
-    name:    'NOV A TYRES – Alphington',
-    address: '200 Grange Rd, Alphington VIC 3078',
-    phone:   '03 7009 7700',
-    image:   '/images/stores/alphington.jpg',
-    slug:    'alphington',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Springvale',
-    address: '4/134 Springvale Rd, Springvale VIC 3171',
-    phone:   '03 9562 4269',
-    image:   '/images/stores/springvale.jpg',
-    slug:    'springvale',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Sefton',
-    address: '107 Carlingford St, Sefton NSW 2162',
-    phone:   '04 0338 8774',
-    image:   '/images/stores/sefton.jpg',
-    slug:    'sefton',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Dandenong',
-    address: '308 S Gippsland Hwy, Dandenong South VIC 3175',
-    phone:   '03 8787 5846',
-    image:   '/images/stores/dandenong.jpg',
-    slug:    'dandenong',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Bayswater',
-    address: '194 Canterbury Rd, Bayswater North VIC 3153',
-    phone:   '03 9720 9354',
-    image:   '/images/stores/bayswater.jpg',
-    slug:    'bayswater',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Sunshine',
-    address: '9 Devonshire Rd, Sunshine VIC 3020',
-    phone:   '03 9311 0000',
-    image:   '/images/stores/sunshine.jpg',
-    slug:    'sunshine',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Geelong',
-    address: '1/118 Bellarine Hwy, Newcomb VIC 3219',
-    phone:   '04 7869 8884',
-    image:   '/images/stores/geelong.jpg',
-    slug:    'geelong',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Brisbane',
-    address: 'Brisbane QLD',
-    phone:   '07 0000 0000',
-    image:   '/images/stores/brisbane.jpg',
-    slug:    'brisbane',
-    open:    true,
-  },
-  {
-    name:    'NOV A TYRES – Adelaide',
-    address: 'Adelaide SA',
-    phone:   '08 0000 0000',
-    image:   '/images/stores/adelaide.jpg',
-    slug:    'adelaide',
-    open:    true,
-  },
-]
+/* The design shows three storefronts with a "view all" escape hatch. */
+const FEATURED_COUNT = 3
 
-const CARD_W  = 390
-const VISIBLE = 3
+function StoreCard({ store, onChat }: { store: Store; onChat: (s: Store) => void }) {
+  const [hovered, setHovered] = useState(false)
 
-/* Store image with graceful fallback — uses plain <img> for reliable onError */
-function StoreImage({ src, name, open }: { src: string; name: string; open: boolean }) {
-  const [err, setErr] = useState(false)
   return (
-    <div style={{ position: 'relative', height: '160px', background: '#1C3A2B', overflow: 'hidden', flexShrink: 0 }}>
-      {!err ? (
-        <img
-          src={src}
-          alt={name}
-          onError={() => setErr(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-        />
-      ) : (
-        <div style={{
-          width: '100%', height: '100%',
-          background: 'linear-gradient(135deg, #1C3A2B 0%, #0f2018 100%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <i className="ti ti-building-store" style={{ fontSize: '40px', color: 'rgba(255,255,255,0.25)' }} aria-hidden="true" />
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: '#fff', border: `1px solid ${C.line}`, borderRadius: '4px',
+        overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        boxShadow: hovered ? '0 10px 22px rgba(0,0,0,.10)' : 'none',
+        transition: 'box-shadow .18s ease',
+      }}
+    >
+      <div style={{ position: 'relative', height: '150px', background: '#E9E9E7' }}>
+        {store.image ? (
+          <Image src={store.image} alt={store.name} fill sizes="(max-width: 780px) 100vw, 380px" style={{ objectFit: 'cover' }} />
+        ) : (
+          /* No storefront photo for this branch yet — a branded panel reads
+             better than a broken image frame. */
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.greenSoft, color: C.green, font: `800 22px ${FONT}`, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            {store.short}
+          </div>
+        )}
+        <span style={{ position: 'absolute', right: '10px', bottom: '10px', background: '#fff', color: '#0A8A3A', fontSize: '11.5px', fontWeight: 800, letterSpacing: '.8px', borderRadius: '2px', padding: '5px 10px' }}>
+          OPEN NOW
+        </span>
+      </div>
+
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '9px', flex: 1 }}>
+        <div style={{ font: `800 21px ${FONT}`, color: C.ink, textTransform: 'uppercase', letterSpacing: '.4px' }}>
+          {store.name}
         </div>
-      )}
-      {open && (
-        <div style={{ position: 'absolute', top: '12px', right: '12px', background: '#FBFBFB', borderRadius: '8px', padding: '4px 12px' }}>
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '14px', color: '#00B450' }}>OPEN NOW</span>
-        </div>
-      )}
+        <div style={{ fontSize: '13.5px', color: C.muted }}>{fullAddress(store)}</div>
+
+        <a href={telHref(store.tel)}
+          style={{ textAlign: 'center', border: `1.5px solid ${C.green}`, borderRadius: '3px', padding: '11px', fontWeight: 700, fontSize: '14px', color: C.green, textDecoration: 'none' }}>
+          {store.tel}
+        </a>
+
+        {/* Opens our own store chat (wired to /api/chat) rather than handing the
+            conversation off to WhatsApp. */}
+        <button type="button" onClick={() => onChat(store)}
+          style={{ textAlign: 'center', border: `1.5px solid ${C.orange}`, borderRadius: '3px', padding: '11px', fontWeight: 700, fontSize: '14px', color: C.orangeDark, background: 'transparent', cursor: 'pointer', fontFamily: FONT }}>
+          Chat with store
+        </button>
+
+        <Link href="/#locations" style={{ marginTop: 'auto', fontSize: '13.5px', fontWeight: 700, color: C.green, textDecoration: 'none' }}>
+          View store →
+        </Link>
+      </div>
     </div>
   )
 }
 
 export default function FittingLocations() {
-  const [offset, setOffset] = useState(0)
-  const maxOffset = Math.max(0, STORES.length - VISIBLE)
+  const [chatStore, setChatStore] = useState<Store | null>(null)
 
   return (
-    <section style={{ background: '#fff', paddingTop: '16px', paddingBottom: '48px' }}>
-      <div className="nv-shell">
-
-        {/* Divider separating Brands We Serve from Fitting Locations */}
-        <div style={{ height: '1px', background: '#E8E8E8', marginBottom: '36px' }} />
-
-        <h2 style={{
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 'clamp(20px, 2.5vw, 26px)',
-          fontWeight: 900,
-          color: '#1A1A1A',
-          marginBottom: '24px',
-        }}>
-          Fitting Locations
-        </h2>
-
-        {/* Carousel */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ overflow: 'hidden' }}>
-            <div style={{
-              display: 'flex',
-              gap: '20px',
-              transform: `translateX(calc(-${offset} * (${CARD_W}px + 20px)))`,
-              transition: 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)',
-            }}>
-              {STORES.map(store => (
-                <div
-                  key={store.slug}
-                  style={{
-                    flexShrink: 0,
-                    width: `${CARD_W}px`,
-                    background: '#fff',
-                    borderRadius: '12px',
-                    border: '1px solid #E5E5E5',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                  }}
-                >
-                  <StoreImage src={store.image} name={store.name} open={store.open} />
-
-                  <div style={{ padding: '16px' }}>
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '18px', color: '#1A1A1A', marginBottom: '6px', lineHeight: 1.3 }}>
-                      {store.name}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '4px' }}>
-                      <i className="ti ti-map-pin" style={{ fontSize: '14px', color: '#076330', marginTop: '2px', flexShrink: 0 }} aria-hidden="true" />
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#838383', fontWeight: 400, lineHeight: 1.4 }}>
-                        {store.address}
-                      </p>
-                    </div>
-
-                    {/* Phone */}
-                    <div style={{ border: '1px solid #D2D2D2', borderRadius: '10px', padding: '11px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '14px 0' }}>
-                      <i className="ti ti-phone" style={{ fontSize: '16px', color: '#076330' }} aria-hidden="true" />
-                      <a href={`tel:${store.phone.replace(/\s/g, '')}`} style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '17px', color: '#1A1A1A', textDecoration: 'none' }}>
-                        {store.phone}
-                      </a>
-                    </div>
-
-                    {/* Chat with Store */}
-                    <button style={{ width: '100%', border: '1px solid #E8572A', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#fff', cursor: 'pointer', marginBottom: '12px' }}>
-                      <i className="ti ti-message-circle" style={{ fontSize: '18px', color: '#E8572A' }} aria-hidden="true" />
-                      <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '16px', color: '#E8572A' }}>Chat with Store</span>
-                    </button>
-
-                    {/* View Store */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <Link href={`/locations/${store.slug}`} style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '14px', color: '#076330', textDecorationLine: 'underline' }}>
-                        View Store
-                      </Link>
-                      <i className="ti ti-arrow-right" style={{ fontSize: '14px', color: '#076330' }} aria-hidden="true" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Prev button */}
-          {offset > 0 && (
-            <button onClick={() => setOffset(o => Math.max(o - 1, 0))} aria-label="Previous store"
-              style={{ position: 'absolute', left: '-20px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', background: '#fff', border: '1px solid #E5E5E5', boxShadow: '0 2px 12px rgba(0,0,0,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-              <i className="ti ti-chevron-left" style={{ fontSize: '18px', color: '#1A1A1A' }} aria-hidden="true" />
-            </button>
-          )}
-
-          {/* Next button */}
-          {offset < maxOffset && (
-            <button onClick={() => setOffset(o => Math.min(o + 1, maxOffset))} aria-label="Next store"
-              style={{ position: 'absolute', right: '-20px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', background: '#fff', border: '1px solid #E5E5E5', boxShadow: '0 2px 12px rgba(0,0,0,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-              <i className="ti ti-chevron-right" style={{ fontSize: '18px', color: '#1A1A1A' }} aria-hidden="true" />
-            </button>
-          )}
+    <section style={{ background: C.wash, padding: SECTION_PAD, fontFamily: FONT }}>
+      <div style={CONTAINER}>
+        <div style={{ marginBottom: '22px' }}>
+          <div style={KICKER}>Fitted near you</div>
+          <h2 style={H2}>Fitting locations</h2>
         </div>
 
-        {/* View all stores */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
-          <Link href="/locations" style={{ border: '1px solid #C5C5C5', borderRadius: '10px', padding: '14px 40px', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '18px', color: '#1A1A1A', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
-            View all stores
-            <i className="ti ti-arrow-right" style={{ fontSize: '20px' }} aria-hidden="true" />
-          </Link>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '16px' }}>
+          {STORES.slice(0, FEATURED_COUNT).map(s => (
+            <StoreCard key={s.id} store={s} onChat={setChatStore} />
+          ))}
         </div>
 
+        <div style={{ textAlign: 'center', marginTop: '22px' }}>
+          <Link href="/#locations" style={CTA_GHOST}>View all stores →</Link>
+        </div>
       </div>
+
+      {chatStore && (
+        <StoreChat storeSlug={chatStore.id} storeName={chatStore.name} onClose={() => setChatStore(null)} />
+      )}
     </section>
   )
 }

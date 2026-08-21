@@ -14,12 +14,15 @@
  * If any env var is missing, the function logs to console and returns
  * gracefully — a missing SMTP config must never break the auth flow.
  */
-import nodemailer from 'nodemailer'
-
-function createTransport() {
+// nodemailer is large and pulls in a lot of Node built-ins. It's only needed on
+// the rare lockout path, so load it lazily — a static import would evaluate it on
+// every isolate startup and inflate the worker's memory baseline (which tips the
+// admin worker over the Workers memory limit under load).
+async function createTransport() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null
 
+  const nodemailer = (await import('nodemailer')).default
   return nodemailer.createTransport({
     host:   SMTP_HOST,
     port:   Number(SMTP_PORT) || 587,
@@ -43,7 +46,7 @@ export async function sendLoginLockoutAlert({
     return
   }
 
-  const transport = createTransport()
+  const transport = await createTransport()
   if (!transport) {
     console.warn('[security] SMTP not configured — lockout alert not sent')
     return

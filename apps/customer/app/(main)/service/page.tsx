@@ -20,6 +20,7 @@
 
 import { useState, useEffect, useRef, ReactNode } from 'react'
 import Image from 'next/image'
+import { smoothScrollToSection } from '../../../lib/scrollToSection'
 
 /* ════════════════════════════════════════════════════════════════════
    ICONS — exact SVG paths from the reference
@@ -202,12 +203,20 @@ const STORES = [
   { name: 'Springvale', state: 'VIC', note: '4/134 Springvale Rd · Service & mechanical', address: '4/134 Springvale Rd, Springvale VIC 3171', phone: '03 9562 4269', wa: 'https://wa.me/61401531756', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Springvale', soon: false },
   { name: 'Dandenong', state: 'VIC', note: '308 S Gippsland Hwy · Dandenong South', address: '308 S Gippsland Hwy, Dandenong South VIC 3175', phone: '03 8787 5846', wa: 'https://wa.me/61413792400', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Dandenong', soon: false },
   { name: 'Bayswater', state: 'VIC', note: '194 Canterbury Rd · Bayswater North', address: '194 Canterbury Rd, Bayswater North VIC 3153', phone: '03 9720 9354', wa: 'https://wa.me/61411879425', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Bayswater', soon: false },
-  { name: 'Alphington', state: 'VIC', note: '200 Grange Rd · Melbourne', address: '200 Grange Rd, Alphington VIC 3078', phone: '03 7009 7700', wa: 'https://wa.me/61403884151', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Alphington', soon: false },
-  { name: 'Sunshine', state: 'VIC', note: '1B Berkshire Rd · Sunshine North', address: '1B Berkshire Rd, Sunshine North VIC 3020', phone: null, wa: 'https://wa.me/61401199224', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sunshine+North', soon: false },
-  { name: 'Sefton', state: 'NSW · Sydney', note: '107 Carlingford St · Sydney', address: '107 Carlingford St, Sefton NSW 2162', phone: null, wa: 'https://wa.me/61403388774', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sefton', soon: false },
+  { name: 'Alphington', state: 'VIC', note: '200 Grange Rd · Melbourne', address: '200 Grange Rd, Alphington VIC 3078', phone: '0403 884 151', wa: 'https://wa.me/61403884151', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Alphington', soon: false },
+  { name: 'Sunshine', state: 'VIC', note: '1B Berkshire Rd · Sunshine North', address: '1B Berkshire Rd, Sunshine North VIC 3020', phone: '0401 199 224', wa: 'https://wa.me/61401199224', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sunshine+North', soon: false },
+  { name: 'Sefton', state: 'NSW · Sydney', note: '107 Carlingford St · Sydney', address: '107 Carlingford St, Sefton NSW 2162', phone: '0403 388 774', wa: 'https://wa.me/61403388774', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sefton', soon: false },
   { name: 'Brisbane', state: 'QLD', note: 'Serviced now from our Melbourne workshops', address: '', phone: null, wa: null, maps: null, soon: true },
   { name: 'Adelaide', state: 'SA', note: 'Serviced now from our Melbourne workshops', address: '', phone: null, wa: null, maps: null, soon: true },
 ]
+
+/* Stores with a real photo on disk (public/images/stores). Others get a clean
+   placeholder rather than a broken image. */
+const STORE_PHOTOS = new Set(['springvale', 'dandenong', 'bayswater', 'alphington', 'sefton'])
+const photoFor = (name: string) => {
+  const slug = name.toLowerCase()
+  return STORE_PHOTOS.has(slug) ? `/images/stores/${slug}.jpg` : null
+}
 
 const MARQUEE_ITEMS = ['Fully Qualified Mechanics', 'Warranty-Safe Log Books', 'Quality Parts & Oils', 'Free Safety Inspection', 'Pre-RWC Checks']
 
@@ -324,6 +333,17 @@ export default function ServicePage() {
 
   /* shops accordion — single open */
   const [openShop, setOpenShop] = useState<number | null>(null)
+
+  /* Arriving from the navbar "Locations" link (/service?goto=shops): load at the
+     top, then smoothly scroll DOWN to the store list. The util re-reads the
+     target each frame, so the content-visibility sections above rendering
+     mid-scroll can't make it overshoot (they did — it landed on the first store
+     instead of the section heading). A short delay lets hydration settle. */
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('goto') !== 'shops') return
+    const t = setTimeout(() => smoothScrollToSection('shops-head', { offset: 96 }), 90)
+    return () => clearTimeout(t)
+  }, [])
 
   /* write-a-review modal */
   const [modalOpen, setModalOpen] = useState(false)
@@ -813,14 +833,16 @@ export default function ServicePage() {
 
       {/* ══ FIND YOUR NEAREST SHOP ════════════════════════════════════ */}
       <section className="shops" id="shops">
-        <div className="shops-head" data-reveal>
+        {/* Scroll anchor: the Locations link lands on the heading, not the
+            section's top padding — so the kicker sits just below the nav. */}
+        <div className="shops-head" id="shops-head" data-reveal>
           <span className="kicker">Find your nearest shop</span>
           <h2>Where to<br />find us.</h2>
         </div>
 
         <div className="shops-list">
           {STORES.map((store, i) => (
-            <div key={store.name} className={`shop-row${store.soon ? ' soon' : ''}${openShop === i ? ' open' : ''}`} data-reveal>
+            <div key={store.name} className={`shop-row${store.soon ? ' soon' : ''}${openShop === i ? ' open' : ''}`}>
               {store.soon ? (
                 <div className="shop-head">
                   <span className="shop-name">{store.name}<span className="shop-state">{store.state}</span></span>
@@ -841,7 +863,16 @@ export default function ServicePage() {
                   <div className="shop-panel">
                     <div className="shop-panel-inner">
                       <div className="shop-panel-pad">
-                        <div className="loc-photo" />
+                        {(() => {
+                          const src = photoFor(store.name)
+                          return src ? (
+                            <div className="loc-photo has-img" style={{ backgroundImage: `url(${src})` }} role="img" aria-label={`${store.name} store`} />
+                          ) : (
+                            <div className="loc-photo">
+                              <span className="loc-photo-ph"><IconPin />{store.name} · photo coming soon</span>
+                            </div>
+                          )
+                        })()}
                         <div className="shop-detail">
                           <a className="loc-line" href={store.maps!} target="_blank" rel="noopener noreferrer">
                             <IconPin />{store.address}
@@ -1648,7 +1679,10 @@ const CSS = `
   display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(20px, 3vw, 52px);
   align-items: center; padding: 4px 0 clamp(26px, 3vw, 40px);
 }
-.svcp .loc-photo { width: 100%; height: clamp(190px, 24vw, 300px); border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(135deg, #1C3A2B 0%, #0C0D0F 100%); }
+.svcp .loc-photo { width: 100%; height: clamp(190px, 24vw, 300px); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface, #ECEAE3); display: grid; place-items: center; }
+.svcp .loc-photo.has-img { background-size: cover; background-position: center; }
+.svcp .loc-photo-ph { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .01em; color: var(--text-dim); }
+.svcp .loc-photo-ph svg { width: 15px; height: 15px; color: var(--accent); }
 .svcp .shop-detail { display: flex; flex-direction: column; gap: 18px; }
 .svcp .loc-line { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(15px, 1.5vw, 18px); color: var(--text-mid); line-height: 1.45; transition: color .2s; }
 .svcp .loc-line:hover { color: var(--text); }
