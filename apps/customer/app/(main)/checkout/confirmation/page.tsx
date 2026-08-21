@@ -37,7 +37,7 @@ function ConfirmationContent() {
   }, [])
 
   return (
-    <main style={{ background: '#0D1A12', minHeight: '100vh', paddingTop: '96px', paddingBottom: '80px', color: '#FAF9F5' }}>
+    <main style={{ background: '#0D1A12', minHeight: '100vh', paddingTop: '40px', paddingBottom: '80px', color: '#FAF9F5' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', padding: '40px 24px 56px' }}>

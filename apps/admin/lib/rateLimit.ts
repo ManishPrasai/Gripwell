@@ -73,10 +73,22 @@ async function checkDB(ip: string): Promise<RateLimitResult> {
   const windowStart = new Date(Date.now() - WINDOW_MS)
   const resetAt     = new Date(Date.now() + WINDOW_MS)
 
+  // Only FAILED attempts since the most recent successful login count toward the
+  // limit. A successful login therefore resets the counter — essential on
+  // Workers, where there is no Redis for clearLoginRateLimit() to clear, so the
+  // old "count every attempt" logic locked out users after a few good logins.
+  const lastSuccess = await prisma.loginAttempt.findFirst({
+    where:   { ipAddress: ip, success: true, attemptedAt: { gte: windowStart } },
+    orderBy: { attemptedAt: 'desc' },
+    select:  { attemptedAt: true },
+  })
+  const since = lastSuccess?.attemptedAt ?? windowStart
+
   const count = await prisma.loginAttempt.count({
     where: {
       ipAddress:   ip,
-      attemptedAt: { gte: windowStart },
+      success:     false,
+      attemptedAt: { gt: since },
     },
   })
 

@@ -5,6 +5,8 @@ import {
   generateRefreshToken,
   hashRefreshToken,
 } from '@nova/database'
+import { IDLE_LOGOUT_ENABLED } from '../../../../lib/config'
+import { resolveAccess } from '../../../../lib/access'
 
 /**
  * Called by middleware when the access token has expired but a refresh token
@@ -48,6 +50,7 @@ export async function GET(req: NextRequest) {
             role: true,
             storeId: true,
             isActive: true,
+            customRole: { select: { scope: true, permissions: true } },
           },
         },
       },
@@ -59,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     /* Inactivity check — same 30-min rule as the /refresh endpoint */
     const IDLE_TIMEOUT_MS = 30 * 60 * 1000
-    if (Date.now() - session.lastUsedAt.getTime() > IDLE_TIMEOUT_MS) {
+    if (IDLE_LOGOUT_ENABLED && Date.now() - session.lastUsedAt.getTime() > IDLE_TIMEOUT_MS) {
       await prisma.adminSession.update({
         where: { id: session.id },
         data:  { isActive: false, revokedAt: new Date() },
@@ -67,12 +70,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
+    const _access = resolveAccess(session.admin)
     const newAccessToken = generateAccessToken({
       id: session.admin.id,
       email: session.admin.email,
       type: 'admin',
       role: session.admin.role,
       storeId: session.admin.storeId || undefined,
+      scope: _access.scope,
+      perms: _access.perms,
     })
 
     const newRefreshToken = generateRefreshToken()

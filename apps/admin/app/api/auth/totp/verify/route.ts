@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma, generateAccessToken, generateRefreshToken, hashRefreshToken } from '@nova/database'
+import { resolveAccess } from '../../../../../lib/access'
 import { verifyTotpPendingToken, verifyTotpCode, hashRecoveryCode } from '../../../../../lib/totp'
 import { validate, TotpVerifySchema } from '../../../../../lib/validate'
 import { logAction } from '../../../../../lib/audit'
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const admin = await prisma.adminUser.findUnique({
       where:   { id: pending.adminId },
-      include: { store: true },
+      include: { store: true, customRole: true },
     })
     if (!admin || !admin.isActive || !admin.totpEnabled || !admin.totpSecret) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
@@ -68,7 +69,8 @@ export async function POST(req: NextRequest) {
 }
 
 async function issueSession(admin: any, ip: string, req: NextRequest) {
-  const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined })
+  const _access          = resolveAccess(admin)
+  const accessToken      = generateAccessToken({ id: admin.id, email: admin.email, type: 'admin', role: admin.role, storeId: admin.storeId || undefined, scope: _access.scope, perms: _access.perms })
   const refreshToken     = generateRefreshToken()
   const refreshTokenHash = hashRefreshToken(refreshToken)
   const userAgent        = req.headers.get('user-agent') || ''

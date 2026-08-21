@@ -1,70 +1,33 @@
-const ITEMS = [
-  {
-    icon:  'ti-headphones',
-    title: 'Need help choosing?',
-    desc:  'Our tyre experts are here to help find the perfect fit.',
-  },
-  {
-    icon:  'ti-truck-delivery',
-    title: 'Fast delivery',
-    desc:  'Quick shipping on in-stock tyres.',
-  },
-  {
-    icon:  'ti-tools',
-    title: 'Fitting available',
-    desc:  'Official fitting locations available.',
-  },
-  {
-    icon:  'ti-user-star',
-    title: 'Expert support',
-    desc:  'Support from our friendly team.',
-  },
-]
+import { C, FONT, CONTAINER } from '../shop/tokens'
 
-export default function TyreInfoBar() {
+/* The Find Tyres and Find Wheels designs carry the same four-up value bar,
+   differing only in the noun. `kind` switches the two lines that change. */
+export default function TyreInfoBar({ kind = 'tyres' }: { kind?: 'tyres' | 'wheels' }) {
+  const isWheels = kind === 'wheels'
+
+  const props = [
+    { title: 'Need help choosing?', body: `Our ${isWheels ? 'wheel' : 'tyre'} experts are here to help find the perfect fit.` },
+    { title: 'Fast delivery',       body: `Quick shipping on in-stock ${isWheels ? 'wheels' : 'tyres'}.` },
+    { title: 'Fitting available',   body: isWheels ? 'Fitted and balanced free with any wheel purchase.' : 'Official fitting locations available.' },
+    { title: 'Expert support',      body: 'Support from our friendly team.' },
+  ]
+
   return (
-    <section style={{ background: '#fff', paddingTop: '16px', paddingBottom: '40px' }}>
-      <div className="nv-shell">
-
-        {/* Divider */}
-        <div style={{ height: '1px', background: '#E8E8E8', marginBottom: '0' }} />
-
-        <div
-          style={{
-            border: '1.5px solid #E9E9E9',
-            borderRadius: '10px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            overflow: 'hidden',
-            marginTop: '24px',
-          }}
-        >
-          {ITEMS.map((item, i) => (
-            <div
-              key={item.title}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '24px 20px',
-                borderRight: i < ITEMS.length - 1 ? '1px solid #E9E9E9' : 'none',
-              }}
-            >
-              <div style={{ flexShrink: 0, width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className={`ti ${item.icon}`} style={{ fontSize: '36px', color: '#1A1A1A' }} aria-hidden="true" />
-              </div>
-              <div>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '16px', color: '#1A1A1A', marginBottom: '4px' }}>
-                  {item.title}
-                </p>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 500, fontSize: '13px', color: '#989898', lineHeight: 1.4 }}>
-                  {item.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
+    <section style={{ background: '#fff', padding: 'clamp(28px,3.5vw,44px) clamp(16px,3vw,64px)', fontFamily: FONT }}>
+      <div
+        style={{
+          ...CONTAINER,
+          border: `1px solid ${C.line}`, borderRadius: '4px',
+          padding: 'clamp(18px,2.5vw,28px)',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '22px',
+        }}
+      >
+        {props.map(p => (
+          <div key={p.title} style={{ borderLeft: `3px solid ${C.orange}`, paddingLeft: '14px' }}>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: C.ink }}>{p.title}</div>
+            <div style={{ fontSize: '13.5px', lineHeight: 1.5, color: C.muted, marginTop: '3px' }}>{p.body}</div>
+          </div>
+        ))}
       </div>
     </section>
   )

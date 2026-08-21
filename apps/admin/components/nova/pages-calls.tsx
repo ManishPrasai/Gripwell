@@ -5,6 +5,7 @@
 import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import { Avatar, Tooltip, Drawer, Modal, toast, SearchBox, EmptyState } from "./ui";
 
@@ -50,7 +51,27 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
 
   function addBookingToQueue(b: any) { D.bookings.unshift(b); }
 
+  // Persist the logged call as an Enquiry. Managers are pinned to their own
+  // store server-side; for admins we resolve the selected store name → id.
+  async function persistCall(form: any) {
+    const CALL_TYPE: Record<string, string> = { booking: "booking", missed: "missed", enquiry: "general" };
+    const storeId = (D.stores.find((s: any) => s.name === form.store) || {}).id;
+    try {
+      await adminFetch("/api/admin/calls", "POST", {
+        name:    (form.customer || "").trim() || "Unknown caller",
+        phone:   form.phone || "—",
+        message: [form.topic, form.note].filter(Boolean).join(" — ").slice(0, 2000),
+        type:    CALL_TYPE[form.kind] || "general",
+        ...(storeId ? { storeId } : {}),
+      });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Call not saved", body: e?.message || "Logged locally only." });
+    }
+  }
+
   function saveCall(form: any) {
+    void persistCall(form);
     const init = form.customer.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "?";
     const av = ["#076330", "#2D6BE0", "#0E9F57", "#E08600", "#D6336C", "#7048E8"][Math.floor(Math.random() * 6)];
     const base = { id: "k" + Date.now(), customer: form.customer, phone: form.phone, init, av, store: form.store, kind: form.kind, topic: form.topic, time: "Today · just now", duration: form.duration || "—", handledBy: ctx.name, note: form.note };

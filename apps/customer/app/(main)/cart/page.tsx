@@ -6,9 +6,5 @@ export const metadata = {
 }
 
 export default function CartPage() {
-  return (
-    <main style={{ background: '#F2F2F2', minHeight: '100vh', paddingTop: '100px', paddingBottom: '60px' }}>
-      <CartContents />
-    </main>
-  )
+  return <CartContents />
 }

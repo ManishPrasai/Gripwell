@@ -168,7 +168,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
             <BrandLogoImg src={product.brandLogo} brand={product.brand} />
           </div>
 
-          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, lineHeight: 1.3, marginBottom: '3px' }}>
+          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700, lineHeight: 1.3, marginBottom: '3px' }}>
             {product.brand} {product.model}
           </p>
 
@@ -176,7 +176,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
             {product.size}&nbsp;&nbsp;{product.spec}
           </p>
 
-          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', fontWeight: 800 }}>
+          <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '19px', fontWeight: 800 }}>
             A${product.price.toFixed(2)}
           </p>
         </div>
@@ -257,11 +257,12 @@ const selectStyle: React.CSSProperties = {
 interface WheelGridProps {
   initialBrand?:    string
   initialDiameter?: string
+  initialWidth?:    string
   initialFinish?:   string
 }
 
 /* ── Section ─────────────────────────────────────────────────────────────── */
-export default function WheelGrid({ initialBrand, initialDiameter, initialFinish }: WheelGridProps = {}) {
+export default function WheelGrid({ initialBrand, initialDiameter, initialWidth, initialFinish }: WheelGridProps = {}) {
   const [allProducts,   setAllProducts]   = useState<WheelProduct[]>([])
   const [loading,       setLoading]       = useState(true)
   const [selectedBrand, setSelectedBrand] = useState(initialBrand || 'All Brands')
@@ -271,6 +272,7 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
     const params = new URLSearchParams({ limit: '50' })
     if (initialBrand)    params.set('brand',    initialBrand)
     if (initialDiameter) params.set('diameter', initialDiameter.replace('"', ''))
+    if (initialWidth)    params.set('width',    initialWidth.replace('"', ''))
     if (initialFinish)   params.set('finish',   initialFinish)
 
     fetch(`/api/wheels?${params}`)
@@ -280,7 +282,7 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
       })
       .catch(err => console.error('[WheelGrid] fetch failed:', err))
       .finally(() => setLoading(false))
-  }, [initialBrand, initialDiameter, initialFinish])
+  }, [initialBrand, initialDiameter, initialWidth, initialFinish])
 
   const brands = useMemo(
     () => ['All Brands', ...Array.from(new Set(allProducts.map(p => p.brand)))],
@@ -301,7 +303,7 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
     return arr
   }, [filtered, sortBy])
 
-  const hasActiveFilter = selectedBrand !== 'All Brands' || initialDiameter || initialFinish
+  const hasActiveFilter = selectedBrand !== 'All Brands' || initialDiameter || initialWidth || initialFinish
 
   return (
     <section style={{ paddingBottom: '56px' }}>
@@ -345,6 +347,13 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialFinish
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1A1A1A', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
                 <i className="ti ti-diameter" style={{ fontSize: '13px' }} aria-hidden="true" />
                 {initialDiameter}
+                <Link href="/wheels/results" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginLeft: '2px' }}>×</Link>
+              </span>
+            )}
+            {initialWidth && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1A1A1A', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+                <i className="ti ti-arrows-horizontal" style={{ fontSize: '13px' }} aria-hidden="true" />
+                {initialWidth}&quot; wide
                 <Link href="/wheels/results" style={{ color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginLeft: '2px' }}>×</Link>
               </span>
             )}

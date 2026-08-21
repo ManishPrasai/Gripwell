@@ -28,9 +28,12 @@ export async function GET(req: NextRequest) {
         firstName: true,
         lastName: true,
         email: true,
+        phone: true,
+        notificationPrefs: true,
         role: true,
         storeId: true,
         isActive: true,
+        mustChangePassword: true,
         lastLoginAt: true,
         store: {
           select: {

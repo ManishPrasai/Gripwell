@@ -16,15 +16,22 @@ export interface CartItem {
   image:       string
 }
 
+// Single source of truth — the checkout API enforces these same limits.
+import { DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER } from '../../lib/order-rules'
+export { DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER }
+
 // ── Context value ─────────────────────────────────────────────────────────────
 interface CartCtx {
   items:       CartItem[]
-  addToCart:   (item: Omit<CartItem, 'qty'>) => void
+  /** `qty` defaults to 1. Tyres are clamped so the order never exceeds MAX_TYRES_PER_ORDER. */
+  addToCart:   (item: Omit<CartItem, 'qty'>, qty?: number) => void
   removeItem:  (id: string) => void
   updateQty:   (id: string, delta: number) => void
   clearCart:   () => void
   cartCount:   number
   cartTotal:   number
+  /** Total tyres across the order — drives the "max 8" limit in the UI. */
+  tyreCount:   number
 }
 
 const CartContext = createContext<CartCtx | null>(null)
@@ -33,11 +40,13 @@ const CartContext = createContext<CartCtx | null>(null)
 // Called from inside setItems() updater functions so they always receive the
 // freshest item snapshot — no stale-closure risk.
 
-function dbAdd(productId: string, productType: string) {
+// POST upserts to an EXACT quantity (never blindly increments), so callers pass
+// the final quantity they want the row to hold.
+function dbAdd(productId: string, productType: string, quantity = 1) {
   fetch('/api/cart', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ productId, productType }),
+    body:    JSON.stringify({ productId, productType, quantity }),
   }).catch(err => console.error('[cart] dbAdd failed:', err))
 }
 
@@ -101,29 +110,48 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items])
 
   // ── addToCart ───────────────────────────────────────────────────────────────
-  // Optimistic: update UI immediately, write to DB in background.
-  const addToCart = useCallback((item: Omit<CartItem, 'qty'>) => {
+  // Optimistic: update UI immediately, write to DB in background. Adding N units
+  // is a single request — the product page used to call this in a loop, firing
+  // one API call per tyre.
+  const addToCart = useCallback((item: Omit<CartItem, 'qty'>, qty: number = 1) => {
     setItems(prev => {
       const existing = prev.find(i => i.id === item.id)
+      let want = Math.max(1, Math.floor(qty))
 
-      if (existing) {
-        const newQty = existing.qty + 1
-        dbUpdate(item.id, item.productType, newQty)
-        return prev.map(i => i.id === item.id ? { ...i, qty: newQty } : i)
+      if (item.productType === 'tyre') {
+        const tyresElsewhere = prev
+          .filter(i => i.productType === 'tyre' && i.id !== item.id)
+          .reduce((s, i) => s + i.qty, 0)
+        const allowance = MAX_TYRES_PER_ORDER - tyresElsewhere - (existing?.qty ?? 0)
+        if (allowance <= 0) return prev          // already at the order limit
+        want = Math.min(want, allowance)
       }
 
-      dbAdd(item.id, item.productType)
-      return [...prev, { ...item, qty: 1 }]
+      const newQty = (existing?.qty ?? 0) + want
+      dbAdd(item.id, item.productType, newQty)   // upsert to the exact quantity
+      return existing
+        ? prev.map(i => i.id === item.id ? { ...i, qty: newQty } : i)
+        : [...prev, { ...item, qty: newQty }]
     })
   }, [])
 
   // ── updateQty ───────────────────────────────────────────────────────────────
-  // delta is ±1. Quantity floor is 1 (remove button handles deletion).
+  // delta is ±1. Floor is 1 (remove button handles deletion); tyres are also
+  // capped so the order total can't exceed MAX_TYRES_PER_ORDER.
   const updateQty = useCallback((id: string, delta: number) => {
     setItems(prev => {
       const item = prev.find(i => i.id === id)
       if (!item) return prev
-      const newQty = Math.max(1, item.qty + delta)
+
+      let newQty = Math.max(1, item.qty + delta)
+      if (item.productType === 'tyre' && delta > 0) {
+        const tyresElsewhere = prev
+          .filter(i => i.productType === 'tyre' && i.id !== id)
+          .reduce((s, i) => s + i.qty, 0)
+        newQty = Math.max(1, Math.min(newQty, MAX_TYRES_PER_ORDER - tyresElsewhere))
+      }
+      if (newQty === item.qty) return prev       // at the cap — nothing to write
+
       dbUpdate(item.id, item.productType, newQty)
       return prev.map(i => i.id === id ? { ...i, qty: newQty } : i)
     })
@@ -146,9 +174,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const cartCount = items.reduce((s, i) => s + i.qty,           0)
   const cartTotal = items.reduce((s, i) => s + i.price * i.qty, 0)
+  const tyreCount = items.reduce((s, i) => s + (i.productType === 'tyre' ? i.qty : 0), 0)
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeItem, updateQty, clearCart, cartCount, cartTotal }}>
+    <CartContext.Provider value={{ items, addToCart, removeItem, updateQty, clearCart, cartCount, cartTotal, tyreCount }}>
       {children}
     </CartContext.Provider>
   )

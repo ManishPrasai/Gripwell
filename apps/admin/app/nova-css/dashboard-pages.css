@@ -348,3 +348,19 @@
 }
 .menu-toggle { display: none; }
 @media (max-width: 860px) { .menu-toggle { display: grid; } }
+
+/* ---------- Client-side pagination ---------- */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+.pager-info { font-size: 12.5px; }
+.pager-info b { color: var(--ink); font-weight: 700; }
+.pager-ctrls { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.pager-page { font-size: 12.5px; color: var(--ink-3); font-weight: 600; white-space: nowrap; }
+
+/* ---------- Loading skeleton shimmer ---------- */
+.sk-line { position: relative; overflow: hidden; border-radius: 6px; background: var(--chip); }
+.sk-circle { border-radius: 10px; }
+.sk-line::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ink) 8%, transparent), transparent);
+  animation: sk-shimmer 1.3s infinite; }
+@keyframes sk-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .sk-line::after { animation: none; } }

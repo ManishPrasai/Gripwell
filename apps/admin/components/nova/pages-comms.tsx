@@ -3,8 +3,9 @@
    NOVA TYRES — Admin · Messages (chat) + Roles & Access (ported)
    ============================================================ */
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import { Avatar, Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState } from "./ui";
 
@@ -20,6 +21,27 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [draft, setDraft] = useState("");
   const bodyRef = useRef<any>(null);
 
+  /* Pull new customer messages in from the 20s poll.
+     `useState` above only seeds on mount, so without this the inbox went stale
+     until a hard refresh. Keyed on a message-count signature so we only rebuild
+     when something actually arrived — and we keep the open thread marked read
+     so incoming polls don't make it flash unread under the reader. */
+  const sig = useMemo(
+    () => ctx.scopeBy(D.conversations, "store").map((c: any) => `${c.id}:${c.messages.length}:${c.status}`).join("|"),
+    [D.conversations, ctx.role, ctx.store],
+  );
+  useEffect(() => {
+    setConvos((prev) =>
+      ctx.scopeBy(D.conversations, "store").map((c: any) => ({
+        ...c,
+        messages: [...c.messages],
+        unread: c.id === activeId ? 0 : c.unread,
+        agent: prev.find((p) => p.id === c.id)?.agent ?? c.agent,
+      })),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+
   const list = convos.filter((c) =>
     (filter === "all" || (filter === "unread" ? c.unread > 0 : c.status === filter)) &&
     (c.customer + c.topic + c.store).toLowerCase().includes(q.toLowerCase())
@@ -30,15 +52,35 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [activeId, active && active.messages.length]);
 
   function open(c: any) { setActiveId(c.id); setConvos((prev) => prev.map((x) => x.id === c.id ? { ...x, unread: 0 } : x)); }
-  function send() {
+  async function send() {
     if (!draft.trim()) return;
+    const text = draft; const convoId = activeId;
     const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    setConvos((prev) => prev.map((x) => x.id === activeId ? { ...x, agent: ctx.name, status: "open", messages: [...x.messages, { from: "store", text: draft, time: now, agent: ctx.name }] } : x));
+    // Optimistic — show the outgoing message immediately.
+    setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, agent: ctx.name, status: "open", messages: [...x.messages, { from: "store", text, time: now, agent: ctx.name }] } : x));
     setDraft("");
+
+    if (!convoId) return;
+    try {
+      await adminFetch("/api/admin/messages", "POST", { conversationId: convoId, body: text });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Message not sent", body: e?.message || "Please try again." });
+    }
   }
-  function closeConvo() {
-    setConvos((prev) => prev.map((x) => x.id === activeId ? { ...x, status: x.status === "open" ? "closed" : "open" } : x));
-    toast({ kind: "ok", title: active.status === "open" ? "Conversation closed" : "Conversation reopened" });
+  async function closeConvo() {
+    const convoId = activeId; const wasOpen = active.status === "open";
+    setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, status: wasOpen ? "closed" : "open" } : x));
+    toast({ kind: "ok", title: wasOpen ? "Conversation closed" : "Conversation reopened" });
+
+    if (!convoId) return;
+    try {
+      await adminFetch(`/api/admin/conversations/${convoId}`, "PATCH", { status: wasOpen ? "closed" : "active" });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, status: wasOpen ? "open" : "closed" } : x));  // rollback
+      toast({ kind: "err", title: "Couldn't update conversation", body: e?.message || "Please try again." });
+    }
   }
 
   return (
@@ -141,13 +183,38 @@ export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [del, setDel] = useState<any>(null);
   const blank = () => ({ id: "new" + Date.now(), name: "", desc: "", color: ROLE_COLORS[2], scope: "store", members: 0, locked: false, perms: Object.fromEntries(D.permAreas.map((a: any) => [a[0], 0])) });
 
-  function save() {
+  async function save() {
     if (!edit.name.trim()) { toast({ kind: "err", title: "Name required" }); return; }
-    setRoles((prev) => prev.some((r) => r.id === edit.id) ? prev.map((r) => r.id === edit.id ? edit : r) : [...prev, edit]);
-    toast({ kind: "ok", title: "Role saved", body: edit.name + " permissions updated." });
+    const target = edit; const prevRoles = roles;
+    const isNew = String(target.id).startsWith("new") || !roles.some((r) => r.id === target.id);
+    // Optimistic
+    setRoles((prev) => prev.some((r) => r.id === target.id) ? prev.map((r) => r.id === target.id ? target : r) : [...prev, target]);
     setEdit(null);
+
+    const payload = { name: target.name, description: target.desc, color: target.color, scope: target.scope, permissions: target.perms };
+    try {
+      if (isNew) await adminFetch("/api/admin/roles", "POST", payload);
+      else       await adminFetch(`/api/admin/roles/${target.id}`, "PATCH", payload);
+      toast({ kind: "ok", title: "Role saved", body: target.name + " permissions updated." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRoles(prevRoles);
+      toast({ kind: "err", title: "Couldn't save role", body: e?.message || "Please try again." });
+    }
   }
-  function doDelete() { setRoles((prev) => prev.filter((r) => r.id !== del.id)); toast({ kind: "ok", title: "Role deleted", body: del.name + " removed." }); setDel(null); }
+  async function doDelete() {
+    const target = del; const prevRoles = roles;
+    setRoles((prev) => prev.filter((r) => r.id !== target.id));
+    setDel(null);
+    try {
+      await adminFetch(`/api/admin/roles/${target.id}`, "DELETE");
+      toast({ kind: "ok", title: "Role deleted", body: target.name + " removed." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRoles(prevRoles);
+      toast({ kind: "err", title: "Couldn't delete role", body: e?.message || "Please try again." });
+    }
+  }
 
   return (
     <div className="page page-enter">

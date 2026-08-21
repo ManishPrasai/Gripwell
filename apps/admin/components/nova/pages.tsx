@@ -5,8 +5,10 @@
    Placeholder: the remaining 10 tabs (ported progressively)
    ============================================================ */
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
+import { VEHICLE_TYPES } from "../../lib/fitting";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, Tooltip, Drawer, Modal, ConfirmModal, toast,
@@ -25,7 +27,14 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
   const totalRevenue = D.orders ? D.orders.reduce((s: number, o: any) => s + (o.total || 0), 0) : 400;
   const unreadMsgs = ctx.scopeBy(D.conversations, "store").reduce((s: number, c: any) => s + c.unread, 0);
 
-  const maxBar = Math.max(...D.revenue7.map((d: any) => d.a + d.b));
+  /* Real analytics (30-day) — revenue, conversion, top products */
+  const [an, setAn] = useState<any>(null);
+  useEffect(() => {
+    fetch("/api/admin/analytics?range=30").then((r) => (r.ok ? r.json() : null)).then((d) => d && setAn(d)).catch(() => {});
+  }, []);
+  const k = an?.kpis;
+
+  const maxBar = Math.max(...D.revenue7.map((d: any) => d.a + d.b), 1);
   const fmt = (n: number) => "$" + (n / 1000).toFixed(1) + "K";
 
   return (
@@ -46,11 +55,11 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
         <div className="dash-col">
           <div className="hero-row">
             <div className="hero-card primary">
-              <div className="hc-top"><span className="hc-label">Revenue this week</span><Icon name="dollar" /></div>
-              <div className="hc-val">{fmt(weekRev)}</div>
+              <div className="hc-top"><span className="hc-label">Revenue (30 days)</span><Icon name="dollar" /></div>
+              <div className="hc-val">{fmt(k?.revenue ?? weekRev)}</div>
               <div className="hc-foot">
                 <span>{ctx.role === "manager" ? ctx.store : stores.length + " stores"}</span>
-                <span className="hc-pill"><Icon name="arrowUp" />This week</span>
+                <span className="hc-pill"><Icon name={(k?.revenueDelta ?? 0) >= 0 ? "arrowUp" : "arrowDown"} />{k ? (k.revenueDelta >= 0 ? "+" : "") + k.revenueDelta + "% vs prev" : "This week"}</span>
               </div>
             </div>
 
@@ -128,12 +137,29 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
               {stores.map((s: any) => (
                 <div className="lrow" key={s.id} onClick={() => nav("stores")}>
                   <Avatar init={s.mgrInit} color={s.mgrAv} />
-                  <div className="lrow-main"><b>{s.name}</b><span>{s.manager} · {s.today} Sold today</span></div>
+                  <div className="lrow-main"><b>{s.name}</b><span>{s.manager} · {s.today} booked today</span></div>
                   <StatusBadge status={s.status} live={s.status === "open"} />
                 </div>
               ))}
             </div>
           </div>
+
+          {k && (
+            <div className="panel feed-panel">
+              <PanelHead title="Top products (30 days)" right={<span className="badge accent dotless">${(k.avgOrder || 0).toLocaleString()} avg order</span>} />
+              <div style={{ padding: "4px 0 12px" }}>
+                {(an.topProducts || []).length === 0 ? (
+                  <div style={{ padding: "14px 4px", color: "var(--ink-3)", fontSize: 13 }}>No sales in this period yet.</div>
+                ) : (an.topProducts || []).slice(0, 5).map((p: any, i: number) => (
+                  <div className="lrow" key={i}>
+                    <span className="sc-ico orange" style={{ width: 34, height: 34 }}><Icon name="tyre" /></span>
+                    <div className="lrow-main"><b>{p.name}</b><span>{p.units} units sold</span></div>
+                    <span className="mono" style={{ fontWeight: 700 }}>${p.revenue.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -148,6 +174,74 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [filter, setFilter] = useState("all");
   const [active, setActive] = useState<any>(null);
   const [confirmClose, setConfirmClose] = useState<any>(null);
+  const emptyStore = { name: "", address: "", suburb: "", state: "SA", postcode: "", phone: "", email: "", latitude: "", longitude: "" };
+  const [creating, setCreating] = useState<any>(null);
+  const [savingNew, setSavingNew] = useState(false);
+
+  // ── Per-store fitting prices (loaded when the store drawer opens) ──────────
+  const [fitPrices, setFitPrices] = useState<Record<string, number> | null>(null);
+  const [fitLoading, setFitLoading] = useState(false);
+  const [fitSaving, setFitSaving] = useState(false);
+
+  useEffect(() => {
+    if (!active?.id) { setFitPrices(null); return; }
+    setFitLoading(true); setFitPrices(null);
+    fetch(`/api/admin/stores/${active.id}/fitting-prices`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error("load failed")))
+      .then((r: any) => setFitPrices(r?.prices ?? null))
+      .catch(() => setFitPrices(null))
+      .finally(() => setFitLoading(false));
+  }, [active?.id]);
+
+  async function saveFitPrices() {
+    if (!active?.id || !fitPrices) return;
+    setFitSaving(true);
+    try {
+      await adminFetch(`/api/admin/stores/${active.id}/fitting-prices`, "PUT", {
+        prices: {
+          passenger:  Number(fitPrices.passenger)  || 0,
+          suv:        Number(fitPrices.suv)         || 0,
+          commercial: Number(fitPrices.commercial)  || 0,
+          truck:      Number(fitPrices.truck)       || 0,
+        },
+      });
+      toast({ kind: "ok", title: "Fitting prices saved", body: `${active.name} fitting rates updated.` });
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't save prices", body: e?.message || "Please try again." });
+    } finally { setFitSaving(false); }
+  }
+
+  async function createStore() {
+    const s = creating;
+    for (const [k, label] of [["name", "Name"], ["address", "Address"], ["suburb", "Suburb"], ["postcode", "Postcode"], ["phone", "Phone"], ["email", "Email"], ["latitude", "Latitude"], ["longitude", "Longitude"]] as const) {
+      if (!String(s[k]).trim()) { toast({ kind: "err", title: `${label} required`, body: "Fill in all fields to add the store." }); return; }
+    }
+    setSavingNew(true);
+    try {
+      await adminFetch("/api/admin/stores", "POST", {
+        name: s.name, address: s.address, suburb: s.suburb, state: s.state, postcode: s.postcode,
+        phone: s.phone, email: s.email, latitude: parseFloat(s.latitude), longitude: parseFloat(s.longitude),
+      });
+      toast({ kind: "ok", title: "Store added", body: `${s.name} is now live. Set its hours from the store editor.` });
+      await ctx.refetch?.();
+      setCreating(null);
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't add store", body: e?.message || "Please try again." });
+    } finally { setSavingNew(false); }
+  }
+
+  async function setStoreOpen(store: any, open: boolean) {
+    setActive((a: any) => a ? { ...a, status: open ? "open" : "closed" } : a);
+    toast({ kind: "ok", title: store.name + (open ? " reopened" : " closed"), body: open ? "Now accepting online bookings." : "Store is now offline for bookings." });
+    if (!store.id) return;
+    try {
+      await adminFetch(`/api/admin/stores/${store.id}`, "PATCH", { isActive: open });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setActive((a: any) => a ? { ...a, status: open ? "closed" : "open" } : a);   // rollback
+      toast({ kind: "err", title: "Couldn't update store", body: e?.message || "Please try again." });
+    }
+  }
 
   const list = all.filter((s: any) =>
     (filter === "all" || s.status === filter) &&
@@ -163,7 +257,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
         </div>
         {ctx.role !== "manager" && (
           <div className="ph-actions">
-            <button className="btn" onClick={() => toast({ kind: "info", title: "Add a store", body: "Store onboarding wizard would open here." })}><Icon name="plus" />Add store</button>
+            <button className="btn" onClick={() => setCreating({ ...emptyStore })}><Icon name="plus" />Add store</button>
           </div>
         )}
       </div>
@@ -214,7 +308,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <button className="btn ghost" style={{ flex: 1 }} onClick={() => { toast({ kind: "info", title: "Editing " + active.name }); }}><Icon name="edit" />Edit store</button>
             {active.status === "open"
               ? <button className="btn danger" style={{ flex: 1 }} onClick={() => setConfirmClose(active)}><Icon name="lock" />Close store</button>
-              : <button className="btn" style={{ flex: 1 }} onClick={() => { toast({ kind: "ok", title: active.name + " reopened" }); setActive({ ...active, status: "open" }); }}><Icon name="checkCircle" />Reopen</button>}
+              : <button className="btn" style={{ flex: 1 }} onClick={() => setStoreOpen(active, true)}><Icon name="checkCircle" />Reopen</button>}
           </React.Fragment>}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
             <StatusBadge status={active.status} live={active.status === "open"} />
@@ -240,6 +334,41 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <div className="set-row"><Icon name="clock" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.opens} – {active.closes}</b><span>Opening hours (Mon–Fri)</span></div></div>
             <div className="set-row"><Icon name="users" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.staff} team members</b><span>{active.bays} bays operating</span></div></div>
           </div>
+
+          {/* ── Fitting service prices (per tyre/wheel, by vehicle type) ── */}
+          <hr className="hr" />
+          <div className="field">
+            <label>Fitting service prices <span style={{ color: "var(--ink-3)", fontWeight: 400 }}>· per tyre/wheel, by vehicle</span></label>
+            {fitLoading ? (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Loading prices…</div>
+            ) : !active.id ? (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Save the store first to set fitting prices.</div>
+            ) : fitPrices ? (
+              <React.Fragment>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+                  {VEHICLE_TYPES.map(v => (
+                    <div key={v.id} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                      <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{v.label}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-2, #f4f4f2)", border: "1px solid var(--line, #e5e5e5)", borderRadius: 9, padding: "0 12px" }}>
+                        <span style={{ fontSize: 14, color: "var(--ink-3)" }}>$</span>
+                        <input
+                          type="number" min="0" step="1"
+                          value={fitPrices[v.id] ?? ""}
+                          onChange={e => setFitPrices(p => ({ ...(p || {}), [v.id]: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                          style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: "10px 0", fontSize: 15, fontWeight: 700, color: "var(--ink-1, #16211b)" }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="btn" style={{ marginTop: 14, width: "100%" }} disabled={fitSaving} onClick={saveFitPrices}>
+                  <Icon name="checkCircle" />{fitSaving ? "Saving…" : "Save fitting prices"}
+                </button>
+              </React.Fragment>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--ink-3)", padding: "8px 0" }}>Couldn&apos;t load prices for this store.</div>
+            )}
+          </div>
         </Drawer>
       )}
 
@@ -247,8 +376,37 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
         <ConfirmModal danger title={"Close " + confirmClose.name + "?"}
           body="Customers won't be able to book online and the store will show as Closed until reopened."
           confirmLabel="Close store" icon="lock"
-          onConfirm={() => { toast({ kind: "ok", title: confirmClose.name + " closed", body: "Store is now offline for bookings." }); setActive((a: any) => a ? { ...a, status: "closed" } : a); setConfirmClose(null); }}
+          onConfirm={() => { setStoreOpen(confirmClose, false); setConfirmClose(null); }}
           onClose={() => setConfirmClose(null)} />
+      )}
+
+      {creating && (
+        <Drawer title="Add a store" sub="Create a new Nova Tyres location" onClose={() => setCreating(null)}
+          foot={<React.Fragment>
+            <button className="btn ghost" style={{ flex: 1 }} onClick={() => setCreating(null)}>Cancel</button>
+            <button className="btn" style={{ flex: 1 }} disabled={savingNew} onClick={createStore}><Icon name="check" />{savingNew ? "Adding…" : "Add store"}</button>
+          </React.Fragment>}>
+          <div className="field"><label>Store name</label><input value={creating.name} onChange={(e) => setCreating({ ...creating, name: e.target.value })} placeholder="Nova Tyres Adelaide" /></div>
+          <div className="field"><label>Street address</label><input value={creating.address} onChange={(e) => setCreating({ ...creating, address: e.target.value })} placeholder="123 Main St" /></div>
+          <div className="form-grid">
+            <div className="field"><label>Suburb</label><input value={creating.suburb} onChange={(e) => setCreating({ ...creating, suburb: e.target.value })} placeholder="Adelaide" /></div>
+            <div className="field"><label>State</label>
+              <select value={creating.state} onChange={(e) => setCreating({ ...creating, state: e.target.value })}>
+                {["SA", "VIC", "NSW", "QLD", "WA", "TAS", "NT", "ACT"].map((s) => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-grid">
+            <div className="field"><label>Postcode</label><input value={creating.postcode} onChange={(e) => setCreating({ ...creating, postcode: e.target.value })} placeholder="5000" /></div>
+            <div className="field"><label>Phone</label><input value={creating.phone} onChange={(e) => setCreating({ ...creating, phone: e.target.value })} placeholder="08 8000 0000" /></div>
+          </div>
+          <div className="field"><label>Email</label><input value={creating.email} onChange={(e) => setCreating({ ...creating, email: e.target.value })} placeholder="adelaide@novatyres.com.au" /></div>
+          <div className="form-grid">
+            <div className="field"><label>Latitude</label><input value={creating.latitude} onChange={(e) => setCreating({ ...creating, latitude: e.target.value })} placeholder="-34.9285" /></div>
+            <div className="field"><label>Longitude</label><input value={creating.longitude} onChange={(e) => setCreating({ ...creating, longitude: e.target.value })} placeholder="138.6007" /></div>
+          </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: 2 }}><Icon name="info" style={{ width: 13, height: 13, verticalAlign: "-2px" }} /> Copy coordinates from Google Maps (right-click the location → the lat/long is at the top). Opening hours are set from the store editor afterwards.</p>
+        </Drawer>
       )}
     </div>
   );
@@ -278,20 +436,40 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
     (s.name + s.email + s.role).toLowerCase().includes(q.toLowerCase())
   );
 
-  function doAdd() {
+  async function doAdd() {
     if (!form.name.trim()) { toast({ kind: "err", title: "Name required", body: "Please enter the team member's name." }); return; }
-    const loginId = form.loginId.trim() || genId(form.name, form.store);
-    const init = form.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
-    setRows((prev) => [{ id: Date.now(), name: form.name, email: form.email, role: form.role, store: form.store, loginId, status: "offline", init, av: "#0E9F57", since: "Jun 2026", phone: "—" }, ...prev]);
-    setAdd(false);
-    setCreds({ name: form.name, loginId, tempPass: form.tempPass || genPass(), isNew: true });
-    toast({ kind: "ok", title: "Login issued", body: form.name + " can now sign in with their Login ID." });
+    if (!form.email.trim()) { toast({ kind: "err", title: "Email required", body: "They'll sign in with this email." }); return; }
+    const [firstName, ...rest] = form.name.trim().split(" ");
+    const lastName = rest.join(" ") || firstName;
+    const storeId = (D.stores.find((x: any) => x.name === form.store) || {}).id;
+    const roleObj = (D.roles || []).find((r: any) => r.name === form.role);
+    try {
+      const res: any = await adminFetch("/api/admin/staff", "POST", {
+        firstName, lastName, email: form.email.trim().toLowerCase(),
+        ...(storeId ? { storeId } : {}), ...(roleObj?.id ? { roleId: roleObj.id } : {}),
+      });
+      setAdd(false);
+      setCreds({ name: form.name, loginId: res.email, tempPass: res.tempPassword, isNew: true });
+      toast({ kind: "ok", title: "Login issued", body: form.name + " can now sign in with their email." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't create staff", body: e?.message || "Please try again." });
+    }
   }
-  function resetLogin(s: any) { setCreds({ name: s.name, loginId: s.loginId || genId(s.name, s.store), tempPass: genPass(), isNew: false }); }
-  function doDelete() {
-    setRows((prev) => prev.filter((r) => r.id !== del.id));
-    toast({ kind: "ok", title: "Removed", body: del.name + " no longer has access." });
+  function resetLogin(s: any) { setCreds({ name: s.name, loginId: s.email || genId(s.name, s.store), tempPass: genPass(), isNew: false }); }
+  async function doDelete() {
+    const target = del; const prevRows = rows;
+    setRows((prev) => prev.filter((r) => r.id !== target.id));
     setDel(null);
+    if (!target.id || typeof target.id === "number") { toast({ kind: "ok", title: "Removed", body: target.name + " no longer has access." }); return; }
+    try {
+      await adminFetch(`/api/admin/staff/${target.id}`, "DELETE");
+      toast({ kind: "ok", title: "Removed", body: target.name + " no longer has access." });
+      ctx.refetch?.();
+    } catch (e: any) {
+      setRows(prevRows);
+      toast({ kind: "err", title: "Couldn't remove", body: e?.message || "Please try again." });
+    }
   }
 
   return (

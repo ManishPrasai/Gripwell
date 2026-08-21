@@ -1,25 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
+import { accessFromToken, can, type PermArea } from './lib/rbac'
 
 /* ─────────────────────────────────────────────────────────────────────────
    ROUTE CLASSIFICATION
    ───────────────────────────────────────────────────────────────────────── */
 
-/** Always public — no token required */
-const PUBLIC_PREFIXES = ['/login', '/api/auth/']
+/**
+ * Always public — no token required.
+ *
+ * `/media/` serves product photos out of KV. They're public catalog imagery
+ * (the storefront serves the identical bytes to anonymous shoppers), and
+ * leaving them gated would bounce every <img> in the console to /login the
+ * moment an access token lapsed.
+ */
+const PUBLIC_PREFIXES = ['/login', '/api/auth/', '/media/']
 
 /**
  * /api/admin/* routes only accessible to SUPER_ADMIN.
  * STORE_MANAGER gets a hard 404 on these — not a 403, not a redirect.
  * (A 403 reveals the route exists; a 404 doesn't.)
  */
-const SUPER_ADMIN_ONLY_API = [
-  '/api/admin/roles',
-  '/api/admin/users',       // global staff management
-  '/api/admin/discounts',
-  '/api/admin/import',
-  '/api/admin/seo',
-  '/api/admin/analytics',   // cross-store aggregates
+/**
+ * Fine-grained gate: API route prefix → the permission area it requires (manage).
+ * A role without that permission gets a hard 404. Legacy tokens (no embedded
+ * perms) fall back to role-derived defaults, preserving the old behaviour.
+ */
+const API_AREA: [string, PermArea][] = [
+  ['/api/admin/roles',     'roles'],
+  ['/api/admin/users',     'staff'],
+  ['/api/admin/staff',     'staff'],
+  ['/api/admin/discounts', 'finance'],
+  ['/api/admin/import',    'inventory'],
+  ['/api/admin/seo',       'website'],
+  ['/api/admin/website',   'website'],
+  ['/api/admin/analytics', 'finance'],
 ]
 
 /**
@@ -100,12 +115,12 @@ export async function middleware(req: NextRequest) {
   const refreshToken = req.cookies.get('admin_refresh_token')?.value
   const payload      = accessToken ? await verifyAdminToken(accessToken) : null
 
-  /* 5 ── /api/admin/* — requires valid admin token ───────────────────── */
+  /* 5 ── /api/admin/* — requires valid admin token + area permission ──── */
   if (isAdminApi) {
     if (!payload) return api404()
 
-    const isSuperAdminRoute = SUPER_ADMIN_ONLY_API.some(r => pathname.startsWith(r))
-    if (isSuperAdminRoute && payload.role !== 'SUPER_ADMIN') return api404()
+    const gated = API_AREA.find(([p]) => pathname.startsWith(p))
+    if (gated && !can(accessFromToken(payload as any), gated[1], 2)) return api404()
 
     return NextResponse.next()
   }

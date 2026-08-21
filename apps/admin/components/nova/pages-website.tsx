@@ -5,8 +5,9 @@
 import * as React from "react";
 import { useState } from "react";
 import { NOVA } from "../../lib/nova/data";
+import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
-import { Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState } from "./ui";
+import { Tooltip, Drawer, ConfirmModal, toast, SearchBox, EmptyState, OverlayPortal } from "./ui";
 
 function seoBadge(score: number) {
   const cls = score >= 80 ? "good" : score >= 65 ? "mid" : "low";
@@ -40,7 +41,7 @@ function PvSection({ type }: { type: string }) {
 }
 
 /* ===================== PAGE BUILDER ===================== */
-function PageBuilder({ page, onClose }: { page: any; onClose: () => void }) {
+function PageBuilder({ ctx, page, onClose }: { ctx?: any; page: any; onClose: () => void }) {
   const D = (ctx as any)?.D || NOVA;
   const [secs, setSecs] = useState<any[]>(() => ((D.pageSections as any)[page.id] || []).map((s: any) => ({ ...s })));
   const [adding, setAdding] = useState(false);
@@ -51,6 +52,7 @@ function PageBuilder({ page, onClose }: { page: any; onClose: () => void }) {
   const add = (type: string) => { setSecs([...secs, { id: "s" + Date.now(), type, visible: true }]); setAdding(false); toast({ kind: "ok", title: (D.sectionTypes as any)[type].name + " added" }); };
 
   return (
+    <OverlayPortal>
     <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="panel" style={{ width: "94vw", maxWidth: 1080, height: "88vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div className="panel-head" style={{ borderBottom: "1px solid var(--border)", padding: "16px 20px" }}>
@@ -116,6 +118,7 @@ function PageBuilder({ page, onClose }: { page: any; onClose: () => void }) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 
@@ -134,7 +137,7 @@ function ScoreCircle({ score }: { score: number }) {
 }
 
 /* ===================== SEO DRAWER ===================== */
-function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClose: () => void; onSave: (score: number) => void }) {
+function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClose: () => void; onSave: (score: number, meta: { metaTitle: string; metaDesc: string }) => void }) {
   const [m, setM] = useState({ metaTitle: item.metaTitle || (item.title + " | Nova Tyres"), metaDesc: item.metaDesc || "", slug: item.slug || item.url || "/", kw: item.kw || "" });
   const titleLen = m.metaTitle.length, descLen = m.metaDesc.length;
   const checks: [string, boolean][] = [
@@ -149,7 +152,7 @@ function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClos
 
   return (
     <Drawer title="SEO settings" sub={item.title} onClose={onClose}
-      foot={<React.Fragment><button className="btn ghost" style={{ flex: 1 }} onClick={onClose}>Cancel</button><button className="btn" style={{ flex: 1 }} onClick={() => { onSave(score); toast({ kind: "ok", title: "SEO saved", body: item.title + " · score " + score }); }}><Icon name="check" />Save SEO</button></React.Fragment>}>
+      foot={<React.Fragment><button className="btn ghost" style={{ flex: 1 }} onClick={onClose}>Cancel</button><button className="btn" style={{ flex: 1 }} onClick={() => onSave(score, { metaTitle: m.metaTitle, metaDesc: m.metaDesc })}><Icon name="check" />Save SEO</button></React.Fragment>}>
 
       <div className="seo-score-ring">
         <ScoreCircle score={score} />
@@ -184,7 +187,7 @@ function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClos
 }
 
 /* ===================== WEBSITE PAGE ===================== */
-export function WebsitePage() {
+export function WebsitePage({ ctx }: { ctx?: any; nav?: any }) {
   const D = (ctx as any)?.D || NOVA;
   const [tab, setTab] = useState("pages");
   const [pages, setPages] = useState<any[]>(D.pages);
@@ -204,14 +207,30 @@ export function WebsitePage() {
     setRows((prev) => prev.map((x) => x.id === p.id ? { ...x, status: nx } : x));
     toast({ kind: "ok", title: nx === "published" ? "Published" : "Moved to drafts", body: p.title });
   }
-  function saveSeo(score: number) { setRows((prev) => prev.map((x) => x.id === seo.id ? { ...x, seo: score } : x)); setSeo(null); }
+  async function saveSeo(score: number, meta: { metaTitle: string; metaDesc: string }) {
+    const target = seo;
+    setRows((prev) => prev.map((x) => x.id === target.id ? { ...x, seo: score, metaTitle: meta.metaTitle, metaDesc: meta.metaDesc } : x));
+    setSeo(null);
+    // Only the Pages tab maps to real PageSEO records (blogs are still mock).
+    if (tab !== "pages" || !target.id || typeof target.id === "number") {
+      toast({ kind: "ok", title: "SEO saved", body: target.title + " · score " + score });
+      return;
+    }
+    try {
+      await adminFetch(`/api/admin/seo/${target.id}`, "PATCH", { metaTitle: meta.metaTitle, metaDesc: meta.metaDesc });
+      toast({ kind: "ok", title: "SEO saved", body: target.title + " is live on the site." });
+      ctx?.refetch?.();
+    } catch (e: any) {
+      toast({ kind: "err", title: "Couldn't save SEO", body: e?.message || "Please try again." });
+    }
+  }
 
   return (
     <div className="page page-enter">
       <div className="pagehead">
         <div className="ph-txt"><h2>Website &amp; Content</h2><p>Pages, blog posts and SEO for your public Nova Tyres site.</p></div>
         <div className="ph-actions">
-          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "New page" : "New blog post", body: "Editor would open here." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
+          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "Pages are fixed routes" : "Blog not enabled yet", body: tab === "pages" ? "Edit any existing page's content and SEO from the list below — new routes are added in code." : "Publishing blog posts needs a content model that isn't set up yet." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
         </div>
       </div>
 
@@ -254,7 +273,7 @@ export function WebsitePage() {
       </div>
 
       {seo && <SeoDrawer item={seo} kind={tab} onClose={() => setSeo(null)} onSave={saveSeo} />}
-      {builder && <PageBuilder page={builder} onClose={() => setBuilder(null)} />}
+      {builder && <PageBuilder ctx={ctx} page={builder} onClose={() => setBuilder(null)} />}
       {del && <ConfirmModal danger title={"Delete \"" + del.title + "\"?"} body="This permanently removes it from your website. This can't be undone." confirmLabel="Delete" onConfirm={() => { setRows((prev) => prev.filter((p) => p.id !== del.id)); toast({ kind: "ok", title: "Deleted", body: del.title }); setDel(null); }} onClose={() => setDel(null)} />}
     </div>
   );

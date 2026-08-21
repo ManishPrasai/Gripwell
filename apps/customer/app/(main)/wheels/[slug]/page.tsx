@@ -1,5 +1,11 @@
 import { notFound } from 'next/navigation'
 import WheelProductDetail from '../../../components/product/WheelProductDetail'
+import { getWheelBySlug, getSimilarWheels } from '../../../lib/product-queries'
+import { STORES } from '../../../../lib/stores'
+
+/* Always render from live DB data (Redis-cached in the query layer) so a page is
+   never served as stale/pre-rendered demo content. */
+export const dynamic = 'force-dynamic'
 
 const DEMO_WHEEL = {
   id: 'demo-w1',
@@ -15,14 +21,16 @@ const DEMO_WHEEL = {
 
 async function getWheel(slug: string) {
   try {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const res  = await fetch(`${base}/api/wheels/${slug}`, { next: { revalidate: 60 } })
-    if (res.ok) {
-      const data = await res.json()
-      return data.wheel ?? null
-    }
+    const wheel = await getWheelBySlug(slug)
+    if (wheel) return wheel
   } catch {}
   return { ...DEMO_WHEEL, slug }
+}
+
+/* Fitment-aware "similar wheels" — real matches by rim diameter / bolt pattern /
+   price. Empty array falls back to the component's built-in demo picks. */
+async function getSimilar(slug: string) {
+  return getSimilarWheels(slug)
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -31,13 +39,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!wheel) return {}
   return {
     title: `${wheel.brand} ${wheel.model} — Nova Tyres`,
-    description: `Buy the ${wheel.brand} ${wheel.model} from Nova Tyres. Expert fitting across 9 Australian locations.`,
+    description: `Buy the ${wheel.brand} ${wheel.model} from Nova Tyres. Expert fitting across ${STORES.length} Australian stores.`,
   }
 }
 
 export default async function WheelProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const wheel = await getWheel(slug)
+  const [wheel, similar] = await Promise.all([getWheel(slug), getSimilar(slug)])
   if (!wheel) notFound()
-  return <WheelProductDetail wheel={wheel} />
+  return <WheelProductDetail wheel={wheel} similar={similar} />
 }
