@@ -69,7 +69,7 @@ const legalLinks = ['Warranty & Returns', 'Privacy & Policy', 'Terms of Service'
 
 /* ── Shared link style ───────────────────────────────────────────────────── */
 const linkStyle: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.52)',
+  color: 'rgba(255,255,255,0.55)',
   fontSize: '14px',
   fontWeight: 400,
   textDecoration: 'none',
@@ -81,7 +81,7 @@ const linkStyle: React.CSSProperties = {
 const capsHeading: React.CSSProperties = {
   color: '#ffffff',
   fontSize: '12px',
-  fontWeight: 600,
+  fontWeight: 700,
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   marginBottom: '16px',
@@ -90,7 +90,7 @@ const capsHeading: React.CSSProperties = {
 const largeHeading: React.CSSProperties = {
   color: '#ffffff',
   fontSize: '19px',
-  fontWeight: 600,
+  fontWeight: 700,
   marginBottom: '16px',
   lineHeight: 1.2,
 }
@@ -98,7 +98,13 @@ const largeHeading: React.CSSProperties = {
 /* ── Component ───────────────────────────────────────────────────────────── */
 export default function Footer() {
   return (
-    <footer style={{ background: '#1C3A2B' }}>
+    <footer
+      style={{
+        background: 'linear-gradient(180deg, var(--nova-green) 0%, #163023 100%)',
+        borderTop: '3px solid var(--nova-coral)',
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
 
       {/* ── Main 4-column grid ── */}
       <div className="max-w-7xl mx-auto px-6 py-14">
@@ -128,7 +134,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {tyreSizes.map(l => (
                 <li key={l.label}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                  <Link href={l.href} style={linkStyle} className="hover:text-(--nova-coral) transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -142,7 +148,7 @@ export default function Footer() {
             <ul className="space-y-2.5 mb-10">
               {quickLinks.map(l => (
                 <li key={l.href}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                  <Link href={l.href} style={linkStyle} className="hover:text-(--nova-coral) transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -153,7 +159,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {topTyreModels.map(l => (
                 <li key={l.label + 'model'}>
-                  <Link href={l.href} style={linkStyle} className="hover:text-white transition-colors">
+                  <Link href={l.href} style={linkStyle} className="hover:text-(--nova-coral) transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -167,7 +173,7 @@ export default function Footer() {
             <ul className="space-y-2.5 mb-10">
               {stores.map(s => (
                 <li key={s}>
-                  <Link href="/locations" style={linkStyle} className="hover:text-white transition-colors">
+                  <Link href="/locations" style={linkStyle} className="hover:text-(--nova-coral) transition-colors">
                     {s}
                   </Link>
                 </li>
@@ -178,7 +184,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {services.map(s => (
                 <li key={s}>
-                  <Link href="/service" style={linkStyle} className="hover:text-white transition-colors">
+                  <Link href="/service" style={linkStyle} className="hover:text-(--nova-coral) transition-colors">
                     {s}
                   </Link>
                 </li>
@@ -190,7 +196,7 @@ export default function Footer() {
           <div>
             <p style={{ ...largeHeading, fontSize: '22px' }}>About Nova Tyres</p>
             <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '14px', lineHeight: 1.75, marginBottom: '32px' }}>
-              <Link href="/" style={{ color: '#E8572A', textDecoration: 'underline' }}>Nova Tyres</Link>
+              <Link href="/" style={{ color: 'var(--nova-coral)', textDecoration: 'underline' }}>Nova Tyres</Link>
               {' '}is an Australian tyre and wheel retailer offering affordable
               products, professional fitting, balancing, alignments, and
               automotive services for passenger, SUV, 4WD, and commercial
@@ -202,10 +208,12 @@ export default function Footer() {
               {payments.map(p => (
                 <div
                   key={p.name}
+                  className="transition-transform hover:-translate-y-0.5"
                   style={{
                     background: '#ffffff',
-                    borderRadius: '6px',
-                    padding: '5px 10px',
+                    border: '1px solid rgba(255,255,255,0.35)',
+                    borderRadius: '999px',
+                    padding: '5px 12px',
                     height: '34px',
                     display: 'flex',
                     alignItems: 'center',
@@ -240,7 +248,7 @@ export default function Footer() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition-opacity hover:opacity-80"
+                className="transition-transform hover:-translate-y-0.5 hover:opacity-90"
               >
                 <Image
                   src={s.src}
@@ -267,7 +275,7 @@ export default function Footer() {
                 key={label}
                 href="#"
                 style={{ color: 'rgba(255,255,255,0.38)', fontSize: '13px', textDecoration: 'none' }}
-                className="hover:text-white transition-colors"
+                className="hover:text-(--nova-coral) transition-colors"
               >
                 {label}
               </Link>
