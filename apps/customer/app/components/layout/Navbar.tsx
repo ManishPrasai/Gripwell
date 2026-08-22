@@ -81,6 +81,16 @@ export default function Navbar() {
           .nv-nav-wide   { display: none; }
           .nv-nav-compact{ display: flex; }
         }
+        /* Below 1060px the wordmark keeps its desktop 21px height — at
+           that height the 1600x123 asset renders ~273px wide, which is
+           wider than a phone screen has left over once the icon cluster
+           sits next to it. Below 480px it switches to scaling by width
+           instead, so it shrinks with the viewport rather than pushing
+           the icons off-screen. */
+        .nv-logo-img { height: 21px; width: auto; }
+        @media (max-width: 480px) {
+          .nv-logo-img { height: auto; width: clamp(108px, 38vw, 180px); }
+        }
       `}</style>
 
       {/* ── Announcement strip ── */}
@@ -118,7 +128,7 @@ export default function Navbar() {
             style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/nova-wordmark-light.png" alt="Nova Tyres"
-              style={{ display: 'block', height: '21px', width: 'auto' }} />
+              className="nv-logo-img" style={{ display: 'block' }} />
           </Link>
 
           {/* ── Wide: full link row ── */}
@@ -183,17 +193,10 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* ── Compact: account + cart + hamburger ── */}
+          {/* ── Compact: cart + hamburger — "My account" / "Sign in" live in
+              the hamburger dropdown below, so a third icon here would just
+              duplicate it while eating width the wordmark needs. ── */}
           <div className="nv-nav-compact" style={{ alignItems: 'center', gap: '8px' }}>
-            <Link href="/account" aria-label="My account"
-              style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '44px', height: '44px', background: 'rgba(250,249,245,0.12)',
-                borderRadius: '8px', color: '#FAF9F5', textDecoration: 'none',
-              }}
-            >
-              <UserIcon size={19} />
-            </Link>
             <Link href="/cart" aria-label="Cart"
               style={{
                 position: 'relative', display: 'inline-flex', alignItems: 'center',

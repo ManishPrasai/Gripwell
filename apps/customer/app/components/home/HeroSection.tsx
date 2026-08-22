@@ -341,7 +341,7 @@ export default function HeroSection() {
                 className="nv-size-help"
                 style={{
                   marginLeft: 'auto', fontFamily: "'DM Sans', sans-serif", fontSize: '13px',
-                  fontWeight: 600, color: '#47554D', background: 'none', border: 0, padding: 0,
+                  fontWeight: 600, color: '#47554D', background: 'none', border: 0, padding: '10px 2px',
                   cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '4px',
                   transition: 'color .2s',
                 }}
@@ -391,17 +391,24 @@ export default function HeroSection() {
         </div>
 
         {/* ── Background selector dots ── */}
-        <div style={{ position: 'absolute', left: '50%', bottom: '20px', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 2 }}>
+        <div style={{ position: 'absolute', left: '50%', bottom: '20px', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', zIndex: 2 }}>
           {HERO_IMAGES.map((_, i) => (
+            // Padding grows the real tap target well past the painted 4px
+            // pill (which lives on the inner span) without changing what's
+            // visually drawn — background stays on the span, not the button.
             <button
               key={i} onClick={() => setHeroSlide(i)} aria-label={`Hero image ${i + 1}`}
               style={{
-                width: i === heroSlide ? '30px' : '9px', height: '4px', borderRadius: '999px',
-                border: 'none', padding: 0, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '14px 10px', border: 'none', background: 'none', cursor: 'pointer',
+              }}
+            >
+              <span style={{
+                display: 'block', width: i === heroSlide ? '30px' : '9px', height: '4px', borderRadius: '999px',
                 background: i === heroSlide ? '#E8572A' : 'rgba(250,249,245,0.42)',
                 transition: 'width .35s cubic-bezier(.22,1,.36,1), background .3s',
-              }}
-            />
+              }} />
+            </button>
           ))}
         </div>
       </section>
