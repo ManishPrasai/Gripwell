@@ -47,11 +47,13 @@ const payments = [
 /* ── Shared styles ───────────────────────────────────────────────────────── */
 
 const colHeading: React.CSSProperties = {
-  fontFamily:   "'DM Sans', sans-serif",
-  fontWeight:   900,
-  fontSize:     '22px',
-  color:        '#FFFFFF',
-  marginBottom: '14px',
+  fontFamily:    "'DM Sans', sans-serif",
+  fontWeight:    900,
+  fontSize:      '20px',
+  textTransform: 'uppercase',
+  letterSpacing: '.02em',
+  color:         '#FFFFFF',
+  marginBottom:  '14px',
 }
 
 const footLink = 'nv-footlink'
@@ -94,7 +96,7 @@ export default function Footer() {
         .nv-legal:hover { color: #FF6817; }
       `}</style>
 
-      <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div
           style={{
             display:             'grid',
@@ -106,13 +108,14 @@ export default function Footer() {
           {/* ── Col 1: brand · tyre sizes · social ── */}
           <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
             <div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/nova-wordmark-light.png"
+              <Image
+                src="/images/nova-emblem.png"
                 alt="Nova Tyres"
-                style={{ display: 'block', width: 'min(100%,176px)', height: 'auto' }}
+                width={152}
+                height={152}
+                style={{ display: 'block', width: '152px', height: '152px' }}
               />
-              <div style={{ fontWeight: 900, fontSize: '25px', letterSpacing: '.5px', color: '#FFFFFF', marginTop: '16px' }}>
+              <div style={{ fontWeight: 900, fontSize: '27px', letterSpacing: '.03em', color: '#FFFFFF', marginTop: '18px' }}>
                 NOVA TYRES
               </div>
               <p style={{ margin: 0, marginTop: '4px', fontSize: '15px', fontWeight: 500, color: '#CFE5D8' }}>
@@ -206,7 +209,7 @@ export default function Footer() {
             <div>
               <div style={colHeading}>About Nova Tyres</div>
               <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#9DB0A5', textWrap: 'pretty' }}>
-                <Link href="/" style={{ color: '#FFFFFF', fontWeight: 700, textDecoration: 'none' }}>Nova Tyres</Link>
+                <Link href="/" style={{ color: '#FFFFFF', fontWeight: 700, textDecoration: 'underline' }}>Nova Tyres</Link>
                 {' '}is an Australian tyre and wheel retailer offering affordable products,
                 professional fitting, balancing, alignments and automotive services for
                 passenger, SUV, 4WD and commercial vehicles across {STORES.length} locations.
@@ -241,7 +244,7 @@ export default function Footer() {
             fontSize: '15px', fontWeight: 700, color: '#FFFFFF',
           }}
         >
-          <span>© {new Date().getFullYear()} Nova Tyres. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Nova Tyres All rights reserved</span>
           <span style={{ display: 'flex', gap: '8px 28px', flexWrap: 'wrap' }}>
             <Link href="/warranty" className="nv-legal">Warranty &amp; Returns</Link>
             <Link href="/privacy" className="nv-legal">Privacy Policy</Link>
