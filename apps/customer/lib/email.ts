@@ -10,6 +10,8 @@
    the order still completes.
    ──────────────────────────────────────────────────────────────────────────── */
 
+import { SITE_URL } from './site'
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 // Invoice / order-confirmation sender. Override with EMAIL_FROM if needed.
 const DEFAULT_FROM = 'Nova Tyres <no-reply@novatyres.com.au>'
@@ -144,7 +146,6 @@ function orderConfirmationHtml(d: OrderEmailData): string {
 
 /* ── Sales / promotional email (from the marketing address) ────────────────── */
 const DEFAULT_MARKETING_FROM = 'Nova Tyres <updates@novatyres.com.au>'
-const SITE_URL = 'https://nova-tyres-customer.manish-prasai31.workers.dev'
 
 export interface SalesEmailData {
   to:            string
