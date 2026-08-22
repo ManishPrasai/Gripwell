@@ -3,15 +3,13 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useCart } from '../../context/CartContext'
+import { STORES } from '../../../lib/stores'
 import './pdp.css'
 import {
-  Breadcrumb, Accordion, FeatureChips, SecureCheckout, WriteReviewBox, FittingFeesCard,
-  ExpertCard, SimilarGrid, WhyBand, ReviewsBand, LocationsBand, ProductSpecs,
-  IcoTruck, IcoMinus, IcoPlus, IcoCart, IcoCheck, IcoZoom, IcoPin, IcoHeadset,
-  IcoDiameter, IcoWidth, IcoPcd, IcoOffset, IcoBore,
-  type SimilarItem, type ReviewCard, type SpecItem,
+  Breadcrumb, TrustBadges, Accordion, SimilarGrid,
+  PaymentsPanel, PickupPanel, ExpertPanel, FittingPanel, ReviewPanel,
+  type SimilarItem,
 } from './PdpParts'
 
 const BRAND_LOGOS: Record<string, string> = {
@@ -22,16 +20,10 @@ const BRAND_LOGOS: Record<string, string> = {
 }
 
 const SIMILAR_WHEELS: SimilarItem[] = [
-  { brand: 'Black Rhino', sub: 'Arsenal · 18×9 · 5×114.3',  price: 265, slug: 'black-rhino-arsenal-18x9', image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         sub: 'Terrain · 16×8 · 6×139.7',  price: 195, slug: 'roh-terrain-16x8',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         sub: 'Warrior · 20×9 · 5×150',    price: 295, slug: 'roh-warrior-20x9',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'King Wheels', sub: 'Force · 17×8 · 6×139.7',    price: 185, slug: 'king-force-17x8',           image: '/images/wheel/Wheel 1.png' },
-]
-
-const DEMO_REVIEWS: ReviewCard[] = [
-  { text: 'Best prices in Melbourne, hands down. Got 4 AWOLs fitted at Springvale — quick, professional, cheaper than anywhere I quoted.', initials: 'SM', name: 'Sarah M.', place: 'Springvale' },
-  { text: 'Great fitment advice over the phone before I ordered. Wheels look mint and the balance is spot on.', initials: 'JT', name: 'James T.', place: 'Sefton' },
-  { text: 'Ordered online, picked up in Bayswater two days later. Easy process and the staff knew their stuff.', initials: 'LN', name: 'Lena N.', place: 'Bayswater' },
+  { brand: 'Black Rhino', sub: 'Arsenal 18×9',  price: 265, slug: 'black-rhino-arsenal-18x9', image: '/images/wheel/Wheel 1.png' },
+  { brand: 'ROH',         sub: 'Terrain 16×8',  price: 195, slug: 'roh-terrain-16x8',         image: '/images/wheel/Wheel 1.png' },
+  { brand: 'ROH',         sub: 'Warrior 20×9',  price: 295, slug: 'roh-warrior-20x9',         image: '/images/wheel/Wheel 1.png' },
+  { brand: 'King Wheels', sub: 'Force 17×8',    price: 185, slug: 'king-force-17x8',          image: '/images/wheel/Wheel 1.png' },
 ]
 
 interface WheelProduct {
@@ -47,7 +39,6 @@ const money = (n: number) => `A$${n.toFixed(2)}`
 export default function WheelProductDetail({ wheel, similar }: { wheel: WheelProduct; similar?: SimilarItem[] }) {
   const [activeImg, setActiveImg] = useState(0)
   const [qty,       setQty]       = useState(1)
-  const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'pickup'>('specs')
   const [added,     setAdded]     = useState(false)
   const { addToCart } = useCart()
 
@@ -57,9 +48,14 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
   const inStock   = wheel.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[wheel.brand]
   const offset    = wheel.offset !== undefined ? `ET${wheel.offset > 0 ? '+' : ''}${wheel.offset}` : '—'
+  const sizeStr   = `${wheel.diameter}″ × ${wheel.width}J`
+  const saving    = compare && compare > price ? Math.round((1 - price / compare) * 100) : null
 
   /* Real fitment-based recommendations from the API; fall back to demo picks. */
   const similarItems = similar && similar.length > 0 ? similar : SIMILAR_WHEELS
+
+  const nearby     = STORES.slice(0, 4).map(s => s.short).join(', ')
+  const extraCount = STORES.length - 4
 
   function handleAdd() {
     addToCart(
@@ -71,162 +67,121 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
     setTimeout(() => setAdded(false), 1800)
   }
 
-  const specs: SpecItem[] = [
-    { label: 'Diameter', value: `${wheel.diameter}"`,                 icon: <IcoDiameter /> },
-    { label: 'Width',    value: `${wheel.width}J`,                    icon: <IcoWidth /> },
-    { label: 'PCD',      value: wheel.pcd,                            icon: <IcoPcd /> },
-    { label: 'Offset',   value: offset,                              icon: <IcoOffset /> },
-    { label: 'Bore',     value: wheel.bore ? `${wheel.bore}mm` : '—', icon: <IcoBore /> },
-  ]
-
   return (
     <main className="nova-pdp" style={{ paddingTop: 64 }}>
       <div className="nv-shell pdp">
         <Breadcrumb trail={[
           { label: 'Home', href: '/' },
           { label: 'Wheels', href: '/wheels' },
-          { label: wheel.brand, href: '/wheels' },
-          { label: wheel.model },
+          { label: wheel.brand, href: '/wheels/results' },
+          { label: `${wheel.model} ${sizeStr}` },
         ]} />
 
-        {/* ── gallery + info ── */}
         <div className="pdp-grid">
+          {/* ── left: photo, trust pills, description, details ── */}
           <div className="pdp-colL">
-            <div className="pdp-gallery">
+            <div className="pdp-hero">
+              <img src={images[activeImg]?.url ?? images[0].url} alt={images[activeImg]?.altText ?? wheel.model} />
+            </div>
+
+            {images.length > 1 && (
               <div className="pdp-thumbs">
                 {images.map((img, i) => (
-                  <button key={i} type="button" className={`pdp-thumb${activeImg === i ? ' active' : ''}`} onClick={() => setActiveImg(i)} aria-label={`View image ${i + 1}`}>
+                  <button key={i} type="button" className={`pdp-thumb${activeImg === i ? ' active' : ''}`}
+                    onClick={() => setActiveImg(i)} aria-label={`View image ${i + 1}`}>
                     <img src={img.url} alt={img.altText ?? wheel.model} />
                   </button>
                 ))}
               </div>
-              <div className="pdp-stage">
-                {wheel.finish && <span className="pdp-stage-badge">{wheel.finish}</span>}
-                <img src={images[activeImg]?.url ?? images[0].url} alt={wheel.model} />
-                <span className="pdp-stage-zoom"><IcoZoom /></span>
-              </div>
-            </div>
+            )}
 
-            <Accordion items={[
-              { q: 'Fitment & compatibility', points: [
-                <><b>Bolt pattern:</b> {wheel.pcd} · <b>Offset:</b> {offset}</>,
-                <>Not sure? Call any store and we&apos;ll confirm fitment for free.</>,
-              ] },
-              { q: 'Shipping & pickup', points: [
-                <>Free pickup at any of our stores.</>,
-                <>Fitting &amp; balancing available in-store — add it at the cart.</>,
-                <>Fast shipping Australia-wide.</>,
-              ] },
-              { q: 'Warranty & returns', points: [
-                <>Full manufacturer warranty against defects.</>,
-                <>Warranty honoured at every Nova Tyres store.</>,
-                <>Questions or claims — just contact your nearest store.</>,
-              ] },
-            ]} />
+            <TrustBadges />
+
+            <section className="pdp-block">
+              <h2>Description</h2>
+              <p>{wheel.description ?? `The ${wheel.brand} ${wheel.model} is a premium alloy wheel built for both performance and style — engineered with high-strength alloy for durability without compromising on weight.`}</p>
+              <ul className="pdp-feats">
+                <li>Hub-centric fit for a vibration-free ride</li>
+                <li>Fully pressure-tested for strength</li>
+                <li>Durable powder-coat finish</li>
+                <li>Fitted and balanced at any Nova store</li>
+              </ul>
+            </section>
+
+            <section className="pdp-block">
+              <h2>Details</h2>
+              <dl className="pdp-rows">
+                <div><dt>Brand</dt><dd>{wheel.brand}</dd></div>
+                <div><dt>Model</dt><dd>{wheel.model}</dd></div>
+                <div><dt>Diameter</dt><dd>{wheel.diameter}″</dd></div>
+                <div><dt>Width</dt><dd>{wheel.width}J</dd></div>
+                <div><dt>PCD / bolt pattern</dt><dd>{wheel.pcd}</dd></div>
+                <div><dt>Offset</dt><dd>{offset}</dd></div>
+                {wheel.bore && <div><dt>Bore</dt><dd>{wheel.bore}mm</dd></div>}
+                <div><dt>Material</dt><dd>{wheel.material}</dd></div>
+                <div><dt>Finish</dt><dd>{wheel.finish ?? '—'}</dd></div>
+                <div><dt>Warranty</dt><dd>Full manufacturer</dd></div>
+              </dl>
+            </section>
           </div>
 
-          <div className="pdp-info">
-            <div className="pdp-brand">
-              {brandLogo ? <img src={brandLogo} alt={wheel.brand} /> : <span className="brand-fallback">{wheel.brand}</span>}
-            </div>
-            <h1 className="pdp-title">{wheel.brand} {wheel.model}</h1>
+          {/* ── right: title, buy box, accordions ── */}
+          <div className="pdp-colR">
+            <span className="pdp-kicker">
+              {wheel.brand}{wheel.finish ? ` · ${wheel.finish}` : ''}
+            </span>
+            <h1 className="pdp-title">{wheel.model}</h1>
             <div className="pdp-rate">
               <span className="stars">★★★★★</span>
-              <span className="rate-num">4.8</span>
-              <a href="#storeReviews">· 126 reviews</a>
+              <span className="count"><b>4.8</b> (126 reviews)</span>
+              <span className="spec">{sizeStr} · {wheel.pcd}</span>
             </div>
 
-            <ProductSpecs items={specs} />
-
-            <div className="pdp-status">
-              {inStock
-                ? <span className="stock-badge"><span className="dot" />In stock</span>
-                : <span className="stock-badge out"><span className="dot" />Out of stock</span>}
-              <span className="pdp-eta"><IcoTruck />Ships in <b>1–2 business days</b></span>
-            </div>
-
-            <div className="pdp-price">
-              <span className="amount">{money(price)}</span>
-              {compare && <span className="was">{money(compare)}</span>}
-            </div>
-
-            <div className="pdp-buy">
-              <div className="pdp-qty">
-                <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease"><IcoMinus /></button>
-                <span>{qty}</span>
-                <button type="button" onClick={() => setQty(q => Math.min(8, q + 1))} disabled={qty >= 8} aria-label="Increase"><IcoPlus /></button>
+            <div className="pdp-buybox">
+              <div className="pdp-price">
+                <span className="amount">{money(price)}</span>
+                {compare && <span className="was">{money(compare)}</span>}
+                {saving && <span className="save">SAVE {saving}%</span>}
               </div>
-              <button className="pdp-add" type="button" onClick={handleAdd} disabled={!inStock}>
-                {added ? <IcoCheck /> : <IcoCart />}
-                {added ? 'Added to cart' : <>Add to cart — {money(price * qty)}</>}
-              </button>
-            </div>
-            <Link className="pdp-buynow" href="/cart">Buy now — checkout in one step</Link>
-            <p className="pdp-maxnote">Sold per wheel · fitting &amp; balancing available in-store</p>
+              <div className="pdp-per">per wheel · GST included</div>
+              <div className={`pdp-stock${inStock ? '' : ' out'}`}>
+                {inStock ? '● In stock — fitted same day, or ready for pickup' : '● Out of stock'}
+              </div>
 
-            <FeatureChips />
-            <SecureCheckout />
-          </div>
-        </div>
-
-        {/* ── tabs + aside ── */}
-        <div className="pdp-details">
-          <div className="pdp-details-main">
-            <div className="pdp-tabs">
-              <button type="button" className={`pdp-tab${activeTab === 'desc' ? ' active' : ''}`} onClick={() => setActiveTab('desc')}>Description</button>
-              <button type="button" className={`pdp-tab${activeTab === 'specs' ? ' active' : ''}`} onClick={() => setActiveTab('specs')}>Product Details</button>
-              <button type="button" className={`pdp-tab${activeTab === 'pickup' ? ' active' : ''}`} onClick={() => setActiveTab('pickup')}>Pickup / Installation</button>
-            </div>
-
-            <div className={`pdp-tabpanel${activeTab === 'desc' ? ' active' : ''}`}>
-              <p>{wheel.description ?? `The ${wheel.brand} ${wheel.model} is a premium alloy wheel built for both performance and style — engineered with high-strength alloy for durability without compromising on weight.`}</p>
-              <p>Every wheel is hub-centric, fully pressure-tested and finished with a durable powder coat. Pair it with your choice of rubber and we&apos;ll fit and balance it at any Nova Tyres workshop.</p>
-            </div>
-
-            <div className={`pdp-tabpanel${activeTab === 'specs' ? ' active' : ''}`}>
-              <table className="spec-table">
-                <thead><tr><th>Specifications</th><th>Details</th></tr></thead>
-                <tbody>
-                  <tr><td>Brand</td><td>{wheel.brand}</td></tr>
-                  <tr><td>Model</td><td>{wheel.model}</td></tr>
-                  <tr><td>Diameter</td><td>{wheel.diameter}&quot;</td></tr>
-                  <tr><td>Width</td><td>{wheel.width}J</td></tr>
-                  <tr><td>PCD / Bolt pattern</td><td>{wheel.pcd}</td></tr>
-                  <tr><td>Offset</td><td>{offset}</td></tr>
-                  {wheel.bore && <tr><td>Bore</td><td>{wheel.bore}mm</td></tr>}
-                  <tr><td>Material</td><td>{wheel.material}</td></tr>
-                  <tr><td>Finish</td><td>{wheel.finish ?? '—'}</td></tr>
-                </tbody>
-              </table>
-
-              <div className="pdp-help">
-                <span className="help-ico"><IcoHeadset /></span>
-                <div>
-                  <h4>Need help choosing the right wheel?</h4>
-                  <p>Not sure this fits your vehicle? Our team can confirm fitment and pick the best option for you.</p>
-                  <Link className="help-btn" href="/service?goto=shops"><IcoPin />Choose location</Link>
+              <div className="pdp-qtyrow">
+                <div className="pdp-qty">
+                  <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))}
+                    disabled={qty <= 1} aria-label="One less wheel">−</button>
+                  <span>{qty}</span>
+                  <button type="button" onClick={() => setQty(q => Math.min(8, q + 1))}
+                    disabled={qty >= 8} aria-label="One more wheel">+</button>
                 </div>
+                <div className="pdp-total">Total <b>{money(price * qty)}</b></div>
+              </div>
+
+              <button className="pdp-add" type="button" onClick={handleAdd} disabled={!inStock}>
+                {added ? 'Added to cart' : 'Add to cart'}
+              </button>
+
+              <div className="pdp-fitnote">
+                <b>Fitted at your local store</b> — usually same day, under an hour. In stock at{' '}
+                <span className="stores">{nearby}</span>
+                {extraCount > 0 ? ` +${extraCount} more` : ''} ·{' '}
+                <a href="/#locations">All stores →</a>
               </div>
             </div>
 
-            <div className={`pdp-tabpanel${activeTab === 'pickup' ? ' active' : ''}`}>
-              <p><b>Free in-store pickup</b> from any of our workshops — we&apos;ll notify you the moment your order is ready to collect.</p>
-              <p><b>Professional fitting</b> &amp; balancing available at checkout, done while you wait. Choose your store and vehicle type at the cart.</p>
-              <p>Australia-wide shipping is dispatched within 1–2 business days.</p>
-            </div>
-          </div>
-
-          <div className="pdp-details-aside">
-            <WriteReviewBox />
-            <FittingFeesCard />
-            <ExpertCard kind="wheel" />
+            <Accordion initial={1} items={[
+              { title: 'Payment methods accepted', body: <PaymentsPanel /> },
+              { title: 'Pickup & Installation',    body: <PickupPanel /> },
+              { title: 'Talk to a wheel expert',   body: <ExpertPanel kind="wheel" /> },
+              { title: 'Fitting at our stores',    body: <FittingPanel /> },
+              { title: 'Write a review',           body: <ReviewPanel /> },
+            ]} />
           </div>
         </div>
 
-        <SimilarGrid title="Similar wheels you may like" basePath="wheels" items={similarItems} />
-        <WhyBand />
-        <ReviewsBand avg={4.8} count="1,240+" reviews={DEMO_REVIEWS} />
-        <LocationsBand kind="wheels" />
+        <SimilarGrid title="Similar wheels" basePath="wheels" items={similarItems} />
       </div>
     </main>
   )
