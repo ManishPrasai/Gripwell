@@ -324,7 +324,9 @@ export default function WheelGrid({ initialBrand, initialDiameter, initialWidth,
             </span>
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* flex-wrap keeps the two 140px-min selects from crowding off
+              the edge on the narrowest phone widths (matches TyreGrid). */}
+          <div className="flex flex-wrap items-center gap-3">
             <div style={{ position: 'relative' }}>
               <select value={selectedBrand} onChange={e => setSelectedBrand(e.target.value)} style={selectStyle}>
                 {brands.map(b => <option key={b} value={b}>{b}</option>)}

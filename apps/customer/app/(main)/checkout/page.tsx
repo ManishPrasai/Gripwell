@@ -511,7 +511,10 @@ export default function CheckoutPage() {
                     <label style={lbl}>Suburb / City</label>
                     <input style={field} type="text" placeholder="Melbourne" value={billing.suburb} onChange={e => setBilling(p => ({ ...p, suburb: e.target.value }))} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  {/* auto-fit lets Country (the longest option text) wrap to
+                      its own row on narrow phones instead of every column
+                      being squeezed to ~70px and clipping its text. */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px' }}>
                     <div>
                       <label style={lbl}>State</label>
                       <div style={{ position: 'relative' }}>
@@ -645,8 +648,11 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
-        {/* ════ RIGHT: Sidebar ════ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '100px' }}>
+        {/* ════ RIGHT: Sidebar ════ — sticky only once it's an actual side
+            column at lg:; on a stacked mobile layout it's the last thing in
+            document flow, so sticking it would pin the order summary to the
+            top of the screen after the visitor scrolls past it. */}
+        <div className="lg:sticky lg:top-25" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
           {/* Order summary */}
           <Card>

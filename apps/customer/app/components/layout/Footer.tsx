@@ -122,7 +122,7 @@ export default function Footer() {
 
             <div>
               <div style={colHeading}>Tyre Sizes</div>
-              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
                 {sizeLinks.map(l => (
                   <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
                 ))}
@@ -163,7 +163,7 @@ export default function Footer() {
           <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
             <div>
               <div style={colHeading}>Quick Links</div>
-              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
                 {quickLinks.map(l => (
                   <Link key={l.href} href={l.href} className={footLink}>{l.label}</Link>
                 ))}
@@ -171,7 +171,7 @@ export default function Footer() {
             </div>
             <div>
               <div style={colHeading}>Top Tyre Models</div>
-              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
                 {modelLinks.map(l => (
                   <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
                 ))}
@@ -183,7 +183,7 @@ export default function Footer() {
           <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
             <div>
               <div style={colHeading}>Our Stores</div>
-              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
                 {STORES.map(s => (
                   <Link key={s.id} href="/#locations" className={footLink}>
                     {s.short} – {s.state}
@@ -193,7 +193,7 @@ export default function Footer() {
             </div>
             <div>
               <div style={colHeading}>Service</div>
-              <div style={{ display: 'grid', gap: '10px', justifyItems: 'start' }}>
+              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
                 {serviceLinks.map(l => (
                   <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
                 ))}

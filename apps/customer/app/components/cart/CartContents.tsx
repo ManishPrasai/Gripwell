@@ -154,7 +154,11 @@ export default function CartContents() {
     <main style={{ fontFamily: FONT, background: '#fff' }}>
       <style>{`
         .ct-layout { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
-        .ct-main   { flex: 1.9; min-width: min(400px,100%); display: grid; gap: 16px; }
+        /* grid-template-columns: minmax(0,1fr) — without it a grid item's
+           implicit min-width is its min-content, which lets a cart row's
+           unbreakable content (icon + text + remove button) force this
+           column wider than its own container on the narrowest phones. */
+        .ct-main   { flex: 1.9; min-width: min(400px,100%); display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; }
         .ct-aside  { flex: 1; min-width: min(320px,100%); }
         .ct-methods{ display: grid; grid-template-columns: repeat(auto-fit,minmax(270px,1fr)); gap: 12px; }
         .ct-veh    { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 10px; }
