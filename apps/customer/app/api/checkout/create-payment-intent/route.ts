@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { computeDiscount } from '../../../../lib/discount'
 import { MAX_TYRES_PER_ORDER } from '../../../../lib/order-rules'
 import { fittingRate, computeTotalsCents, isVehicleType, type VehicleType } from '../../../../lib/fitting'
+import { resolveCartCustomerId, attachGuestCookie } from '../../../lib/guest-cart'
 
 // ── Stripe server client (lazy) ───────────────────────────────────────────────
 // Initialised on first request, not at module load, so the build phase never
@@ -19,34 +20,14 @@ function getStripe(): Stripe {
   return _stripe
 }
 
-// ── Dev user helper (same pattern as /api/cart) ───────────────────────────────
-let _devUserId: string | null = null
-
-async function devUserId(): Promise<string> {
-  if (_devUserId) return _devUserId
-  const customer = await prisma.customer.upsert({
-    where:  { email: 'dev@local.nova' },
-    update: {},
-    create: {
-      firstName:    'Dev',
-      lastName:     'User',
-      email:        'dev@local.nova',
-      passwordHash: 'dev-bypass-no-auth',
-    },
-    select: { id: true },
-  })
-  _devUserId = customer.id
-  return _devUserId
-}
-
 // ── POST /api/checkout/create-payment-intent ──────────────────────────────────
-// 1. Load CartItems from DB for dev user.
+// 1. Load CartItems from DB for this browser's guest cart.
 // 2. Look up authoritative prices from Tyre / Wheel tables (never trust client).
 // 3. Add fitting fee, convert to cents, create Stripe PaymentIntent.
 // 4. Return { clientSecret } to the browser.
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const userId = await devUserId()
+    const { customerId: userId, guestId, isNew } = await resolveCartCustomerId(req)
     const body = await req.json().catch(() => ({} as any))
     const discountCode = String(body?.discountCode || '').trim()
 
@@ -163,12 +144,12 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json({
+    return attachGuestCookie(NextResponse.json({
       clientSecret: intent.client_secret,
       discountApplied: discountCents > 0,
       discountAmount: discountCents / 100,
       code: appliedCode,
-    })
+    }), guestId, isNew)
   } catch (err) {
     console.error('[create-payment-intent]', err)
     return NextResponse.json({ error: 'Failed to create payment intent' }, { status: 500 })

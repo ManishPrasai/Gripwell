@@ -1,40 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@nova/database'
-
-// ── Dev user ─────────────────────────────────────────────────────────────────
-// No auth in dev. We upsert a placeholder Customer once per process so all
-// CartItem FK constraints are satisfied without touching real auth.
-let _devUserId: string | null = null
-
-async function devUserId(): Promise<string> {
-  if (_devUserId) return _devUserId
-
-  const customer = await prisma.customer.upsert({
-    where: { email: 'dev@local.nova' },
-    update: {},
-    create: {
-      firstName: 'Dev',
-      lastName:  'User',
-      email:     'dev@local.nova',
-      passwordHash: 'dev-bypass-no-auth',
-    },
-    select: { id: true },
-  })
-
-  _devUserId = customer.id
-  return _devUserId
-}
+import { resolveCartCustomerId, attachGuestCookie } from '../../lib/guest-cart'
 
 // ── GET /api/cart ─────────────────────────────────────────────────────────────
-// Returns every CartItem row belonging to the dev user.
-export async function GET() {
+// Returns every CartItem row belonging to this browser's guest cart.
+export async function GET(req: NextRequest) {
   try {
-    const userId = await devUserId()
+    const { customerId, guestId, isNew } = await resolveCartCustomerId(req)
     const items = await prisma.cartItem.findMany({
-      where:   { customerId: userId },
+      where:   { customerId },
       orderBy: { createdAt: 'asc' },
     })
-    return NextResponse.json({ items })
+    return attachGuestCookie(NextResponse.json({ items }), guestId, isNew)
   } catch (err) {
     console.error('[cart GET]', err)
     return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 })
@@ -46,7 +23,7 @@ export async function GET() {
 // Body: { productId: string, productType: 'tyre'|'wheel', quantity?: number }
 export async function POST(req: NextRequest) {
   try {
-    const userId = await devUserId()
+    const { customerId, guestId, isNew } = await resolveCartCustomerId(req)
     const { productId, productType, quantity = 1 } = await req.json()
 
     if (!productId || !productType) {
@@ -55,13 +32,13 @@ export async function POST(req: NextRequest) {
 
     const item = await prisma.cartItem.upsert({
       where: {
-        customerId_productType_productId: { customerId: userId, productType, productId },
+        customerId_productType_productId: { customerId, productType, productId },
       },
       update: { quantity },   // set exact quantity, never blindly increment
-      create: { customerId: userId, productType, productId, quantity },
+      create: { customerId, productType, productId, quantity },
     })
 
-    return NextResponse.json({ item })
+    return attachGuestCookie(NextResponse.json({ item }), guestId, isNew)
   } catch (err) {
     console.error('[cart POST]', err)
     return NextResponse.json({ error: 'Failed to add item' }, { status: 500 })
@@ -73,7 +50,7 @@ export async function POST(req: NextRequest) {
 // Body: { productId: string, productType: string, quantity: number }
 export async function PUT(req: NextRequest) {
   try {
-    const userId = await devUserId()
+    const { customerId, guestId, isNew } = await resolveCartCustomerId(req)
     const { productId, productType, quantity } = await req.json()
 
     if (!productId || !productType || quantity == null) {
@@ -82,20 +59,20 @@ export async function PUT(req: NextRequest) {
 
     if (quantity <= 0) {
       await prisma.cartItem.deleteMany({
-        where: { customerId: userId, productType, productId },
+        where: { customerId, productType, productId },
       })
-      return NextResponse.json({ deleted: true })
+      return attachGuestCookie(NextResponse.json({ deleted: true }), guestId, isNew)
     }
 
     const item = await prisma.cartItem.upsert({
       where: {
-        customerId_productType_productId: { customerId: userId, productType, productId },
+        customerId_productType_productId: { customerId, productType, productId },
       },
       update: { quantity },
-      create: { customerId: userId, productType, productId, quantity },
+      create: { customerId, productType, productId, quantity },
     })
 
-    return NextResponse.json({ item })
+    return attachGuestCookie(NextResponse.json({ item }), guestId, isNew)
   } catch (err) {
     console.error('[cart PUT]', err)
     return NextResponse.json({ error: 'Failed to update item' }, { status: 500 })
@@ -104,22 +81,22 @@ export async function PUT(req: NextRequest) {
 
 // ── DELETE /api/cart ──────────────────────────────────────────────────────────
 // With body { productId, productType }: removes that single row.
-// With empty body:                      clears the entire dev-user cart.
+// With empty body:                      clears this browser's entire guest cart.
 export async function DELETE(req: NextRequest) {
   try {
-    const userId = await devUserId()
+    const { customerId, guestId, isNew } = await resolveCartCustomerId(req)
     const body = await req.json().catch(() => ({}))
     const { productId, productType } = body as { productId?: string; productType?: string }
 
     if (productId && productType) {
       await prisma.cartItem.deleteMany({
-        where: { customerId: userId, productType, productId },
+        where: { customerId, productType, productId },
       })
     } else {
-      await prisma.cartItem.deleteMany({ where: { customerId: userId } })
+      await prisma.cartItem.deleteMany({ where: { customerId } })
     }
 
-    return NextResponse.json({ ok: true })
+    return attachGuestCookie(NextResponse.json({ ok: true }), guestId, isNew)
   } catch (err) {
     console.error('[cart DELETE]', err)
     return NextResponse.json({ error: 'Failed to delete item(s)' }, { status: 500 })
