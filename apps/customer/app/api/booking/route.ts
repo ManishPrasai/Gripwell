@@ -33,6 +33,18 @@ export async function POST(req: NextRequest) {
       const svc = await tx.service.findUnique({ where: { id: serviceId }, select: { id: true } })
       if (!svc) throw new Error('BAD_SERVICE')
 
+      // Atomic claim: the WHERE clause is re-evaluated against committed data
+      // for every concurrent request, so only as many requests as there is
+      // remaining capacity can ever succeed here — this is what actually
+      // prevents two simultaneous bookings from both landing on a full slot
+      // (the earlier findUnique above is just a fast-path availability check,
+      // not a lock).
+      const claim = await tx.appointmentSlot.updateMany({
+        where: { id: slotId, isAvailable: true, currentBookings: { lt: slot.maxBookings } },
+        data:  { currentBookings: { increment: 1 } },
+      })
+      if (claim.count === 0) throw new Error('SLOT_UNAVAILABLE')
+
       const session = await tx.guestSession.create({
         data: {
           sessionId: crypto.randomUUID(),
@@ -54,11 +66,16 @@ export async function POST(req: NextRequest) {
         select: { id: true },
       })
 
-      const nextCount = slot.currentBookings + 1
-      await tx.appointmentSlot.update({
-        where: { id: slot.id },
-        data:  { currentBookings: nextCount, isAvailable: nextCount < slot.maxBookings },
+      // Re-read the count this transaction just committed (safe: the row lock
+      // from the update above is still held, so no concurrent claim can have
+      // changed it) to flip isAvailable once the slot is actually full.
+      const fresh = await tx.appointmentSlot.findUnique({
+        where:  { id: slotId },
+        select: { currentBookings: true, maxBookings: true },
       })
+      if (fresh && fresh.currentBookings >= fresh.maxBookings) {
+        await tx.appointmentSlot.update({ where: { id: slotId }, data: { isAvailable: false } })
+      }
 
       return appt
     })
