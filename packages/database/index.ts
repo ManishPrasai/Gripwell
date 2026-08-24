@@ -51,9 +51,9 @@ function createPrismaClient(connectionString?: string) {
 // as soon as a warm isolate serves a second request. So on Workers we build one
 // client per request (GC'd when the request's ctx ends); on Node (next build,
 // seed, dev) we keep a single module-level singleton.
-const requestClients = new WeakMap<object, PrismaClient>()
+const requestClients = new WeakMap<object, PrismaClientInstance>()
 
-function getPrisma(): PrismaClient {
+function getPrisma(): PrismaClientInstance {
   try {
     const { env, ctx } = getCloudflareContext()
     if (ctx) {

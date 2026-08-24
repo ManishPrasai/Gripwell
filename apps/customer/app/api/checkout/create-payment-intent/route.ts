@@ -15,7 +15,7 @@ function getStripe(): Stripe {
   if (!key) throw new Error('STRIPE_SECRET_KEY environment variable is not set')
   // Cloudflare Workers: the SDK must use the fetch HTTP client, not Node http
   // (which hangs on workerd).
-  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia', httpClient: Stripe.createFetchHttpClient() })
+  _stripe = new Stripe(key, { apiVersion: '2026-06-24.dahlia', httpClient: Stripe.createFetchHttpClient() })
   return _stripe
 }
 

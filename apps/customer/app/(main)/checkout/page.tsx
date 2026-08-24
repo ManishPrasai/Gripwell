@@ -203,7 +203,7 @@ function StripePaymentForm({
       )}
       <PaymentElement
         onReady={() => setElementReady(true)}
-        onLoaderError={(e) => setPayError(`Stripe failed to load: ${e.error?.message ?? 'unknown error'}`)}
+        onLoadError={(e) => setPayError(`Stripe failed to load: ${e.error?.message ?? 'unknown error'}`)}
         options={{
           fields: { billingDetails: 'never' },
         }}
