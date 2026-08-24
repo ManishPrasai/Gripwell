@@ -19,28 +19,6 @@ function getWebhookSecret(): string {
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set')
   return secret
 }
-const FITTING_FEE    = 25.00
-
-// ── Dev user (same pattern as other routes) ───────────────────────────────────
-let _devUserId: string | null = null
-
-async function devUserId(): Promise<string> {
-  if (_devUserId) return _devUserId
-  const c = await prisma.customer.upsert({
-    where:  { email: 'dev@local.nova' },
-    update: {},
-    create: {
-      firstName:    'Dev',
-      lastName:     'User',
-      email:        'dev@local.nova',
-      passwordHash: 'dev-bypass-no-auth',
-    },
-    select: { id: true },
-  })
-  _devUserId = c.id
-  return _devUserId
-}
-
 // ── Dev store ─────────────────────────────────────────────────────────────────
 let _devStoreId: string | null = null
 
@@ -175,7 +153,17 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     return
   }
 
-  const [userId, storeId] = await Promise.all([devUserId(), devStoreId()])
+  // The customer who owned the cart at PaymentIntent creation time — stamped
+  // into metadata by create-payment-intent. Webhooks are server-to-server
+  // (no cookies), so this metadata is the only way to know whose cart this
+  // payment belongs to.
+  const userId = paymentIntent.metadata?.customerId
+  if (!userId) {
+    console.warn(`[webhook/stripe] PI ${piId} succeeded but has no metadata.customerId — requires manual review.`)
+    return
+  }
+
+  const storeId = await devStoreId()
 
   // ── Fetch active cart rows ─────────────────────────────────────────────────
   const cartItems = await prisma.cartItem.findMany({
@@ -226,6 +214,15 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     return sum + Number(row?.price ?? 0) * item.quantity
   }, 0)
 
+  // Recover discount + fitting from the PaymentIntent metadata (set by
+  // create-payment-intent when the charge was created) so the fallback order
+  // reflects what was actually charged, not a flat guessed fitting fee.
+  const meta          = paymentIntent.metadata
+  const discountCents = Number(meta.discountCents || 0)
+  const discountId    = discountCents > 0 ? (meta.discountId || '') : ''
+  const discountAmount = discountCents / 100
+  const fitting        = meta.fittingCents != null ? Number(meta.fittingCents) / 100 : 0
+
   // Use the Stripe-confirmed amount as the canonical total so the Order
   // always reflects what was actually charged, even if there's a price
   // discrepancy between the DB and the PaymentIntent (e.g. price updated mid-session).
@@ -240,7 +237,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         status:                'CONFIRMED',
         paymentStatus:         'PAID',
         subtotal,
-        discountAmount:        0,
+        discountAmount,
         total,
         paymentMethod:         'stripe',
         stripePaymentIntentId: piId,
@@ -260,18 +257,21 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
                 totalPrice: unitCost * item.quantity,
               }
             }),
-            // ── Fitting & balancing fee ───────────────────────────────────
-            {
-              itemType:   'fitting',
-              quantity:   1,
-              unitPrice:  FITTING_FEE,
-              totalPrice: FITTING_FEE,
-            },
+            // ── Fitting & balancing fee (only when fitting was chosen) ─────
+            ...(fitting > 0
+              ? [{ itemType: 'fitting', quantity: 1, unitPrice: fitting, totalPrice: fitting }]
+              : []),
           ],
         },
       },
       select: { id: true },
     })
+
+    // Record discount usage (increment counter + usage row) atomically.
+    if (discountId && discountAmount > 0) {
+      await tx.discount.update({ where: { id: discountId }, data: { currentUses: { increment: 1 } } })
+      await tx.discountUsage.create({ data: { discountId, customerId: userId, orderId: newOrder.id } })
+    }
 
     // Clear cart now that the order is safely persisted
     await tx.cartItem.deleteMany({ where: { customerId: userId } })
