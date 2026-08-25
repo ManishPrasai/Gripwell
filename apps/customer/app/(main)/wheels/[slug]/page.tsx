@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import WheelProductDetail from '../../../components/product/WheelProductDetail'
 import { getWheelBySlug, getSimilarWheels } from '../../../lib/product-queries'
 import { STORES } from '../../../../lib/stores'
+import { buildProductSchema } from '../../../../lib/schema'
 
 /* Always render from live DB data (Redis-cached in the query layer) so a page is
    never served as stale/pre-rendered demo content. */
@@ -47,5 +48,27 @@ export default async function WheelProductPage({ params }: { params: Promise<{ s
   const { slug } = await params
   const [wheel, similar] = await Promise.all([getWheel(slug), getSimilar(slug)])
   if (!wheel) notFound()
-  return <WheelProductDetail wheel={wheel} similar={similar} />
+
+  const w = wheel as {
+    id: string; slug: string; brand: string; model: string; description?: string
+    price: string; stockQuantity: number
+    images: { url: string }[]
+  }
+  const schema = buildProductSchema({
+    path: `/wheels/${w.slug}`,
+    brand: w.brand,
+    name: `${w.brand} ${w.model}`,
+    description: w.description,
+    images: w.images.map(img => img.url),
+    sku: w.id,
+    price: parseFloat(w.price),
+    inStock: w.stockQuantity > 0,
+  })
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <WheelProductDetail wheel={wheel} similar={similar} />
+    </>
+  )
 }

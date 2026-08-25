@@ -2,34 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { sendOrderConfirmation } from '../../../../lib/email'
+import { resolveCartCustomerId, resolveOrderCustomerId, attachGuestCookie } from '../../../lib/guest-cart'
 
+// STRIPE_SECRET_KEY is required here — this route decides whether an order
+// gets marked PAID, so unlike other best-effort Stripe lookups elsewhere, a
+// missing key must hard-fail rather than silently skip verification.
 let _stripe: Stripe | null = null
-function getStripe(): Stripe | null {
+function getStripe(): Stripe {
   if (_stripe) return _stripe
   const key = process.env.STRIPE_SECRET_KEY
-  if (!key) return null
-  _stripe = new Stripe(key, { apiVersion: '2026-05-27.dahlia', httpClient: Stripe.createFetchHttpClient() })
+  if (!key) throw new Error('STRIPE_SECRET_KEY environment variable is not set')
+  _stripe = new Stripe(key, { apiVersion: '2026-06-24.dahlia', httpClient: Stripe.createFetchHttpClient() })
   return _stripe
-}
-
-// ── Dev user (same pattern as /api/cart) ─────────────────────────────────────
-let _devUserId: string | null = null
-
-async function devUserId(): Promise<string> {
-  if (_devUserId) return _devUserId
-  const c = await prisma.customer.upsert({
-    where:  { email: 'dev@local.nova' },
-    update: {},
-    create: {
-      firstName:    'Dev',
-      lastName:     'User',
-      email:        'dev@local.nova',
-      passwordHash: 'dev-bypass-no-auth',
-    },
-    select: { id: true },
-  })
-  _devUserId = c.id
-  return _devUserId
 }
 
 // ── Dev store (Nova Tyres Sefton — the default fitting station) ───────────────
@@ -63,11 +47,14 @@ async function devStoreId(): Promise<string> {
 // Called immediately after a successful Stripe payment confirmation.
 //
 // Flow:
-//  1. Idempotency guard — if paymentIntentId already has an Order, return it.
-//  2. Fetch CartItems for dev user.
-//  3. Resolve slug → UUID + price from Tyre/Wheel tables.
-//  4. In a single DB transaction: create Order + OrderItems, then delete CartItems.
-//  5. Return { orderId, orderNumber, total } to the frontend.
+//  1. Verify the PaymentIntent actually succeeded — the sole source of truth
+//     for whether an order gets created and marked PAID.
+//  2. Idempotency guard — if paymentIntentId already has an Order, return it.
+//  3. Fetch CartItems for this browser's guest cart.
+//  4. Resolve slug → UUID + price from Tyre/Wheel tables.
+//  5. Verify the charged amount matches the current cart's computed total.
+//  6. In a single DB transaction: create Order + OrderItems, then delete CartItems.
+//  7. Return { orderId, orderNumber, total } to the frontend.
 export async function POST(req: NextRequest) {
   try {
     const body             = await req.json().catch(() => ({}))
@@ -77,24 +64,47 @@ export async function POST(req: NextRequest) {
     const contactName      = (b.name ?? '').trim() || 'Customer'
     const storeName        = (b.storeName ?? '').trim()
 
-    const [userId, storeId] = await Promise.all([devUserId(), devStoreId()])
+    const [{ customerId: userId, guestId, isNew }, storeId] = await Promise.all([
+      resolveCartCustomerId(req),
+      devStoreId(),
+    ])
 
-    // ── 1. Idempotency: don't create duplicate orders for the same payment ────
-    if (paymentIntentId) {
-      const existing = await prisma.order.findFirst({
-        where:  { stripePaymentIntentId: paymentIntentId },
-        select: { id: true, total: true },
-      })
-      if (existing) {
-        return NextResponse.json({
-          orderId:     existing.id,
-          orderNumber: `NVT-${existing.id.slice(0, 8).toUpperCase()}`,
-          total:       Number(existing.total),
-        })
-      }
+    // ── 1. A real, successful PaymentIntent is required — no payment, no order.
+    if (!paymentIntentId) {
+      return NextResponse.json({ error: 'Missing paymentIntentId.' }, { status: 400 })
     }
 
-    // ── 2. Fetch active cart rows ─────────────────────────────────────────────
+    // ── 2. Idempotency: don't create duplicate orders for the same payment ────
+    const existing = await prisma.order.findFirst({
+      where:  { stripePaymentIntentId: paymentIntentId },
+      select: { id: true, total: true },
+    })
+    if (existing) {
+      return NextResponse.json({
+        orderId:     existing.id,
+        orderNumber: `NVT-${existing.id.slice(0, 8).toUpperCase()}`,
+        total:       Number(existing.total),
+      })
+    }
+
+    // ── 3. Verify the PaymentIntent with Stripe — hard fail on any mismatch.
+    //  This is the only check that proves money actually changed hands; every
+    //  other field below is derived from data this route already trusted, so a
+    //  forged/absent/unpaid/wrong-cart paymentIntentId must be rejected here.
+    let intent: Stripe.PaymentIntent
+    try {
+      intent = await getStripe().paymentIntents.retrieve(paymentIntentId)
+    } catch {
+      return NextResponse.json({ error: 'Payment could not be verified.' }, { status: 402 })
+    }
+    if (intent.status !== 'succeeded') {
+      return NextResponse.json({ error: 'Payment has not completed.' }, { status: 402 })
+    }
+    if (intent.metadata?.customerId !== userId) {
+      return NextResponse.json({ error: 'Payment does not belong to this cart.' }, { status: 403 })
+    }
+
+    // ── 4. Fetch active cart rows ─────────────────────────────────────────────
     const cartItems = await prisma.cartItem.findMany({
       where: { customerId: userId },
     })
@@ -107,7 +117,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── 3. Resolve slug → { id, price } from product tables ──────────────────
+    // ── 5. Resolve slug → { id, price } from product tables ──────────────────
     // CartItem.productId stores the slug; OrderItem.tyreId/wheelId need the UUID.
     const tyreSlugs  = cartItems.filter(i => i.productType === 'tyre').map(i => i.productId)
     const wheelSlugs = cartItems.filter(i => i.productType === 'wheel').map(i => i.productId)
@@ -130,7 +140,7 @@ export async function POST(req: NextRequest) {
     const tyreMap  = new Map<string, ProductRow>(tyreRows.map(t  => [t.slug, t]))
     const wheelMap = new Map<string, ProductRow>(wheelRows.map(w => [w.slug, w]))
 
-    // ── 4. Build financials ───────────────────────────────────────────────────
+    // ── 6. Build financials ───────────────────────────────────────────────────
     const subtotal = cartItems.reduce((sum, item) => {
       const row = item.productType === 'tyre'
         ? tyreMap.get(item.productId)
@@ -138,35 +148,40 @@ export async function POST(req: NextRequest) {
       return sum + Number(row?.price ?? 0) * item.quantity
     }, 0)
 
-    // ── 4b. Recover discount + GST + fitting from the PaymentIntent metadata ──
-    //  The PaymentIntent is the source of truth for what was actually charged.
+    // Recover discount + GST + fitting from the already-verified PaymentIntent's
+    // metadata (set by create-payment-intent when the charge was created).
+    const m = intent.metadata
     let discountAmount = 0
     let discountId = ''
-    let gst = Math.round(subtotal * 0.10 * 100) / 100   // fallback if metadata missing
-    let fitting = 0
-    let fulfilMethod: 'fit' | 'pickup' = 'fit'
-    let fitCount = 0
-    if (paymentIntentId) {
-      try {
-        const intent = await getStripe()?.paymentIntents.retrieve(paymentIntentId)
-        const m = intent?.metadata ?? {}
-        const dcents = Number(m.discountCents || 0)
-        if (dcents > 0) { discountAmount = dcents / 100; discountId = m.discountId || '' }
-        if (m.gstCents     != null) gst     = Number(m.gstCents) / 100
-        if (m.fittingCents != null) fitting = Number(m.fittingCents) / 100
-        if (m.fulfilMethod === 'pickup') fulfilMethod = 'pickup'
-        if (m.fitCount != null) fitCount = Number(m.fitCount)
-      } catch { /* fall back to computed GST, no discount/fitting */ }
-    }
+    const dcents = Number(m.discountCents || 0)
+    if (dcents > 0) { discountAmount = dcents / 100; discountId = m.discountId || '' }
+    const gst      = m.gstCents     != null ? Number(m.gstCents)     / 100 : Math.round(subtotal * 0.10 * 100) / 100
+    const fitting  = m.fittingCents != null ? Number(m.fittingCents) / 100 : 0
+    const fulfilMethod: 'fit' | 'pickup' = m.fulfilMethod === 'pickup' ? 'pickup' : 'fit'
+    const fitCount = m.fitCount != null ? Number(m.fitCount) : 0
 
     const total = Math.max(0, subtotal + gst + fitting - discountAmount)
 
-    // ── 5. Create Order + clear cart atomically ───────────────────────────────
+    // ── 6b. The charged amount must match what this cart computes right now —
+    //  otherwise the cart was mutated after payment (e.g. pay for one cheap
+    //  item, then swap in an expensive cart before calling this route). A
+    //  1-cent tolerance absorbs float rounding noise, not real tampering.
+    if (Math.abs(Math.round(total * 100) - intent.amount) > 1) {
+      return NextResponse.json({ error: 'Cart no longer matches the amount paid.' }, { status: 409 })
+    }
+
+    // ── 6c. Attribute the order to a real, identifiable customer when an email
+    //  was given at checkout (find-or-create by email — matches an existing
+    //  registered account if there is one); otherwise it stays on the
+    //  anonymous guest-cart placeholder.
+    const orderCustomerId = await resolveOrderCustomerId(contactEmail, contactName, userId)
+
+    // ── 7. Create Order + clear cart atomically ───────────────────────────────
     const order = await prisma.$transaction(async tx => {
 
       const newOrder = await tx.order.create({
         data: {
-          customerId:            userId,
+          customerId:            orderCustomerId,
           storeId,
           // Enums passed as string literals — Prisma accepts the string value
           status:                'CONFIRMED' as const,
@@ -205,7 +220,7 @@ export async function POST(req: NextRequest) {
       // Record discount usage (increment counter + usage row) atomically.
       if (discountId && discountAmount > 0) {
         await tx.discount.update({ where: { id: discountId }, data: { currentUses: { increment: 1 } } })
-        await tx.discountUsage.create({ data: { discountId, customerId: userId, orderId: newOrder.id } })
+        await tx.discountUsage.create({ data: { discountId, customerId: orderCustomerId, orderId: newOrder.id } })
       }
 
       // Clear cart now that the order is safely persisted in the same transaction
@@ -218,7 +233,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[checkout/success] Order ${orderNumber} created — A$${total.toFixed(2)}`)
 
-    // ── 6. Order confirmation + invoice email (best-effort; never blocks) ─────
+    // ── 8. Order confirmation + invoice email (best-effort; never blocks) ─────
     if (contactEmail) {
       const emailItems = cartItems.map(item => {
         const isTyre = item.productType === 'tyre'
@@ -247,7 +262,7 @@ export async function POST(req: NextRequest) {
       } catch (e) { console.error('[checkout/success] confirmation email failed', e) }
     }
 
-    return NextResponse.json({ orderId: order.id, orderNumber, total })
+    return attachGuestCookie(NextResponse.json({ orderId: order.id, orderNumber, total }), guestId, isNew)
 
   } catch (err) {
     console.error('[checkout/success]', err)

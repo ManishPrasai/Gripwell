@@ -85,6 +85,21 @@ export async function getWheelBySlug(slug: string): Promise<any> {
   return data
 }
 
+/* ── All active slugs (sitemap) ───────────────────────────────────────────── */
+export async function getAllTyreSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return prisma.tyre.findMany({
+    where: { isActive: true, deletedAt: null },
+    select: { slug: true, updatedAt: true },
+  })
+}
+
+export async function getAllWheelSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return prisma.wheel.findMany({
+    where: { isActive: true, deletedAt: null },
+    select: { slug: true, updatedAt: true },
+  })
+}
+
 /* ── Similar tyres (fitment-aware) ────────────────────────────────────────── */
 const TYRE_CARD = {
   brand: true, model: true, type: true, price: true, slug: true, isBestSeller: true,

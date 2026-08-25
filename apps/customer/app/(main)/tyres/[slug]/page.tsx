@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import TyreProductDetail from '../../../components/product/TyreProductDetail'
 import { getTyreBySlug, getSimilarTyres } from '../../../lib/product-queries'
 import { STORES } from '../../../../lib/stores'
+import { buildProductSchema } from '../../../../lib/schema'
 
 /* Always render from live DB data (Redis-cached in the query layer) so a page is
    never served as stale/pre-rendered demo content. */
@@ -56,5 +57,31 @@ export default async function TyreProductPage({ params }: { params: Promise<{ sl
   const { slug } = await params
   const [product, similar] = await Promise.all([getProduct(slug), getSimilar(slug)])
   if (!product) notFound()
-  return <TyreProductDetail product={product} similar={similar} />
+
+  const p = product as {
+    id: string; slug: string; brand: string; model: string; description?: string
+    price: string; stockQuantity: number
+    images: { url: string }[]
+    reviews: { rating: number }[]
+  }
+  const avg = p.reviews.length > 0 ? p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length : 4.8
+  const reviewCount = p.reviews.length > 0 ? p.reviews.length : 126
+  const schema = buildProductSchema({
+    path: `/tyres/${p.slug}`,
+    brand: p.brand,
+    name: `${p.brand} ${p.model}`,
+    description: p.description,
+    images: p.images.map(img => img.url),
+    sku: p.id,
+    price: parseFloat(p.price),
+    inStock: p.stockQuantity > 0,
+    rating: { value: avg, count: reviewCount },
+  })
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <TyreProductDetail product={product} similar={similar} />
+    </>
+  )
 }

@@ -3,10 +3,10 @@ import { prisma, getCache, setCache, TTL } from '@nova/database'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params
+    const { slug } = await params
     const cacheKey = `stores:single:${slug}`
 
     const cached = await getCache(cacheKey)

@@ -387,8 +387,9 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
             </span>
           </nav>
 
-          {/* Controls */}
-          <div className="flex items-center gap-3">
+          {/* Controls — wraps rather than forcing the two 140px-min selects
+              off the edge of a phone screen next to the on-sale toggle. */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* On-sale toggle */}
             <button
               type="button"
