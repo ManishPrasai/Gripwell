@@ -4,9 +4,13 @@ import { prisma, getCache, setCache, TTL } from '@nova/database'
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const limit = parseInt(searchParams.get('limit') || '4')
+    // No cap by default — an admin can feature as many products as they like
+    // and every one of them shows; the grid wraps to more rows on its own.
+    // `limit` stays supported for any caller that does want a capped preview.
+    const limitParam = searchParams.get('limit')
+    const limit = limitParam ? parseInt(limitParam) : undefined
 
-    const cacheKey = `tyres:featured:${limit}`
+    const cacheKey = `tyres:featured:${limit ?? 'all'}`
 
     const cached = await getCache(cacheKey)
     if (cached) return NextResponse.json(cached)
@@ -17,7 +21,7 @@ export async function GET(req: NextRequest) {
         isFeatured: true,
         deletedAt: null
       },
-      take: limit,
+      ...(limit ? { take: limit } : {}),
       orderBy: { createdAt: 'desc' },
       select: {
         id:             true,

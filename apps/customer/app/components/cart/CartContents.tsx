@@ -410,10 +410,6 @@ export default function CartContents() {
                     <span>Products ({cartCount} {cartCount === 1 ? 'item' : 'items'})</span>
                     <strong>{money(totals.subtotal)}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                    <span>GST (10%)</span>
-                    <strong>{money(totals.gst)}</strong>
-                  </div>
                   {isFit ? (
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                       <span>Fitting ({fitQty} × {money(rate)})</span>

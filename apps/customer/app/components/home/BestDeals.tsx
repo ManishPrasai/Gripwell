@@ -116,7 +116,8 @@ function SkeletonCard() {
 }
 
 /* ─── Card ────────────────────────────────────────────────────────────────── */
-function DealCard({ deal, unit }: { deal: Deal; unit: string }) {
+function DealCard({ deal }: { deal: Deal }) {
+  const unit = deal.tab === 'wheels' ? 'per wheel, fitted' : 'per tyre, fitted'
   const { addToCart } = useCart()
   const [hovered, setHovered] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
@@ -211,11 +212,6 @@ function DealCard({ deal, unit }: { deal: Deal; unit: string }) {
           }}>
             ${deal.price.toFixed(0)}
           </span>
-          {deal.was != null && (
-            <span style={{ color: '#6E7C74', textDecoration: 'line-through', fontSize: '13px' }}>
-              ${deal.was.toFixed(0)}
-            </span>
-          )}
           <span style={{ fontSize: '12.5px', color: '#6E7C74' }}>{unit}</span>
         </span>
 
@@ -244,28 +240,26 @@ function DealCard({ deal, unit }: { deal: Deal; unit: string }) {
 }
 
 /* ─── Section ─────────────────────────────────────────────────────────────── */
+/* Which products show here is an admin call (the isFeatured flag on each
+   Tyre/Wheel, set from the inventory edit drawer) — no customer-facing tab to
+   switch between tyres and wheels; both show together in one grid. */
 export default function BestDeals() {
-  const [tab, setTab] = useState<'tyres' | 'wheels'>('tyres')
-  const [tyreDeals, setTyreDeals]   = useState<Deal[]>([])
-  const [wheelDeals, setWheelDeals] = useState<Deal[]>([])
-  const [loading, setLoading]       = useState(true)
+  const [deals, setDeals]     = useState<Deal[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/tyres/bestsellers?limit=4').then(r => r.json()),
-      fetch('/api/wheels?limit=4').then(r => r.json()),
+      fetch('/api/tyres/featured?limit=4').then(r => r.json()),
+      fetch('/api/wheels/featured?limit=4').then(r => r.json()),
     ])
       .then(([tyreData, wheelData]) => {
-        if (Array.isArray(tyreData.tyres))   setTyreDeals(tyreData.tyres.map(mapTyre))
-        if (Array.isArray(wheelData.wheels)) setWheelDeals(wheelData.wheels.map(mapWheel))
+        const tyreDeals  = Array.isArray(tyreData.tyres)   ? tyreData.tyres.map(mapTyre)   : []
+        const wheelDeals = Array.isArray(wheelData.wheels) ? wheelData.wheels.map(mapWheel) : []
+        setDeals([...tyreDeals, ...wheelDeals])
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
-
-  const isWheels = tab === 'wheels'
-  const deals    = isWheels ? wheelDeals : tyreDeals
-  const unit     = isWheels ? 'per wheel, fitted' : 'per tyre, fitted'
 
   return (
     <section
@@ -282,65 +276,28 @@ export default function BestDeals() {
       `}</style>
 
       {/* ── Header ── */}
-      <div data-reveal style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '26px' }}>
-        <div>
-          <p style={{ margin: '0 0 8px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E8572A' }}>
-            This week
-          </p>
-          <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(34px,4vw,46px)', letterSpacing: '0.02em', color: '#1C3A2B' }}>
-            Best deals on tyres &amp; wheels
-          </h2>
-        </div>
-
-        {/* Segmented switch — the pill is one absolutely-positioned element that
-            slides, so the label text never reflows mid-transition. */}
-        <button
-          onClick={() => setTab(t => (t === 'tyres' ? 'wheels' : 'tyres'))}
-          role="switch" aria-checked={isWheels}
-          aria-label="Switch between tyre and wheel deals"
-          style={{
-            fontFamily: "'DM Sans', sans-serif", position: 'relative',
-            display: 'inline-flex', alignItems: 'center', background: '#FFFFFF',
-            border: '1.5px solid #DEDCD4', borderRadius: '999px', padding: '5px',
-            cursor: 'pointer', flexShrink: 0, boxShadow: '0 1px 3px rgba(20,25,22,0.06)',
-          }}
-        >
-          <span style={{
-            position: 'absolute', top: '5px', bottom: '5px',
-            left: isWheels ? '50%' : '5px', width: 'calc(50% - 5px)',
-            borderRadius: '999px', background: '#1C3A2B',
-            boxShadow: '0 2px 8px -2px rgba(28,58,43,0.5)',
-            transition: 'left .3s cubic-bezier(.22,1,.36,1)',
-          }} />
-          <span style={{ position: 'relative', zIndex: 1, padding: '10px 26px', fontSize: '14px', fontWeight: 700, whiteSpace: 'nowrap', color: isWheels ? '#3A453E' : '#FFFFFF', transition: 'color .3s' }}>Tyres</span>
-          <span style={{ position: 'relative', zIndex: 1, padding: '10px 26px', fontSize: '14px', fontWeight: 700, whiteSpace: 'nowrap', color: isWheels ? '#FFFFFF' : '#3A453E', transition: 'color .3s' }}>Wheels</span>
-        </button>
+      <div data-reveal style={{ marginBottom: '26px' }}>
+        <p style={{ margin: '0 0 8px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E8572A' }}>
+          This week
+        </p>
+        <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(34px,4vw,46px)', letterSpacing: '0.02em', color: '#1C3A2B' }}>
+          Best deals on tyres &amp; wheels
+        </h2>
       </div>
 
-      {/* ── Grid — keyed per tab so the panel re-enters on every switch ── */}
-      <div key={tab} className="nv-deals-grid" style={{ animation: 'novaIn .35s cubic-bezier(.22,1,.36,1) both' }}>
+      {/* ── Grid — admin-curated via each product's "Featured" flag ── */}
+      <div className="nv-deals-grid" style={{ animation: 'novaIn .35s cubic-bezier(.22,1,.36,1) both' }}>
         {loading
           ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
-          : deals.map(deal => <DealCard key={deal.id} deal={deal} unit={unit} />)}
+          : deals.map(deal => <DealCard key={deal.id} deal={deal} />)}
       </div>
 
       {!loading && deals.length === 0 && (
         <p style={{ textAlign: 'center', color: '#6E7C74', fontSize: '15px', padding: '32px 0' }}>
-          No {isWheels ? 'wheel' : 'tyre'} deals right now — check back soon.
+          No featured deals right now — check back soon.
         </p>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '28px' }}>
-        <Link
-          href={isWheels ? '/wheels/results' : '/tyres/results'}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: '#076330', fontSize: '14px', fontWeight: 700, textDecoration: 'none' }}
-        >
-          {isWheels ? 'Shop all wheels' : 'Shop all tyres'}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </Link>
-      </div>
     </section>
   )
 }

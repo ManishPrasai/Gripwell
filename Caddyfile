@@ -1,0 +1,7 @@
+shop.207.148.82.84.sslip.io {
+    reverse_proxy web:3000
+}
+
+admin.207.148.82.84.sslip.io {
+    reverse_proxy admin:3000
+}

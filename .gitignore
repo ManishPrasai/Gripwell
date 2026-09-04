@@ -53,3 +53,6 @@ apps/*/.open-next/
 # Wrangler local state
 .wrangler/
 **/.wrangler/
+
+# Local media fallback (plain `next dev` without MEDIA_DIR/Docker volume)
+apps/*/.media/

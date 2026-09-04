@@ -1,5 +1,7 @@
 services:
   # 1. Customer-facing storefront (apps/customer)
+  #    Not published to the host — caddy is the only public entry point (see
+  #    below), reaching this over the internal Docker network.
   web:
     build:
       context: .
@@ -8,19 +10,21 @@ services:
         APP: customer
     container_name: nova_tyres_web
     restart: always
-    ports:
-      - "3000:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://nova_admin:tyres_secure_pass@postgres_db:5432/nova_tyres_db
       - REDIS_URL=redis://redis_cache:6379
+      - MEDIA_DIR=/data/media
+    volumes:
+      - media_data:/data/media
     depends_on:
       - postgres_db
       - redis_cache
 
   # 2. Admin panel (apps/admin)
+  #    Not published to the host — see the web service note above.
   admin:
     build:
       context: .
@@ -29,19 +33,23 @@ services:
         APP: admin
     container_name: nova_tyres_admin
     restart: always
-    ports:
-      - "3001:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://nova_admin:tyres_secure_pass@postgres_db:5432/nova_tyres_db
       - REDIS_URL=redis://redis_cache:6379
+      - MEDIA_DIR=/data/media
+    volumes:
+      - media_data:/data/media
     depends_on:
       - postgres_db
       - redis_cache
 
   # 3. Local Isolated PostgreSQL Database (Matches your pgAdmin shortcut!)
+  #    Not published to the host — only web/admin need it, over the internal
+  #    Docker network. `docker compose exec postgres_db psql ...` still works
+  #    for local inspection without exposing 5432 to the public internet.
   postgres_db:
     image: postgres:15-alpine
     container_name: nova_tyres_db
@@ -50,21 +58,38 @@ services:
       POSTGRES_USER: nova_admin
       POSTGRES_PASSWORD: tyres_secure_pass
       POSTGRES_DB: nova_tyres_db
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   # 4. Redis Caching Engine (Matches Phase 1 of your project tracker!)
+  #    Not published to the host — see postgres_db note above.
   redis_cache:
     image: redis:7-alpine
     container_name: nova_tyres_redis
     restart: always
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
+
+  # 5. Reverse proxy — the only container published to the host. Terminates
+  #    TLS (auto Let's Encrypt via sslip.io hostnames) and routes by domain.
+  caddy:
+    image: caddy:2-alpine
+    container_name: nova_tyres_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - admin
 
 volumes:
   postgres_data:
   redis_data:
+  caddy_data:
+  caddy_config:
+  media_data:

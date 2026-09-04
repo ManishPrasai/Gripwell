@@ -1,17 +1,40 @@
 /**
- * Product image storage — Workers KV.
+ * Product image storage — local disk.
  *
- * Images live in the `NOVA_MEDIA` KV namespace, bound to both Workers: the
- * admin writes on upload, the storefront reads when serving `/media/*`. KV is
- * the right fit here — product photos are written rarely and read constantly,
- * and every edge location caches them.
+ * Images live under MEDIA_DIR (a directory shared between the admin and
+ * customer containers via a Docker volume — see docker-compose.yaml): the
+ * admin writes on upload, the storefront reads the same files when serving
+ * `/media/*`. A key like `products/<uuid>.webp` resolves to a file at
+ * `MEDIA_DIR/products/<uuid>.webp`.
  *
- * Stored URLs are *relative* (`/media/products/<uuid>.webp`) on purpose. The
- * same string resolves on the admin domain and on the storefront, because both
- * Workers serve that route from the same namespace. No custom domain, no CORS,
+ * Content type is derived from the file extension rather than stored
+ * separately — every key this app mints already carries one (see
+ * `newMediaKey`), so there's no metadata sidecar to keep in sync.
+ *
+ * Stored URLs are *relative* (`/media/products/<uuid>.webp`) on purpose: the
+ * same string resolves on both the admin and customer apps, since both serve
+ * this route against the same shared directory. No custom domain, no CORS,
  * no absolute URL to rewrite if the domain ever changes.
  */
-import { getCloudflareContext } from '@opennextjs/cloudflare'
+import { promises as fs } from 'fs'
+import path from 'path'
+
+/** Shared across both containers via a Docker volume; falls back to a local
+ *  folder (gitignored) for plain `next dev`. */
+const MEDIA_DIR = process.env.MEDIA_DIR || path.join(process.cwd(), '.media')
+
+const CONTENT_TYPE_BY_EXT: Record<string, string> = {
+  webp: 'image/webp',
+  jpg:  'image/jpeg',
+  png:  'image/png',
+  avif: 'image/avif',
+}
+
+function toBuffer(value: ArrayBuffer | ArrayBufferView | string): Buffer {
+  if (typeof value === 'string') return Buffer.from(value)
+  if (ArrayBuffer.isView(value)) return Buffer.from(value.buffer, value.byteOffset, value.byteLength)
+  return Buffer.from(value)
+}
 
 /** Formats we accept. Anything else is rejected before it reaches storage. */
 const ALLOWED = new Map<string, string>([
@@ -32,9 +55,8 @@ export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024
 export const MEDIA_PREFIX = '/media/'
 
 /**
- * Minimal structural type for the KV binding. `@cloudflare/workers-types` isn't
- * a dependency of this repo (bindings are reached through `env as any`
- * elsewhere too), and these three calls are everything media storage needs.
+ * Storage interface kept identical to the previous KV-backed version, so
+ * every caller (upload, serve, delete routes) needed zero changes.
  */
 export interface MediaKV {
   put(
@@ -49,18 +71,40 @@ export interface MediaKV {
   delete(key: string): Promise<void>
 }
 
-/**
- * The KV binding, or null when it isn't available (plain `next dev` without the
- * Cloudflare dev proxy). Callers surface a clear message rather than crashing.
- */
-export function mediaKV(): MediaKV | null {
-  try {
-    const env = getCloudflareContext().env as unknown as Record<string, MediaKV | undefined>
-    return env?.NOVA_MEDIA ?? null
-  } catch {
-    // Not inside a Cloudflare request context.
-    return null
+class LocalDiskMedia implements MediaKV {
+  private resolve(key: string): string {
+    return path.join(MEDIA_DIR, key)
   }
+
+  async put(key: string, value: ArrayBuffer | ArrayBufferView | string): Promise<void> {
+    const filePath = this.resolve(key)
+    await fs.mkdir(path.dirname(filePath), { recursive: true })
+    await fs.writeFile(filePath, toBuffer(value))
+  }
+
+  async getWithMetadata<M = unknown>(
+    key: string,
+  ): Promise<{ value: ArrayBuffer | null; metadata: M | null }> {
+    try {
+      const buf = await fs.readFile(this.resolve(key))
+      const ext = key.split('.').pop()?.toLowerCase() ?? ''
+      const contentType = CONTENT_TYPE_BY_EXT[ext] ?? 'application/octet-stream'
+      const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+      return { value: arrayBuffer, metadata: { contentType } as unknown as M }
+    } catch {
+      return { value: null, metadata: null }
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try { await fs.unlink(this.resolve(key)) } catch { /* already gone */ }
+  }
+}
+
+/** Always available — local disk needs no external context, unlike the
+ *  Workers KV binding this replaced. */
+export function mediaKV(): MediaKV | null {
+  return new LocalDiskMedia()
 }
 
 export function extensionFor(contentType: string): string | null {

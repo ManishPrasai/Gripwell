@@ -145,7 +145,7 @@ export default function Footer() {
                   className="nv-social" style={{ ...socialTile, background: '#0A66C2' }}>
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2.9 21h4.16V9.4H2.9V21Zm7.02 0h4.16v-6.3c0-1.66.6-2.66 2.02-2.66 1.32 0 1.86.94 1.86 2.7V21H22.1v-6.9c0-3.4-1.82-4.98-4.24-4.98-1.96 0-2.84 1.08-3.33 1.84V9.4H9.92c.06 1.16 0 11.6 0 11.6Z"/></svg>
                 </a>
-                <a href="https://www.yelp.com" aria-label="Yelp" target="_blank" rel="noopener noreferrer"
+                <a href="https://www.yelp.com/biz/nova-tyres-springvale-2?uid=byxWfoz3h2Opm18Y9dweaQ&utm_campaign=www_business_share_popup&utm_medium=copy_link&utm_source=(direct)" aria-label="Yelp" target="_blank" rel="noopener noreferrer"
                   className="nv-social" style={{ ...socialTile, width: 'auto', padding: '0 12px', background: '#FFFFFF' }}>
                   <Image src="/images/footer/social-yelp.png" alt="Yelp"
                     width={60} height={26} style={{ objectFit: 'contain', height: '22px', width: 'auto' }} />

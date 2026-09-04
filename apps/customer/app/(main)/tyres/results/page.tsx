@@ -9,7 +9,7 @@ export const metadata = {
 export default async function TyreResultsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ width?: string; profile?: string; rim?: string; brand?: string; type?: string }>
+  searchParams: Promise<{ width?: string; profile?: string; rim?: string; brand?: string; type?: string; q?: string }>
 }) {
   const params = await searchParams
 
@@ -22,6 +22,7 @@ export default async function TyreResultsPage({
         initialRim={params.rim}
         initialBrand={params.brand}
         initialType={params.type}
+        initialQ={params.q}
       />
     </main>
   )

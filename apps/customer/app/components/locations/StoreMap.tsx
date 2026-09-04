@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  APIProvider, Map, Marker, InfoWindow, useMap,
+  APIProvider, Map, Marker, InfoWindow, useMap, useApiIsLoaded,
 } from '@vis.gl/react-google-maps'
 
 /*
@@ -95,10 +95,64 @@ function FitAllOnce({ stores }: { stores: MappableStore[] }) {
   return null
 }
 
+/* Renders every pin + the open InfoWindow. Split out because pinIcon() touches
+   `google.maps.*`, which only exists once the Maps JS API script has finished
+   loading — <Marker> itself defers safely, but a prop expression like
+   `icon={pinIcon(...)}` still runs immediately during render regardless.
+   useApiIsLoaded() re-renders this once the script is ready, so pinIcon()
+   never runs while `google` is still undefined. */
+function StoreMarkers<T extends MappableStore>({
+  stores, selectedStore, onSelectStore, openId, setOpenId,
+}: {
+  stores:        T[]
+  selectedStore: T | null
+  onSelectStore: (store: T) => void
+  openId:        string | null
+  setOpenId:     (id: string | null) => void
+}) {
+  const apiIsLoaded = useApiIsLoaded()
+  if (!apiIsLoaded) return null
+
+  const open = stores.find(s => s.id === openId) ?? null
+
+  return (
+    <>
+      {stores.map(store => (
+        <Marker
+          key={store.id}
+          position={{ lat: store.lat, lng: store.lng }}
+          title={store.name}
+          icon={pinIcon(selectedStore?.id === store.id)}
+          zIndex={selectedStore?.id === store.id ? 10 : 1}
+          onClick={() => { onSelectStore(store); setOpenId(store.id) }}
+        />
+      ))}
+
+      {open && (
+        <InfoWindow
+          position={{ lat: open.lat, lng: open.lng }}
+          pixelOffset={[0, -38]}
+          onCloseClick={() => setOpenId(null)}
+        >
+          <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", minWidth: '160px' }}>
+            <p style={{ fontWeight: 700, fontSize: '14px', margin: '0 0 2px', color: '#1B1C1E' }}>{open.name}</p>
+            <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>{open.address}</p>
+            <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>{open.suburb}</p>
+          </div>
+        </InfoWindow>
+      )}
+    </>
+  )
+}
+
 interface StoreMapProps<T extends MappableStore> {
   stores:        T[]
   selectedStore: T | null
   onSelectStore: (store: T) => void
+  /** Plain default Google Maps styling (full street/place labels) instead of
+   *  the muted basemap — for a single-store locator view where the customer
+   *  needs real navigation detail rather than a multi-pin overview. */
+  fullDetail?: boolean
 }
 
 /* Shown when the key is absent so a missing env var degrades to a readable
@@ -123,7 +177,7 @@ function MapUnavailable() {
 /* Generic over the store shape so onSelectStore hands callers back their own
    record type, not a narrowed one they'd have to re-widen. */
 export default function StoreMap<T extends MappableStore>({
-  stores, selectedStore, onSelectStore,
+  stores, selectedStore, onSelectStore, fullDetail,
 }: StoreMapProps<T>) {
   /* Which pin's InfoWindow is open. Tracked by id so it survives the parent
      re-rendering with a fresh store array. */
@@ -133,45 +187,26 @@ export default function StoreMap<T extends MappableStore>({
 
   if (!API_KEY) return <MapUnavailable />
 
-  const open = stores.find(s => s.id === openId) ?? null
-
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <APIProvider apiKey={API_KEY}>
         <Map
           defaultCenter={DEFAULT_CENTER}
           defaultZoom={DEFAULT_ZOOM}
-          styles={MAP_STYLES}
+          styles={fullDetail ? undefined : MAP_STYLES}
           disableDefaultUI
           zoomControl
           gestureHandling="cooperative"
           clickableIcons={false}
           style={{ width: '100%', height: '100%' }}
         >
-          {stores.map(store => (
-            <Marker
-              key={store.id}
-              position={{ lat: store.lat, lng: store.lng }}
-              title={store.name}
-              icon={pinIcon(selectedStore?.id === store.id)}
-              zIndex={selectedStore?.id === store.id ? 10 : 1}
-              onClick={() => { onSelectStore(store); setOpenId(store.id) }}
-            />
-          ))}
-
-          {open && (
-            <InfoWindow
-              position={{ lat: open.lat, lng: open.lng }}
-              pixelOffset={[0, -38]}
-              onCloseClick={() => setOpenId(null)}
-            >
-              <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", minWidth: '160px' }}>
-                <p style={{ fontWeight: 700, fontSize: '14px', margin: '0 0 2px', color: '#1B1C1E' }}>{open.name}</p>
-                <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>{open.address}</p>
-                <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>{open.suburb}</p>
-              </div>
-            </InfoWindow>
-          )}
+          <StoreMarkers
+            stores={stores}
+            selectedStore={selectedStore}
+            onSelectStore={onSelectStore}
+            openId={openId}
+            setOpenId={setOpenId}
+          />
 
           <FitAllOnce stores={stores} />
           <MapViewSync selected={selectedStore} />

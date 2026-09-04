@@ -41,12 +41,19 @@ export async function GET(req: NextRequest) {
     })
 
     // Resolve each store's fitting prices: defaults merged with any overrides.
+    // latitude/longitude are Prisma Decimal — JSON-serialize as strings, so
+    // convert to real numbers here (once) rather than at every call site.
     const withPrices = stores.map(({ fittingPrices, ...store }) => {
       const prices: Record<VehicleType, number> = { ...DEFAULT_FITTING_PRICES }
       for (const fp of fittingPrices) {
         if (fp.vehicleType in prices) prices[fp.vehicleType as VehicleType] = Number(fp.price)
       }
-      return { ...store, fittingPrices: prices }
+      return {
+        ...store,
+        latitude:  Number(store.latitude),
+        longitude: Number(store.longitude),
+        fittingPrices: prices,
+      }
     })
 
     const response = { stores: withPrices }
