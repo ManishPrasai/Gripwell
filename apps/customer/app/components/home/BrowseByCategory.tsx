@@ -22,7 +22,7 @@ export default function BrowseByCategory() {
   const [hovered, setHovered] = useState<number | null>(null)
 
   return (
-    <section style={{ background: '#0D1A12', padding: 'clamp(32px,3.6vw,48px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section style={{ background: '#FAF9F5', padding: 'clamp(32px,3.6vw,48px) 0', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
         .nv-cat-grid { display: grid; gap: 16px; grid-template-columns: repeat(3,minmax(0,1fr)); }
         @media (max-width: 780px) { .nv-cat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
@@ -31,10 +31,10 @@ export default function BrowseByCategory() {
 
       <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
         <div data-reveal style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: '0 0 8px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(30px,3.4vw,40px)', letterSpacing: '0.02em', color: '#F1EFE7' }}>
+          <h2 style={{ margin: '0 0 8px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(30px,3.4vw,40px)', letterSpacing: '0.02em', color: '#16211B' }}>
             Find the right tyre for your drive
           </h2>
-          <p style={{ margin: '0 auto', maxWidth: '56ch', color: '#9DB0A5', fontSize: '14px' }}>
+          <p style={{ margin: '0 auto', maxWidth: '56ch', color: '#6E7C74', fontSize: '14px' }}>
             Engineered for performance, safety and confidence.
           </p>
         </div>
@@ -102,12 +102,12 @@ export default function BrowseByCategory() {
             href="/tyres"
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              borderRadius: '14px', border: '1.5px dashed rgba(250,249,245,0.3)', textDecoration: 'none', color: '#F1EFE7',
+              borderRadius: '14px', border: '1.5px dashed #C9C7BE', textDecoration: 'none', color: '#076330',
               minHeight: 'clamp(160px,14vw,190px)',
               transition: 'border-color .25s, background .25s',
             }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(250,249,245,0.6)'; e.currentTarget.style.background = 'rgba(250,249,245,0.04)' }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(250,249,245,0.3)'; e.currentTarget.style.background = 'transparent' }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = '#076330'; e.currentTarget.style.background = '#E8F5EE' }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = '#C9C7BE'; e.currentTarget.style.background = 'transparent' }}
           >
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />

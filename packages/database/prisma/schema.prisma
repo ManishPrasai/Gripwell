@@ -1041,6 +1041,22 @@ model ChatOperatingHours {
 }
 
 // ─────────────────────────────────────
+// MARKETING
+// ─────────────────────────────────────
+
+model Subscriber {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  confirmed      Boolean   @default(false)
+  token          String    @unique @default(uuid())
+  createdAt      DateTime  @default(now())
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+
+  @@index([confirmed])
+}
+
+// ─────────────────────────────────────
 // ENUMS
 // ─────────────────────────────────────
 

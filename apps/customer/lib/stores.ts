@@ -51,8 +51,8 @@ export const STORE_FILTERS = ['All', ...STORE_STATES_SERVED] as const
 export type StoreFilter = typeof STORE_FILTERS[number]
 
 /** Central switchboard, used when the caller has no specific branch in mind. */
-export const NOVA_SWITCHBOARD      = '1300 11 NOVA'
-export const NOVA_SWITCHBOARD_HREF = 'tel:1300116682'
+export const NOVA_SWITCHBOARD      = '0402 338 805'
+export const NOVA_SWITCHBOARD_HREF = 'tel:0402338805'
 
 /** Strips spaces, brackets and dashes so the number is dialable from a link. */
 export function telHref(tel: string): string {

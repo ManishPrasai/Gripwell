@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCart } from '../../context/CartContext'
 import { STORE_NETWORK_LABEL } from '../../../lib/stores'
+import { smoothScrollToSection } from '../../../lib/scrollToSection'
 
 /* Contact details surface in three places (strip, mobile bar, WhatsApp),
    so they live here once rather than being retyped per component. */
@@ -12,13 +13,18 @@ export const NOVA_PHONE      = '0402 338 805'
 export const NOVA_PHONE_HREF = `tel:${NOVA_PHONE.replace(/\s/g, '')}`
 export const NOVA_WA_HREF    = 'https://wa.me/61402338805'
 
-const LINKS = [
-  { label: 'Home',        href: '/' },
-  { label: 'Find Tyres',  href: '/tyres' },
-  { label: 'Find Wheels', href: '/wheels' },
-  { label: 'Service',     href: '/service' },
-  { label: 'Locations',   href: '/#locations' },
-  { label: 'Warranty',    href: '/warranty' },
+/* `scrollTo` links (just "Locations" for now) scroll in place when the user
+   is already on that link's page — a plain Link navigation there would still
+   "work" (same URL), but Next.js scrolls to top on navigation by default,
+   and the target page's own goto-param effect only runs on mount, so it
+   would jump to the hero and stay there instead of moving to the section. */
+const LINKS: { label: string; href: string; page: string; scrollTo?: string }[] = [
+  { label: 'Home',        href: '/',                      page: '/' },
+  { label: 'Find Tyres',  href: '/tyres',                  page: '/tyres' },
+  { label: 'Find Wheels', href: '/wheels',                 page: '/wheels' },
+  { label: 'Service',     href: '/service',                page: '/service' },
+  { label: 'Locations',   href: '/service?goto=shops',     page: '/service', scrollTo: 'shops-head' },
+  { label: 'Warranty',    href: '/warranty',                page: '/warranty' },
 ]
 
 function UserIcon({ size = 16 }: { size?: number }) {
@@ -104,6 +110,16 @@ export default function Navbar() {
   const isActive = (href: string) => {
     if (href.startsWith('/#')) return false
     return href === '/' ? pathname === '/' : pathname.startsWith(href)
+  }
+
+  /* Already on a `scrollTo` link's page: scroll in place instead of letting
+     Link navigate (see LINKS comment for why a plain navigation breaks this). */
+  function handleNavClick(link: typeof LINKS[number], e: React.MouseEvent) {
+    if (link.scrollTo && pathname === link.page) {
+      e.preventDefault()
+      smoothScrollToSection(link.scrollTo, { offset: 96 })
+      setMenuOpen(false)
+    }
   }
 
   /* Free text: a numeric size-shaped query goes straight to a size search —
@@ -279,6 +295,7 @@ export default function Navbar() {
               return (
                 <Link key={link.href} href={link.href}
                   className="nv-navlink"
+                  onClick={e => handleNavClick(link, e)}
                   style={{
                     color: active ? '#FFB07A' : '#FAF9F5', textDecoration: 'none',
                     fontSize: '13.5px', fontWeight: active ? 700 : 600,
@@ -410,6 +427,7 @@ export default function Navbar() {
           >
             {LINKS.map(link => (
               <Link key={link.href} href={link.href}
+                onClick={e => handleNavClick(link, e)}
                 style={{
                   color: isActive(link.href) ? '#FFB07A' : '#FAF9F5', textDecoration: 'none',
                   fontSize: '15px', fontWeight: 700, padding: '13px 4px',
