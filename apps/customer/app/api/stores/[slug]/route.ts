@@ -63,7 +63,11 @@ export async function GET(
       )
     }
 
-    const response = { store }
+    // latitude/longitude are Prisma Decimal — JSON-serialize as strings, so
+    // convert to real numbers here rather than at every call site.
+    const response = {
+      store: { ...store, latitude: Number(store.latitude), longitude: Number(store.longitude) },
+    }
     await setCache(cacheKey, response, TTL.STORES)
 
     return NextResponse.json(response)

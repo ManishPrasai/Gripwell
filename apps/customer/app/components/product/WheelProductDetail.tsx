@@ -44,12 +44,10 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
 
   const images    = wheel.images.length > 0 ? wheel.images : [{ url: '/images/wheel/Wheel 1.png', altText: wheel.model, sortOrder: 0 }]
   const price     = parseFloat(wheel.price)
-  const compare   = wheel.compareAtPrice ? parseFloat(wheel.compareAtPrice) : null
   const inStock   = wheel.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[wheel.brand]
   const offset    = wheel.offset !== undefined ? `ET${wheel.offset > 0 ? '+' : ''}${wheel.offset}` : '—'
   const sizeStr   = `${wheel.diameter}″ × ${wheel.width}J`
-  const saving    = compare && compare > price ? Math.round((1 - price / compare) * 100) : null
 
   /* Real fitment-based recommendations from the API; fall back to demo picks. */
   const similarItems = similar && similar.length > 0 ? similar : SIMILAR_WHEELS
@@ -140,8 +138,6 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
             <div className="pdp-buybox">
               <div className="pdp-price">
                 <span className="amount">{money(price)}</span>
-                {compare && <span className="was">{money(compare)}</span>}
-                {saving && <span className="save">SAVE {saving}%</span>}
               </div>
               <div className="pdp-per">per wheel · GST included</div>
               <div className={`pdp-stock${inStock ? '' : ' out'}`}>

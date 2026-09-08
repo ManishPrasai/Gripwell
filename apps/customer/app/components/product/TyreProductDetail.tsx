@@ -13,12 +13,13 @@ import {
 } from './PdpParts'
 
 const BRAND_LOGOS: Record<string, string> = {
-  Continental: '/images/brands/continental.svg',
-  Hankook:     '/images/brands/hankook.svg',
-  Pirelli:     '/images/brands/pirelli.svg',
-  Maxxis:      '/images/brands/maxxis.svg',
-  Yokohama:    '/images/brands/yokohama.svg',
-  Michelin:    '/images/brands/michelin.svg',
+  Continental:    '/images/brands/continental.svg',
+  Hankook:        '/images/brands/hankook.svg',
+  Pirelli:        '/images/brands/pirelli.svg',
+  Maxxis:         '/images/brands/maxxis.svg',
+  Yokohama:       '/images/brands/yokohama.svg',
+  Michelin:       '/images/brands/michelin.svg',
+  'BF Goodrich':  '/images/brands/bfgoodrich.svg',
 }
 
 const SIMILAR_TYRES: SimilarItem[] = [
@@ -51,13 +52,11 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
   const ts        = product.tyreSize
   const images    = product.images.length > 0 ? product.images : [{ url: '/images/tyres/Tyre 1.png', altText: product.model, sortOrder: 0 }]
   const price     = parseFloat(product.price)
-  const compare   = product.compareAtPrice ? parseFloat(product.compareAtPrice) : null
   const inStock   = product.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[product.brand]
   const atLimit   = tyreCount >= MAX_TYRES_PER_ORDER
   const sizeStr   = `${ts.width}/${ts.profile}R${ts.rimDiameter}`
   const loadSpeed = `${ts.loadIndex ?? ''}${ts.speedRating ?? ''}` || '—'
-  const saving    = compare && compare > price ? Math.round((1 - price / compare) * 100) : null
 
   /* Real fitment-based recommendations from the API; fall back to demo picks. */
   const similarItems = similar && similar.length > 0 ? similar : SIMILAR_TYRES
@@ -139,9 +138,12 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
 
           {/* ── right: title, buy box, accordions ── */}
           <div className="pdp-colR">
-            <span className="pdp-kicker">
-              {product.brand}{product.type ? ` · ${titleCase(product.type)}` : ''}
-            </span>
+            {brandLogo ? (
+              <img src={brandLogo} alt={`${product.brand} logo`} className="pdp-brand-logo" />
+            ) : (
+              <span className="pdp-brand-text">{product.brand}</span>
+            )}
+            {product.type && <span className="pdp-category">{titleCase(product.type)}</span>}
             <h1 className="pdp-title">{product.model}</h1>
             <div className="pdp-rate">
               <span className="stars">★★★★★</span>
@@ -152,8 +154,6 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
             <div className="pdp-buybox">
               <div className="pdp-price">
                 <span className="amount">{money(price)}</span>
-                {compare && <span className="was">{money(compare)}</span>}
-                {saving && <span className="save">SAVE {saving}%</span>}
               </div>
               <div className="pdp-per">per tyre · GST included</div>
               <div className={`pdp-stock${inStock ? '' : ' out'}`}>

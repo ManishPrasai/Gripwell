@@ -202,6 +202,40 @@ function salesHtml(d: SalesEmailData): string {
 </body></html>`
 }
 
+/* ── Newsletter double opt-in confirmation ─────────────────────────────────── */
+export async function sendNewsletterConfirmation(to: string, token: string): Promise<boolean> {
+  if (!to) return false
+  const confirmUrl = `${SITE_URL}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
+  return sendEmail({
+    to,
+    subject: 'Confirm your Nova Tyres subscription',
+    html: newsletterConfirmHtml(confirmUrl),
+  })
+}
+
+function newsletterConfirmHtml(confirmUrl: string): string {
+  return `<!doctype html>
+<html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;padding:24px 16px">
+    <div style="background:#076330;border-radius:16px 16px 0 0;padding:26px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    </div>
+    <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px;text-align:center">
+      <h1 style="margin:0 0 10px;color:#16211B;font-size:22px;line-height:1.25">One click to confirm</h1>
+      <p style="margin:0 auto 24px;color:#47554D;font-size:14px;line-height:1.6;max-width:40ch">
+        Confirm your email to start receiving deals before they sell out.
+      </p>
+      <a href="${esc(confirmUrl)}" style="display:inline-block;background:#E8572A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">
+        Confirm subscription
+      </a>
+      <p style="margin:24px 0 0;color:#B0B0A8;font-size:12px;line-height:1.6">
+        Didn't sign up? Ignore this email — you won't be added.
+      </p>
+    </div>
+  </div>
+</body></html>`
+}
+
 function esc(s: string): string {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
 }

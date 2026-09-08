@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       prisma.tyre.findMany({
         where: { deletedAt: null },
         select: {
-          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true,
+          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true, isFeatured: true,
           tyreSize: { select: { width: true, profile: true, rimDiameter: true } },
           images: { select: { url: true }, take: 1 },
         },
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       prisma.wheel.findMany({
         where: { deletedAt: null },
         select: {
-          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true,
+          id: true, brand: true, model: true, price: true, stockQuantity: true, isActive: true, isFeatured: true,
           diameter: true, width: true, pcd: true, offset: true,
           images: { select: { url: true }, take: 1 },
         },
@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
         brand: t.brand, price: Number(t.price),
         stock: t.stockQuantity, low: LOW_THRESHOLD,
         status: t.isActive ? 'active' : 'draft', icon: 'tyre',
-        image: t.images[0]?.url,
+        image: t.images[0]?.url, featured: t.isFeatured,
       })),
       ...wheelsRaw.map(w => ({
         id: w.id, name: `${w.brand} ${w.model}`, cat: 'Wheels',
@@ -203,7 +203,7 @@ export async function GET(req: NextRequest) {
         brand: w.brand, price: Number(w.price),
         stock: w.stockQuantity, low: 4,
         status: w.isActive ? 'active' : 'draft', icon: 'wheel',
-        image: w.images[0]?.url,
+        image: w.images[0]?.url, featured: w.isFeatured,
       })),
     ]
 

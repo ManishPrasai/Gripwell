@@ -143,6 +143,7 @@ model Wheel {
   stockQuantity  Int       @default(0)
   slug           String    @unique
   isActive       Boolean   @default(true)
+  isFeatured     Boolean   @default(false)
   deletedAt      DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -1037,6 +1038,22 @@ model ChatOperatingHours {
 
   @@unique([storeId, dayOfWeek])
   @@index([storeId])
+}
+
+// ─────────────────────────────────────
+// MARKETING
+// ─────────────────────────────────────
+
+model Subscriber {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  confirmed      Boolean   @default(false)
+  token          String    @unique @default(uuid())
+  createdAt      DateTime  @default(now())
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+
+  @@index([confirmed])
 }
 
 // ─────────────────────────────────────

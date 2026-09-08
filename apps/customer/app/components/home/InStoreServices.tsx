@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const SERVICES = [
   { title: 'Wheel alignment',    free: false, body: 'Computerised four-wheel alignment for even wear and straight steering.' },
@@ -13,8 +13,6 @@ const SERVICES = [
 ]
 
 export default function InStoreServices() {
-  const [hovered, setHovered] = useState<number | null>(null)
-
   return (
     <section
       style={{
@@ -23,10 +21,18 @@ export default function InStoreServices() {
       }}
     >
       <style>{`
-        .nv-svc-grid { display: grid; gap: 12px; align-items: stretch; grid-template-columns: repeat(6,minmax(0,1fr)); }
-        @media (max-width: 1100px) { .nv-svc-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
-        @media (max-width: 780px)  { .nv-svc-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
         .nv-svc-cta:hover { border-color: #076330; background: #E8F5EE; }
+        .nv-svc-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; align-items: stretch; }
+        .nv-svc-cards  { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3,1fr); gap: 14px; height: 100%; }
+        .nv-svc-photo  { position: relative; min-height: 260px; border-radius: 14px; overflow: hidden; }
+        @media (max-width: 900px) {
+          .nv-svc-layout { grid-template-columns: 1fr; }
+          .nv-svc-photo  { min-height: 200px; }
+        }
+        @media (max-width: 560px) {
+          .nv-svc-cards { grid-template-columns: 1fr; grid-template-rows: none; }
+        }
+        .nv-svc-card:hover { border-color: #076330; box-shadow: 0 10px 22px -14px rgba(20,25,22,0.3); transform: translateY(-2px); }
       `}</style>
 
       <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
@@ -60,41 +66,41 @@ export default function InStoreServices() {
           </Link>
         </div>
 
-        <div data-reveal className="nv-svc-grid nv-d1">
-          {SERVICES.map((sv, i) => {
-            const on = hovered === i
-            return (
+        <div data-reveal className="nv-svc-layout nv-d1">
+          <span className="nv-svc-photo">
+            <Image
+              src="/images/service/workshop-hero.jpg" alt="Inside a Nova Tyres workshop"
+              fill sizes="(max-width: 900px) 90vw, 380px" style={{ objectFit: 'cover' }}
+            />
+          </span>
+
+          <div className="nv-svc-cards">
+            {SERVICES.map(sv => (
               <Link
                 key={sv.title}
                 href="/service"
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
+                className="nv-svc-card"
                 style={{
-                  minWidth: 0, display: 'block', background: '#FFFFFF',
-                  border: `1px solid ${on ? '#FFFFFF' : '#E7E5DE'}`, borderRadius: '6px',
-                  padding: '18px 16px', textDecoration: 'none', color: '#16211B',
-                  transform: on ? 'translateY(-4px)' : 'translateY(0)',
-                  boxShadow: on ? '0 16px 32px -20px rgba(20,25,22,0.45)' : 'none',
-                  transition: 'transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s',
+                  minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px',
+                  padding: '16px', border: '1px solid #E7E5DE', borderRadius: '10px',
+                  textDecoration: 'none', color: '#16211B',
+                  transition: 'border-color .2s, box-shadow .2s, transform .2s',
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '15.5px', fontWeight: 700, letterSpacing: '-0.01em', color: '#16211B' }}>{sv.title}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 700, color: '#16211B' }}>{sv.title}</span>
                   {sv.free && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', background: '#E8F5EE', color: '#076330', borderRadius: '3px', padding: '3px 7px', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', background: '#E8F5EE', color: '#076330', borderRadius: '3px', padding: '2px 6px', fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.1em' }}>
                       FREE
                     </span>
                   )}
                 </span>
-                <span style={{ display: 'block', fontSize: '13px', lineHeight: 1.5, color: '#6E7C74', textWrap: 'pretty', marginBottom: '14px' }}>
+                <span style={{ fontSize: '12.5px', color: '#6E7C74', lineHeight: 1.45 }}>
                   {sv.body}
                 </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 700, color: '#076330' }}>
-                  Learn more →
-                </span>
               </Link>
-            )
-          })}
+            ))}
+          </div>
         </div>
       </div>
     </section>

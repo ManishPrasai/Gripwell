@@ -7,13 +7,23 @@
 ---
 
 ## Current focus
-Mobile responsiveness audit + fixes on the **customer** app, branch `avishek`. Work is **uncommitted** (working tree only) as of 2026-08-22.
+Homepage redesign work on branch `Homepage-Redesign`. Just finished: Navbar "Locations" link now scrolls in place (both directions) when already on `/service` instead of jumping to the hero. Work is **uncommitted** as of 2026-09-06.
 
 ## Branch / state
-- Branch: `avishek`, last pushed commit `24a58d6` (footer refresh + PDP redesign, already on `origin/avishek`).
-- This session's mobile-audit fixes are **not yet committed**.
+- Branch: `Homepage-Redesign`, last commit `9842d1e` (category grid, in-store services, tyre size guide modal).
+- Since then, uncommitted: `Locations` navbar link fix (href → `/service?goto=shops`, plus in-place bidirectional scroll via a `handleNavClick` interceptor in `Navbar.tsx` that calls `smoothScrollToSection` instead of navigating when already on the target page), and a real double opt-in newsletter feature (new `Subscriber` Prisma model, `/api/newsletter/subscribe` + `/confirm` routes, `NewsletterSection.tsx` wired up) — tested end-to-end with real Gmail addresses, confirmed working.
+- Not yet pushed to VPS (last VPS push was after `9842d1e`; batch — don't auto-push).
+- Prior mobile-responsiveness audit (branch `avishek`, commit `24a58d6`) is a separate, older thread — not part of this session.
 
-## What's been done (2026-08-22, VS Code extension session)
+## Next steps / TODO
+- [ ] Push accumulated `Homepage-Redesign` changes (Locations-link fix + newsletter feature) to VPS when asked.
+- [ ] Confirm mobile-audit work below (branch `avishek`) still needs review/commit if that branch is picked back up — unrelated to current work.
+
+## Gotchas / notes
+- `smoothScrollToSection()` (`lib/scrollToSection.ts`) re-reads the target's position every frame, so it already handles both scroll directions and layout shift — don't rebuild this per-feature, just call it.
+- Newsletter: `Subscriber` Prisma model + `/api/newsletter/subscribe` (POST) + `/api/newsletter/confirm` (GET, token link from email) are real and tested with live Gmail sends, not UI theater.
+
+## Archived: mobile-audit session (2026-08-22, branch `avishek`, unrelated to current work)
 Ran a scripted Playwright audit (320/375/390/414/768/1024/1280/1440/1920px) across all 16 customer routes, checking horizontal overflow, touch-target size, iOS-zoom-risk inputs (<16px), and unconstrained images. Found and fixed:
 
 - **`components/layout/Navbar.tsx`** — the wordmark PNG (`nova-wordmark-light.png`, genuinely 13:1 aspect ratio, no crop headroom) rendered ~273px wide at its fixed desktop height, overflowing every page below ~420px viewport (the exact same 63px on nearly every route — this was the single highest-impact bug). Fixed: logo now clamps its width below 480px via `.nv-logo-img`. Also dropped the redundant standalone "Account" icon from the compact mobile header (already duplicated in the hamburger dropdown) to free up width.
@@ -28,14 +38,14 @@ Ran a scripted Playwright audit (320/375/390/414/768/1024/1280/1440/1920px) acro
 
 **Not changed / verified-clean without edits**: `pdp.css` + `PdpParts.tsx`/`TyreProductDetail.tsx`/`WheelProductDetail.tsx` (already used `clamp()` + `auto-fit minmax` throughout — no PDP issues found), `account.css` (already had 3 media queries), `service/page.tsx` (already had 16 media queries incl. `prefers-reduced-motion`).
 
-## Next steps / TODO
-- [ ] Review + commit this session's mobile-audit fixes (currently uncommitted in the working tree).
-- [ ] The audit script + screenshots live in the scratchpad (`C:\Users\Acer\AppData\Local\Temp\claude\...\scratchpad\pw\`), not in the repo — throwaway, not meant to be committed.
-- [ ] Dev server may still be running in the background on :3000 from this session.
-
-## Gotchas / notes
-- If you touch `Navbar.tsx` logo sizing again: `nova-wordmark-light.png` is a real 1600×123 asset with zero transparent padding (verified by alpha-channel bounding box) — there's no compact icon-only mark to fall back to, so any mobile fix has to be width-clamping, not cropping.
-- CSS Grid footgun seen twice in this codebase (`CartContents.tsx` cart rows): a `display:grid` container with no explicit `grid-template-columns` lets a child's min-content force the track wider than the container on narrow viewports. Always pair `display:grid` with either explicit tracks or `minmax(0,1fr)`.
+Still uncommitted on branch `avishek` (last pushed `24a58d6`) as of 2026-08-22 — commit if that branch is picked back up:
+- `Navbar.tsx` logo width-clamp below 480px (`nova-wordmark-light.png` is 1600×123, no crop headroom — any mobile fix must clamp width, not crop) + dropped redundant mobile "Account" icon.
+- `CartContents.tsx` — `.ct-main` grid needed `grid-template-columns: minmax(0,1fr)` (a bare `display:grid` lets child min-content force the track wider on narrow viewports — seen twice in this codebase).
+- `TyreGrid.tsx`/`WheelGrid.tsx` filter row got `flex-wrap`.
+- `checkout/page.tsx` — billing grid → `repeat(auto-fit, minmax(100px,1fr))`; order-summary `position:sticky` made `lg:`-only.
+- `globals.css` — global mobile `input,select,textarea{font-size:16px!important}` to stop iOS auto-zoom.
+- `HeroSection.tsx` — bigger carousel-dot/text-button tap targets. `Footer.tsx` — link gap 10px→13px.
+- Verified clean via a 9-breakpoint × 16-route Playwright audit (script/screenshots were in scratchpad, not the repo — throwaway).
 
 ---
-_Last updated: 2026-08-22 by VS Code extension Claude Code._
+_Last updated: 2026-09-06 by VS Code extension Claude Code._

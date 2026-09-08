@@ -289,10 +289,11 @@ interface TyreGridProps {
   initialRim?:     string
   initialBrand?:   string
   initialType?:    string
+  initialQ?:       string
 }
 
 /* ── Main grid section ───────────────────────────────────────────────────── */
-export default function TyreGrid({ initialWidth, initialProfile, initialRim, initialBrand, initialType }: TyreGridProps = {}) {
+export default function TyreGrid({ initialWidth, initialProfile, initialRim, initialBrand, initialType, initialQ }: TyreGridProps = {}) {
   const [allProducts,   setAllProducts]   = useState<TyreProduct[]>([])
   const [loading,       setLoading]       = useState(true)
   const [selectedBrand, setSelectedBrand] = useState(initialBrand || 'All Brands')
@@ -306,6 +307,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
     if (initialWidth)   params.set('width',   initialWidth)
     if (initialProfile) params.set('profile', initialProfile)
     if (initialRim)     params.set('rim',     initialRim)
+    if (initialQ)       params.set('q',       initialQ)
 
     fetch(`/api/tyres?${params}`)
       .then(r => r.json())
@@ -314,7 +316,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
       })
       .catch(err => console.error('[TyreGrid] fetch failed:', err))
       .finally(() => setLoading(false))
-  }, [initialType, initialBrand, initialWidth, initialProfile, initialRim])
+  }, [initialType, initialBrand, initialWidth, initialProfile, initialRim, initialQ])
 
   const brands = useMemo(
     () => ['All Brands', ...Array.from(new Set(allProducts.map(p => p.brand)))],

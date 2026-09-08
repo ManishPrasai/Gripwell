@@ -9,7 +9,7 @@ import { adminFetch } from "../../lib/adminFetch";
 import { Icon } from "./icons";
 import {
   Avatar, StatusBadge, StockBadge, Stars, Tooltip, Drawer, Modal, ConfirmModal,
-  toast, SearchBox, EmptyState, PanelHead, usePager, Pager,
+  toast, SearchBox, EmptyState, PanelHead, usePager, Pager, Switch,
 } from "./ui";
 import { downloadCSV } from "../../lib/csv";
 import { ProductGallery } from "./image-upload";
@@ -54,6 +54,7 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
     try {
       await adminFetch(`/api/admin/products/${target.id}`, "PATCH", {
         price: +target.price, stock: +target.stock, status: target.status,
+        featured: !!target.featured,
       });
       toast({ kind: "ok", title: "Saved", body: target.name + " updated." });
       ctx.refetch?.();
@@ -163,6 +164,10 @@ export function InventoryPage({ ctx }: { ctx: Ctx; nav?: any }) {
           <div className="form-grid">
             <div className="field"><label>Low-stock alert at</label><input type="number" value={edit.low} onChange={(e) => setEdit({ ...edit, low: +e.target.value })} /></div>
             <div className="field"><label>Status</label><select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}><option value="active">Active</option><option value="draft">Draft</option></select></div>
+          </div>
+          <div className="field" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <label style={{ margin: 0 }}>Featured on homepage</label>
+            <Switch on={!!edit.featured} onChange={(v) => setEdit({ ...edit, featured: v })} />
           </div>
           <div className="role-banner" style={{ marginTop: 6, marginBottom: 0 }}><Icon name="info" /><span>This product is visible on the <b>{edit.cat}</b> page of your website when Active.</span></div>
         </Drawer>

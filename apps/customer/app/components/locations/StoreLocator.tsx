@@ -30,6 +30,7 @@ export default function StoreLocator() {
       <style>{`
         .nv-rail-btn:hover { background: #F0EFE9; border-color: #076330; }
         .nv-store-tel:hover { background: #FF6817; }
+        .nv-store-card:hover { border-color: #076330; box-shadow: 0 10px 26px -18px rgba(7,99,48,0.45); transform: translateY(-3px); }
       `}</style>
 
       <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
@@ -65,12 +66,13 @@ export default function StoreLocator() {
                 typed as the narrow MappableStore — resolve it back to the full
                 record before storing it as the active store. */}
             <StoreMap
-              stores={STORES}
+              stores={[active]}
               selectedStore={active}
               onSelectStore={s => {
                 const full = STORES.find(x => x.id === s.id)
                 if (full) setActive(full)
               }}
+              fullDetail
             />
           </div>
 
@@ -145,11 +147,18 @@ export default function StoreLocator() {
             return (
               <div
                 key={st.id}
+                onClick={() => setActive(st)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive(st) } }}
+                role="button"
+                tabIndex={0}
+                aria-pressed={on}
+                className={on ? undefined : 'nv-store-card'}
                 style={{
                   flex: '0 0 auto', width: '244px', boxSizing: 'border-box', background: '#FFFFFF',
                   border: `1px solid ${on ? '#076330' : '#E7E5DE'}`, borderRadius: '12px', padding: '18px',
                   boxShadow: on ? '0 10px 26px -18px rgba(7,99,48,0.6)' : '0 4px 6px rgba(20,25,22,0.05)',
-                  transition: 'border-color .2s, box-shadow .2s',
+                  transition: 'border-color .2s, box-shadow .2s, transform .2s',
+                  cursor: 'pointer',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0 }}>
@@ -161,26 +170,21 @@ export default function StoreLocator() {
                   </span>
                 </div>
                 <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#6E7C74' }}>{st.address}</p>
-                <button
-                  onClick={() => setActive(st)}
-                  style={{
+                {on && (
+                  <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '10px',
-                    padding: 0, border: 'none', background: 'transparent', cursor: 'pointer',
-                    fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700,
-                    color: on ? '#E8572A' : '#076330',
-                  }}
-                >
-                  {on ? 'Showing on map' : 'Show on map'}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M12 19V5M6 11l6-6 6 6" />
-                  </svg>
-                </button>
+                    fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: '#E8572A',
+                  }}>
+                    Showing on map
+                  </span>
+                )}
                 <a
                   href={telHref(st.tel)}
+                  onClick={e => e.stopPropagation()}
                   className="nv-store-tel"
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    marginTop: '14px', background: '#E8572A', color: '#fff', textDecoration: 'none',
+                    marginTop: on ? '14px' : '24px', background: '#E8572A', color: '#fff', textDecoration: 'none',
                     borderRadius: '8px', padding: '13px 12px', fontSize: '14.5px', fontWeight: 700,
                     whiteSpace: 'nowrap', transition: 'background .2s',
                   }}

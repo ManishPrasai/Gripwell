@@ -5,11 +5,28 @@ import { useState } from 'react'
 export default function NewsletterSection() {
   const [email, setEmail]         = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError]         = useState<string | null>(null)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email) return
-    setSubmitted(true)
+    if (!email || submitting) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Something went wrong')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong — please try again')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -48,7 +65,7 @@ export default function NewsletterSection() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <input
               type="email" required value={email}
-              onChange={e => { setEmail(e.target.value); setSubmitted(false) }}
+              onChange={e => { setEmail(e.target.value); setSubmitted(false); setError(null) }}
               placeholder="you@email.com" aria-label="Email address"
               style={{
                 flex: '1 1 220px', minWidth: 0, background: '#FFFFFF', border: '1px solid #E7E5DE',
@@ -57,19 +74,24 @@ export default function NewsletterSection() {
               }}
             />
             <button
-              type="submit" className="nv-news-btn"
+              type="submit" className="nv-news-btn" disabled={submitting}
               style={{
                 background: '#E8572A', color: '#fff', border: 'none', borderRadius: '10px',
                 padding: '0 30px', height: '54px', fontFamily: "'DM Sans', sans-serif",
-                fontSize: '15px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s, box-shadow .2s',
+                fontSize: '15px', fontWeight: 700, cursor: submitting ? 'default' : 'pointer', whiteSpace: 'nowrap',
+                opacity: submitting ? 0.7 : 1,
+                transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s, box-shadow .2s, opacity .2s',
               }}
             >
-              Subscribe
+              {submitting ? 'Sending…' : 'Subscribe'}
             </button>
           </form>
 
-          {submitted ? (
+          {error ? (
+            <p style={{ margin: '14px 0 0', color: '#E8572A', fontSize: '13px', fontWeight: 600 }}>
+              {error}
+            </p>
+          ) : submitted ? (
             <p style={{ margin: '14px 0 0', display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#39C06E', fontSize: '14px', fontWeight: 600, animation: 'novaIn .3s ease both' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M20 6 9 17l-5-5" />

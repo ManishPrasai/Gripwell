@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Select as SelectPrimitive } from 'radix-ui'
 import TyreSizeGuideModal from './TyreSizeGuideModal'
 import { STORES, STORE_STATES_SERVED } from '../../../lib/stores'
 
@@ -20,26 +21,6 @@ const HERO_IMAGES = [
   '/images/hero/hero-3.jpg',
 ]
 const HERO_INTERVAL_MS = 6500
-
-interface TyreSizeCombo { width: number; profile: number; rimDiameter: number }
-
-/* Derive the valid next-dropdown options from real inventory combos, falling
-   back to the full range when nothing matches so the UI is never a dead end. */
-function profilesForWidth(combos: TyreSizeCombo[], w: string): string[] {
-  const matches = combos.filter(c => c.width === Number(w))
-  if (!matches.length) return TYRE_PROFILES
-  const set = new Set(matches.map(c => String(c.profile)))
-  const filtered = TYRE_PROFILES.filter(p => set.has(p))
-  return filtered.length ? filtered : TYRE_PROFILES
-}
-
-function rimsForWidthProfile(combos: TyreSizeCombo[], w: string, p: string): string[] {
-  const matches = combos.filter(c => c.width === Number(w) && c.profile === Number(p))
-  if (!matches.length) return RIM_SIZES
-  const set = new Set(matches.map(c => String(c.rimDiameter)))
-  const filtered = RIM_SIZES.filter(r => set.has(r))
-  return filtered.length ? filtered : RIM_SIZES
-}
 
 /* ── Shared field styling ────────────────────────────────────────────────── */
 const fieldLabel: React.CSSProperties = {
@@ -60,6 +41,55 @@ const selectStyle: React.CSSProperties = {
   color:        '#16211B',
   cursor:       'pointer',
   transition:   'border-color .2s',
+}
+
+const triggerStyle: React.CSSProperties = {
+  ...selectStyle,
+  display:        'flex',
+  alignItems:     'center',
+  justifyContent: 'space-between',
+  gap:            '6px',
+}
+
+/* Width/Profile/Rim all need to open the exact same way regardless of scroll
+   position — a native <select> lets the browser flip the list upward when it
+   doesn't fit below, and with three different option-count lists (17/11/10)
+   that made the three fields behave inconsistently. This uses Radix's Select
+   (already a dependency, already wired into the design system's CSS vars via
+   components/ui/select.tsx) with collision-avoidance turned off so it always
+   opens downward, same as its siblings, no matter where it sits on the page. */
+function HeroSelect({
+  value, onChange, options, suffix, ariaLabel,
+}: {
+  value: string; onChange: (v: string) => void; options: string[]; suffix?: string; ariaLabel: string
+}) {
+  return (
+    <SelectPrimitive.Root value={value} onValueChange={onChange}>
+      <SelectPrimitive.Trigger className="nv-hero-select" style={triggerStyle} aria-label={ariaLabel}>
+        <SelectPrimitive.Value />
+        <SelectPrimitive.Icon asChild>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6E7C74" strokeWidth="2.4"
+            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          position="popper" side="bottom" sideOffset={6}
+          className="nv-hero-select-content"
+        >
+          <SelectPrimitive.Viewport style={{ padding: '6px' }}>
+            {options.map(o => (
+              <SelectPrimitive.Item key={o} value={o} className="nv-hero-select-item">
+                <SelectPrimitive.ItemText>{o}{suffix}</SelectPrimitive.ItemText>
+              </SelectPrimitive.Item>
+            ))}
+          </SelectPrimitive.Viewport>
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectPrimitive.Root>
+  )
 }
 
 const searchBtn: React.CSSProperties = {
@@ -121,35 +151,6 @@ export default function HeroSection() {
     return () => clearInterval(t)
   }, [])
 
-  /* Real width/profile/rim combinations from inventory — drives cross-filtering */
-  const [sizeCombos, setSizeCombos] = useState<TyreSizeCombo[]>([])
-  useEffect(() => {
-    fetch('/api/tyres/sizes')
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data.sizes)) setSizeCombos(data.sizes) })
-      .catch(() => {})
-  }, [])
-
-  const availableProfiles = useMemo(() => profilesForWidth(sizeCombos, width), [sizeCombos, width])
-  const availableRims     = useMemo(() => rimsForWidthProfile(sizeCombos, width, profile), [sizeCombos, width, profile])
-
-  /* Width changed — cascade-validate profile, then rim */
-  function handleWidthChange(next: string) {
-    setWidth(next)
-    const profiles = profilesForWidth(sizeCombos, next)
-    const nextProfile = profiles.includes(profile) ? profile : profiles[0]
-    if (nextProfile !== profile) setProfile(nextProfile)
-    const rims = rimsForWidthProfile(sizeCombos, next, nextProfile)
-    if (!rims.includes(rim)) setRim(rims[0])
-  }
-
-  /* Profile changed — cascade-validate rim */
-  function handleProfileChange(next: string) {
-    setProfile(next)
-    const rims = rimsForWidthProfile(sizeCombos, width, next)
-    if (!rims.includes(rim)) setRim(rims[0])
-  }
-
   const currentSize = `${width}/${profile}R${rim}`
 
   function pickPopular(label: string) {
@@ -184,6 +185,22 @@ export default function HeroSection() {
           .nv-hero-cta           { grid-column: 1 / -1; }
         }
         .nv-hero-select:hover   { border-color: #076330; }
+        .nv-hero-select[data-state=open] { border-color: #076330; }
+        .nv-hero-select-content {
+          background: #FFFFFF; border: 1px solid #DEDCD4; border-radius: 8px;
+          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+          z-index: 1000;
+          width: var(--radix-select-trigger-width);
+          max-height: min(240px, var(--radix-select-content-available-height));
+          overflow-y: auto;
+        }
+        .nv-hero-select-item {
+          padding: 9px 10px; border-radius: 6px; cursor: pointer; outline: none;
+          font-family: 'DM Mono', monospace; font-size: 15px; color: #16211B;
+          transition: background .12s, color .12s;
+        }
+        .nv-hero-select-item[data-highlighted] { background: #F0EFE9; color: #16211B; }
+        .nv-hero-select-item[data-state=checked] { background: #EAF3ED; color: #076330; font-weight: 700; }
         .nv-hero-cta:hover      { background: #FF6817; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
         .nv-hero-cta:active     { transform: translateY(0); }
         .nv-trust-pill:hover    { background: rgba(250,249,245,0.14); border-color: rgba(250,249,245,0.34); }
@@ -271,24 +288,18 @@ export default function HeroSection() {
             {tab === 'tyres' ? (
               <div key="tyres" style={{ animation: 'novaIn .3s ease both' }}>
                 <div className="nv-hero-fields">
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
                     <span style={fieldLabel}>WIDTH</span>
-                    <select className="nv-hero-select" style={selectStyle} value={width} onChange={e => handleWidthChange(e.target.value)}>
-                      {TYRE_WIDTHS.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </label>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                    <HeroSelect value={width} onChange={setWidth} options={TYRE_WIDTHS} ariaLabel="Tyre width" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
                     <span style={fieldLabel}>PROFILE</span>
-                    <select className="nv-hero-select" style={selectStyle} value={profile} onChange={e => handleProfileChange(e.target.value)}>
-                      {availableProfiles.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </label>
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                    <HeroSelect value={profile} onChange={setProfile} options={TYRE_PROFILES} ariaLabel="Tyre profile" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
                     <span style={fieldLabel}>RIM</span>
-                    <select className="nv-hero-select" style={selectStyle} value={rim} onChange={e => setRim(e.target.value)}>
-                      {availableRims.map(o => <option key={o} value={o}>{o}&quot;</option>)}
-                    </select>
-                  </label>
+                    <HeroSelect value={rim} onChange={setRim} options={RIM_SIZES} suffix={'"'} ariaLabel="Rim diameter" />
+                  </div>
                   <button className="nv-hero-cta" style={searchBtn} onClick={search}>SEARCH TYRES</button>
                 </div>
               </div>

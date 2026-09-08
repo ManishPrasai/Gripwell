@@ -50,13 +50,21 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    let nearestStores = stores
+    // latitude/longitude are Prisma Decimal — JSON-serialize as strings, so
+    // convert to real numbers here (once) rather than at every call site.
+    const numericStores = stores.map(store => ({
+      ...store,
+      latitude:  Number(store.latitude),
+      longitude: Number(store.longitude),
+    }))
+
+    let nearestStores: (typeof numericStores[number] & { distance?: number })[] = numericStores
 
     // If lat/lng provided calculate distance
     if (lat && lng) {
-      const storesWithDistance = stores.map(store => {
-        const storeLat = parseFloat(store.latitude.toString())
-        const storeLng = parseFloat(store.longitude.toString())
+      const storesWithDistance = numericStores.map(store => {
+        const storeLat = store.latitude
+        const storeLng = store.longitude
 
         // Haversine formula for distance in km
         const R = 6371
@@ -80,7 +88,7 @@ export async function GET(req: NextRequest) {
 
     // If suburb provided filter by suburb or state
     if (suburb && !lat) {
-      nearestStores = stores
+      nearestStores = numericStores
         .filter(store =>
           store.suburb.toLowerCase().includes(suburb.toLowerCase()) ||
           store.state.toLowerCase().includes(suburb.toLowerCase())
