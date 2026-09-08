@@ -7,16 +7,24 @@
 ---
 
 ## Current focus
-Homepage redesign work on branch `Homepage-Redesign`. Just finished: Navbar "Locations" link now scrolls in place (both directions) when already on `/service` instead of jumping to the hero. Work is **uncommitted** as of 2026-09-06.
+`Homepage-Redesign` branch has been merged into `main` and deleted (2026-09-08) — all homepage redesign work, the Locations-navbar scroll fix, and the newsletter feature now live on `main` (`42b01f5`). Now setting up CI/CD via `.github/workflows/deploy.yml`.
 
 ## Branch / state
-- Branch: `Homepage-Redesign`, last commit `9842d1e` (category grid, in-store services, tyre size guide modal).
-- Since then, uncommitted: `Locations` navbar link fix (href → `/service?goto=shops`, plus in-place bidirectional scroll via a `handleNavClick` interceptor in `Navbar.tsx` that calls `smoothScrollToSection` instead of navigating when already on the target page), and a real double opt-in newsletter feature (new `Subscriber` Prisma model, `/api/newsletter/subscribe` + `/confirm` routes, `NewsletterSection.tsx` wired up) — tested end-to-end with real Gmail addresses, confirmed working.
-- Not yet pushed to VPS (last VPS push was after `9842d1e`; batch — don't auto-push).
+- `main` is current: `42b01f5`. No feature branch in progress right now.
+- `.github/workflows/deploy.yml` added — on push to `main`: type-checks, then SSHes into the VPS to `git pull && docker compose build && docker compose up -d`.
+- **Blocked on repo-admin access**: the account working this repo does NOT have admin rights on `Nova-Coorp/nova_tyres_website` — could not add a GitHub deploy key or repo Secrets. Still needed before the workflow can run:
+  - A deploy key (public half of `~/.ssh/nova_tyres_deploy` on the VPS) added at Settings → Deploy keys (read-only).
+  - 4 repo Secrets at Settings → Secrets and variables → Actions: `VPS_HOST` (`207.148.82.84`), `VPS_USER` (`root`), `VPS_SSH_KEY` (private half of `~/.ssh/nova_tyres_deploy` — was rotated after being pasted in chat once, use the current key on the VPS), `VPS_PATH` (`/root/nova-tyres`).
+  - Someone with admin access (the "senior dev" the user has been messaging) needs to do this or grant access.
+- The VPS's `/root/nova-tyres` was NOT a git clone (was tarball/scp-deployed) — user was in the middle of converting it to a real git clone (backed up as `/root/nova-tyres.bak`, attempted `git clone` via SSH deploy key) when blocked on the above. Confirm this finished before assuming `git pull` works there.
+- Not yet pushed to VPS via the old manual method either — main has moved since the last VPS deploy (which was after `9842d1e`).
 - Prior mobile-responsiveness audit (branch `avishek`, commit `24a58d6`) is a separate, older thread — not part of this session.
 
 ## Next steps / TODO
-- [ ] Push accumulated `Homepage-Redesign` changes (Locations-link fix + newsletter feature) to VPS when asked.
+- [ ] Confirm with the senior dev/repo admin: deploy key added, 4 secrets added.
+- [ ] Confirm `/root/nova-tyres` on the VPS is a working git clone (`git status` should show a branch, not "not a git repository").
+- [ ] Once both above are done, push a trivial commit to `main` to test the workflow end-to-end, then check `docker compose ps` on the VPS.
+- [ ] Push current `main` to the VPS (manual, since automation isn't confirmed working yet).
 - [ ] Confirm mobile-audit work below (branch `avishek`) still needs review/commit if that branch is picked back up — unrelated to current work.
 
 ## Gotchas / notes
