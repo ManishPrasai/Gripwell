@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../../context/CartContext'
+import MobileCheckout from '../../components/checkout/mobile/MobileCheckout'
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -232,8 +233,21 @@ function StripePaymentForm({
   )
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
+// ── Page — dual-tree split (same pattern as / , /tyres , /wheels , /service) ──
+// Desktop design is byte-for-byte unchanged, just wrapped; the mobile tree
+// renders MobileCheckout below 1024px.
 export default function CheckoutPage() {
+  return (
+    <>
+      <style>{`@media (max-width:1023.98px){.nv-shared-chrome{display:none!important}}`}</style>
+      <div data-vw="desktop"><CheckoutPageDesktop /></div>
+      <div data-vw="mobile"><MobileCheckout /></div>
+    </>
+  )
+}
+
+// ── Desktop checkout ─────────────────────────────────────────────────────────
+function CheckoutPageDesktop() {
   const { items, cartTotal, cartCount, clearCart } = useCart()
   const router = useRouter()
 

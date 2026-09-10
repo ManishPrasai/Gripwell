@@ -1,119 +1,103 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
 /*
-  Each card points at a filter the catalogue can actually serve. The TyreType
-  enum is PASSENGER | SUV | COMMERCIAL | MUD_TERRAIN, so the design's
-  "All-Terrain" slot is filled by COMMERCIAL — the one remaining real type —
-  rather than linking to a filter that returns nothing.
+  "Find the right tyre for your drive" — the Shop-by-category grid.
+
+  The TyreType enum is PASSENGER | SUV | COMMERCIAL | MUD_TERRAIN, so the
+  "Commercial" card points at that filter; "Wheels" jumps to the wheels
+  catalogue. Each href resolves to a filter the catalogue can actually serve.
+
+  Image balance: the source assets don't share an aspect ratio — the tyre
+  shots are ~1664x2432 (tall), the wheel is ~447x559 (flatter) — so every
+  image sits in a fixed-height `.nv-cat-figure` that flex-centres and
+  `object-fit: contain`s it. Per-category perceptual tuning is a single knob,
+  the `--img-scale` custom property, keyed off `data-category` (see <style>).
 */
 const CATEGORIES = [
-  { name: 'PASSENGER',  tag: 'QUIET & ECONOMICAL', cta: 'Shop Passenger',  href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png',   alt: 'Passenger car tyre' },
-  { name: '4X4 / SUV',  tag: 'BUILT FOR LOAD',     cta: 'Shop 4x4 / SUV',  href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png',         alt: '4x4 and SUV tyre' },
-  { name: 'COMMERCIAL', tag: 'VANS & UTES',        cta: 'Shop Commercial', href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-all-terrain.png', alt: 'Commercial van tyre' },
-  { name: 'MUD-TERRAIN',tag: 'MAXIMUM BITE',       cta: 'Shop Mud-Terrain',href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png',         alt: 'Mud-terrain tyre' },
-  { name: 'WHEELS',     tag: 'ALLOY & PACKAGES',   cta: 'Shop Wheels',     href: '/wheels',                         img: '/images/wheels/king-kt5.png',        alt: 'Alloy wheel' },
+  { key: 'passenger',  name: 'Passenger',   blurb: 'Quiet & economical', href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png',   alt: 'Passenger car tyre',  w: 1664, h: 2432 },
+  { key: 'suv',        name: '4x4 / SUV',   blurb: 'Built for load',     href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png',         alt: '4x4 and SUV tyre',    w: 1664, h: 2432 },
+  { key: 'commercial', name: 'Commercial',  blurb: 'Vans & utes',        href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-all-terrain.png', alt: 'Commercial van tyre', w: 1664, h: 2432 },
+  { key: 'mud',        name: 'Mud-Terrain', blurb: 'Maximum bite',       href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png',         alt: 'Mud-terrain tyre',    w: 1584, h: 2336 },
+  { key: 'wheels',     name: 'Wheels',      blurb: 'Alloy & packages',   href: '/wheels',                         img: '/images/wheels/king-kt5.png',        alt: 'Alloy wheel',         w: 447,  h: 559 },
 ]
 
 export default function BrowseByCategory() {
-  const [hovered, setHovered] = useState<number | null>(null)
-
   return (
-    <section style={{ background: '#0D1A12', padding: 'clamp(32px,3.6vw,48px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: 'clamp(52px,6vw,80px) 0', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        .nv-cat-grid { display: grid; gap: 16px; grid-template-columns: repeat(3,minmax(0,1fr)); }
-        @media (max-width: 780px) { .nv-cat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-        @media (max-width: 520px) { .nv-cat-grid { grid-template-columns: 1fr; } }
+        .nv-cat-grid { display: grid; gap: 20px; grid-template-columns: repeat(5,minmax(0,1fr)); }
+        @media (max-width: 1100px) { .nv-cat-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+        @media (max-width: 780px)  { .nv-cat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+        @media (max-width: 520px)  { .nv-cat-grid { grid-template-columns: 1fr; } }
+
+        .nv-cat-card { position: relative; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E7E5DE; border-radius: 18px; padding: 24px; text-decoration: none; color: #16211B; transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s; }
+        .nv-cat-card:hover { border-color: #C9C7BE; transform: translateY(-5px); box-shadow: 0 6px 10px rgba(20,25,22,0.08), 0 26px 50px -22px rgba(20,25,22,0.34); }
+
+        /* One fixed stage for every product shot: identical height on every
+           card, flex-centred both axes, inset off the card edge, and clipped
+           so a perceptual scale-up can't bleed past the frame. */
+        .nv-cat-figure {
+          --img-scale: 1;
+          display: flex; align-items: center; justify-content: center;
+          height: 224px; padding: 14px; margin-bottom: 20px; overflow: hidden;
+        }
+        .nv-cat-img {
+          max-width: 100%; max-height: 100%; width: auto; height: auto;
+          object-fit: contain; transform: scale(var(--img-scale));
+        }
+
+        /* Perceptual balance knob — the wheel/rim asset is flatter and reads
+           small next to the tall tyre shots, so nudge it up. Add a line per
+           category (e.g. a chunky tread that reads heavy → scale below 1). */
+        .nv-cat-card[data-category="wheels"] .nv-cat-figure { --img-scale: 1.12; }
       `}</style>
 
-      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
-        <div data-reveal style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: '0 0 8px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(30px,3.4vw,40px)', letterSpacing: '0.02em', color: '#F1EFE7' }}>
-            Find the right tyre for your drive
-          </h2>
-          <p style={{ margin: '0 auto', maxWidth: '56ch', color: '#9DB0A5', fontSize: '14px' }}>
-            Engineered for performance, safety and confidence.
-          </p>
-        </div>
-
-        <div data-reveal className="nv-cat-grid nv-d1">
-          {CATEGORIES.map((c, i) => {
-            const on = hovered === i
-            return (
-              <Link
-                key={c.name}
-                href={c.href}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                style={{
-                  position: 'relative', display: 'flex', flexDirection: 'column',
-                  boxSizing: 'border-box', overflow: 'hidden', borderRadius: '14px', textDecoration: 'none',
-                  background: '#1C3A2B',
-                  border: `1px solid ${on ? 'rgba(250,249,245,0.42)' : 'rgba(250,249,245,0.18)'}`,
-                  transform: on ? 'translateY(-6px)' : 'translateY(0)',
-                  boxShadow: on ? '0 20px 34px -18px rgba(0,0,0,0.5)' : 'none',
-                  transition: 'transform .3s cubic-bezier(.22,1,.36,1), border-color .3s, box-shadow .3s',
-                }}
-              >
-                <span style={{
-                  position: 'relative', height: 'clamp(160px,14vw,190px)', background: '#E7EFE9',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Image src={c.img} alt={c.alt} fill sizes="(max-width: 780px) 90vw, 380px" style={{ objectFit: 'contain' }} />
-                  <span style={{
-                    position: 'absolute', top: '12px', right: '12px',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: '32px', height: '32px', borderRadius: '999px',
-                    background: on ? '#E8572A' : '#1C3A2B', color: '#F1EFE7',
-                    transition: 'background .25s',
-                  }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </span>
-
-                <span style={{ padding: '10px 16px 12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '10px', letterSpacing: '0.16em', color: '#FF8A5C', marginBottom: '7px' }}>
-                    {c.tag}
-                  </span>
-                  <span style={{ display: 'block', fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(22px,2.2vw,28px)', letterSpacing: '0.02em', color: '#F1EFE7', lineHeight: 1, marginBottom: '12px' }}>
-                    {c.name}
-                  </span>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '7px', paddingTop: '11px',
-                    borderTop: '1px solid rgba(250,249,245,0.16)', width: '100%',
-                    fontSize: '13px', fontWeight: 700, color: '#F1EFE7', marginTop: 'auto',
-                  }}>
-                    {c.cta}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </span>
-              </Link>
-            )
-          })}
-
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
+        <div
+          data-reveal
+          style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between',
+            gap: '16px 24px', marginBottom: 'clamp(28px,3.2vw,40px)',
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8572A', marginBottom: '10px' }}>
+              Shop by category
+            </span>
+            <h2 style={{ margin: 0, fontSize: 'clamp(32px,3.8vw,44px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#16211B' }}>
+              Find the right tyre for your drive
+            </h2>
+          </div>
           <Link
             href="/tyres"
             style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              borderRadius: '14px', border: '1.5px dashed rgba(250,249,245,0.3)', textDecoration: 'none', color: '#F1EFE7',
-              minHeight: 'clamp(160px,14vw,190px)',
-              transition: 'border-color .25s, background .25s',
+              display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '13px', fontWeight: 700,
+              letterSpacing: '0.06em', textTransform: 'uppercase', color: '#076330', textDecoration: 'none',
+              whiteSpace: 'nowrap', paddingBottom: '4px',
             }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(250,249,245,0.6)'; e.currentTarget.style.background = 'rgba(250,249,245,0.04)' }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(250,249,245,0.3)'; e.currentTarget.style.background = 'transparent' }}
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            View all tyres
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
-            <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '20px', letterSpacing: '0.03em' }}>View all tyres</span>
           </Link>
+        </div>
+
+        <div data-reveal className="nv-cat-grid nv-d1">
+          {CATEGORIES.map(c => (
+            <Link key={c.key} href={c.href} className="nv-cat-card" data-category={c.key}>
+              <span className="nv-cat-figure">
+                <Image src={c.img} alt={c.alt} width={c.w} height={c.h} className="nv-cat-img" />
+              </span>
+              <span style={{ display: 'block', fontSize: '19px', fontWeight: 700, color: '#16211B', marginBottom: '6px' }}>
+                {c.name}
+              </span>
+              <span style={{ display: 'block', fontSize: '13.5px', color: '#6E7C74' }}>
+                {c.blurb}
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

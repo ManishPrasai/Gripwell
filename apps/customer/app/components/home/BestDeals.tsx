@@ -264,6 +264,7 @@ export default function BestDeals() {
   return (
     <section
       style={{
+        background: '#FAF9F5',
         maxWidth: '1180px', margin: '0 auto',
         padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,40px)',
         fontFamily: "'DM Sans', sans-serif",

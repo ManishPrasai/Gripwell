@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { C, FONT, CONTAINER, SECTION_PAD, KICKER, H2 } from '../shop/tokens'
 
-const FEATURED_COUNT = 3
+const FEATURED_COUNT = 4
 
 interface WheelItem {
   id: string; brand: string; model: string; slug: string
