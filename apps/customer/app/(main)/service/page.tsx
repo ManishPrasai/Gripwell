@@ -21,6 +21,7 @@
 import { useState, useEffect, useRef, ReactNode } from 'react'
 import Image from 'next/image'
 import { smoothScrollToSection } from '../../../lib/scrollToSection'
+import MobileServicePage from '../../components/service/mobile/MobileServicePage'
 
 /* ════════════════════════════════════════════════════════════════════
    ICONS — exact SVG paths from the reference
@@ -229,13 +230,6 @@ const BRAND_CARDS = [
   { name: 'Hankook', src: '/images/brands/hankook.svg' },
   { name: 'BFGoodrich', src: '/images/brands/bfgoodrich.svg' },
 ]
-const BRAND_FLOATS = [
-  { cls: 'bf-1', src: '/images/brands/maxxis.svg' },
-  { cls: 'bf-2', src: '/images/brands/nitto.svg' },
-  { cls: 'bf-3', src: '/images/brands/atlander.svg' },
-  { cls: 'bf-4', src: '/images/brands/roh.svg' },
-]
-
 const STAR_LABELS = ['Tap to rate', 'Poor', 'Fair', 'Good', 'Great', 'Excellent']
 
 /* ════════════════════════════════════════════════════════════════════
@@ -291,9 +285,21 @@ const TextStars = ({ sm = false }: { sm?: boolean }) => (
 )
 
 /* ════════════════════════════════════════════════════════════════════
-   PAGE
+   PAGE — dual-tree split (same pattern as / , /tyres , /wheels).
+   Desktop design is byte-for-byte unchanged, just wrapped; the mobile
+   tree renders MobileServicePage below 1024px.
 ═══════════════════════════════════════════════════════════════════ */
 export default function ServicePage() {
+  return (
+    <>
+      <style>{`@media (max-width:1023.98px){.nv-shared-chrome{display:none!important}}`}</style>
+      <div data-vw="desktop"><ServicePageDesktop /></div>
+      <div data-vw="mobile"><MobileServicePage /></div>
+    </>
+  )
+}
+
+function ServicePageDesktop() {
   /* tiers */
   const [tierIdx, setTierIdx] = useState(0)
   const tier = TIERS[tierIdx]
@@ -577,12 +583,6 @@ export default function ServicePage() {
 
       {/* ══ BRANDS ════════════════════════════════════════════════════ */}
       <section className="brands section-pad nv-cv" id="brands">
-        {BRAND_FLOATS.map(f => (
-          <span key={f.cls} className={`brand-float ${f.cls}`}>
-            <img src={f.src} alt="" loading="lazy" />
-          </span>
-        ))}
-
         <div className="brands-head" data-reveal>
           <span className="brands-pill">Our partners</span>
           <h2><span className="brand-g">Brands we</span> <span className="accent">service &amp; sell</span></h2>
@@ -590,12 +590,17 @@ export default function ServicePage() {
           <span className="brands-divider"><i /><b /></span>
         </div>
 
+        {/* The list is rendered twice so the -50% keyframe lands on the seam and
+            the scroll reads as continuous; the duplicate half is decorative. */}
         <div className="brands-carousel" data-reveal>
           <div className="brands-track">
-            {BRAND_CARDS.map((b, i) => (
-              <div key={b.name} className={`brand-card${i === 3 ? ' is-featured' : ''}`}>
-                <img src={b.src} alt={b.name} loading="lazy" />
-                <span className="brand-star"><IconStar /></span>
+            {[...BRAND_CARDS, ...BRAND_CARDS].map((b, i) => (
+              <div
+                key={`${b.name}-${i}`}
+                className="brand-card"
+                aria-hidden={i >= BRAND_CARDS.length || undefined}
+              >
+                <img src={b.src} alt={i < BRAND_CARDS.length ? b.name : ''} loading="lazy" />
               </div>
             ))}
           </div>
@@ -1339,21 +1344,9 @@ const CSS = `
 /* ============================================================
    BRANDS
 ============================================================ */
-.svcp .brands { position: relative; isolation: isolate; background: var(--surface); border-block: 1px solid var(--line); overflow: hidden; text-align: center; }
-.svcp .brand-float {
-  position: absolute; z-index: 0; width: 96px; height: 96px;
-  background: #fff; border: 1px solid var(--line); border-radius: 18px;
-  box-shadow: var(--shadow); opacity: .9;
-  display: grid; place-items: center; padding: 14px;
-}
-.svcp .brand-float img { max-height: 100%; width: auto; object-fit: contain; }
-.svcp .brand-float.bf-1 { top: 12%; left: 9%; transform: rotate(-9deg); }
-.svcp .brand-float.bf-2 { top: 16%; right: 9%; transform: rotate(8deg); }
-.svcp .brand-float.bf-3 { top: 42%; left: 4%; transform: rotate(7deg); width: 84px; height: 84px; }
-.svcp .brand-float.bf-4 { top: 40%; right: 4%; transform: rotate(-8deg); width: 84px; height: 84px; }
-@media (max-width: 980px) { .svcp .brand-float { display: none; } }
+.svcp .brands { position: relative; background: var(--surface); border-block: 1px solid var(--line); overflow: hidden; text-align: center; }
 
-.svcp .brands-head { position: relative; z-index: 1; max-width: 640px; margin-inline: auto; }
+.svcp .brands-head { max-width: 640px; margin-inline: auto; }
 .svcp .brands-pill {
   display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700;
   letter-spacing: .2em; text-transform: uppercase; color: var(--accent);
@@ -1370,27 +1363,33 @@ const CSS = `
 .svcp .brands-divider i { width: 64px; height: 3px; border-radius: 3px; background: var(--green); }
 .svcp .brands-divider b { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: .7; }
 
-.svcp .brands-carousel { position: relative; z-index: 1; margin: clamp(40px, 5vw, 64px) auto 0; max-width: var(--maxw); padding-inline: var(--gutter); }
-.svcp .brands-track { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(12px, 1.4vw, 20px); align-items: stretch; }
+.svcp .brands-carousel {
+  position: relative; margin: clamp(40px, 5vw, 64px) 0 0;
+  width: 100%; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+}
+/* The list is rendered twice and spacing lives on the cards (margin-right, not
+   flex gap), so the two halves are exactly equal width and -50% lands on the
+   seam regardless of the card's box model. */
+.svcp .brands-track {
+  display: flex; width: max-content; align-items: stretch;
+  animation: svcpBrandsSlide 34s linear infinite;
+}
+.svcp .brands-carousel:hover .brands-track { animation-play-state: paused; }
+@keyframes svcpBrandsSlide {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
 .svcp .brand-card {
-  position: relative; width: 100%; height: clamp(94px, 8.5vw, 122px);
+  box-sizing: border-box;
+  flex: 0 0 176px; height: clamp(94px, 8.5vw, 122px); margin-right: 16px;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
   box-shadow: var(--shadow); display: grid; place-items: center; padding: 16px;
-  transition: transform .3s var(--ease), box-shadow .3s, border-color .3s;
+  transition: border-color .3s, box-shadow .3s;
 }
-.svcp .brand-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 18px 40px -18px var(--accent); }
-.svcp .brand-card.is-featured { border-color: var(--accent); box-shadow: 0 18px 40px -18px var(--accent); }
+.svcp .brands-carousel:hover .brand-card:hover { border-color: var(--accent); box-shadow: 0 18px 40px -18px var(--accent); }
 .svcp .brand-card img { max-height: 38px; width: auto; object-fit: contain; }
-.svcp .brand-star {
-  position: absolute; top: -14px; left: 50%; transform: translateX(-50%) scale(0);
-  width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff;
-  display: grid; place-items: center; box-shadow: var(--shadow); transition: transform .35s var(--ease);
-}
-.svcp .brand-star svg { width: 16px; height: 16px; }
-.svcp .brand-card.is-featured .brand-star { transform: translateX(-50%) scale(1); }
-@media (max-width: 1080px) { .svcp .brands-track { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 720px)  { .svcp .brands-track { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 460px)  { .svcp .brands-track { grid-template-columns: repeat(2, 1fr); } }
 
 .svcp .brands-trust { position: relative; z-index: 1; margin-top: 30px; display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
 .svcp .brands-avatars { display: inline-flex; align-items: center; }
@@ -1729,7 +1728,8 @@ const CSS = `
 
 /* reduced motion (reference parity — global rules also apply) */
 @media (prefers-reduced-motion: reduce) {
-  .svcp .marquee-track { animation: none !important; }
+  .svcp .marquee-track,
+  .svcp .brands-track { animation: none !important; }
   .svcp .inc { animation: none; opacity: 1; transform: none; }
 }
 `

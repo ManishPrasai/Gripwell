@@ -153,6 +153,10 @@ interface StoreMapProps<T extends MappableStore> {
    *  the muted basemap — for a single-store locator view where the customer
    *  needs real navigation detail rather than a multi-pin overview. */
   fullDetail?: boolean
+  /** Set false for a preview: no pan/zoom gestures, no zoom control, no
+   *  "ctrl + scroll" / "two fingers" hint. The caller typically overlays a
+   *  link so the whole panel taps through to the full locator. Default true. */
+  interactive?: boolean
 }
 
 /* Shown when the key is absent so a missing env var degrades to a readable
@@ -177,7 +181,7 @@ function MapUnavailable() {
 /* Generic over the store shape so onSelectStore hands callers back their own
    record type, not a narrowed one they'd have to re-widen. */
 export default function StoreMap<T extends MappableStore>({
-  stores, selectedStore, onSelectStore, fullDetail,
+  stores, selectedStore, onSelectStore, fullDetail, interactive = true,
 }: StoreMapProps<T>) {
   /* Which pin's InfoWindow is open. Tracked by id so it survives the parent
      re-rendering with a fresh store array. */
@@ -195,8 +199,9 @@ export default function StoreMap<T extends MappableStore>({
           defaultZoom={DEFAULT_ZOOM}
           styles={fullDetail ? undefined : MAP_STYLES}
           disableDefaultUI
-          zoomControl
-          gestureHandling="cooperative"
+          zoomControl={interactive}
+          gestureHandling={interactive ? 'cooperative' : 'none'}
+          keyboardShortcuts={interactive}
           clickableIcons={false}
           style={{ width: '100%', height: '100%' }}
         >

@@ -399,6 +399,44 @@ textarea:focus-visible {
   border-radius: 9999px;
 }
 
+/* ────────────────────────────────────────────────────────────────────
+   Responsive design split — desktop vs mobile trees on one page.
+
+   Both trees are server-rendered into the HTML; CSS picks one per
+   viewport width. The switch is instant on resize (DevTools included),
+   costs no JavaScript, and needs no user-agent detection so the page
+   stays a single cacheable response. 1024px is the divide — tablets
+   get the mobile design.
+
+   [data-vw="desktop"] → the existing homepage, untouched
+   [data-vw="mobile"]  → the new phone/tablet design
+──────────────────────────────────────────────────────────────────── */
+@media (max-width: 1023.98px) {
+  [data-vw="desktop"] { display: none !important; }
+}
+@media (min-width: 1024px) {
+  [data-vw="mobile"] { display: none !important; }
+}
+
+/* Mobile design tree (MobileHome, MobileFindTyres, …) — shared helpers.
+   Kept here rather than in a per-component <style> so the mobile pages don't
+   each re-declare them. All class names are .nv-mob-* scoped. */
+@keyframes nvMobFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.nv-mob-press { transition: transform .1s; }
+.nv-mob-press:active { transform: scale(0.97); }
+.nv-mob-rail { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.nv-mob-rail > * { scroll-snap-align: start; flex: none; }
+.nv-mob-rail::-webkit-scrollbar { height: 0; }
+.nv-mob-pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.nv-mob-pills::-webkit-scrollbar { display: none; }
+.nv-mob-pills > * { flex: none; }
+.nv-mob-vscroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #D8D5CA transparent; }
+.nv-mob-vscroll::-webkit-scrollbar { width: 4px; }
+.nv-mob-vscroll::-webkit-scrollbar-thumb { background: #D8D5CA; border-radius: 999px; }
+@keyframes nvMobMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.nv-mob-marquee { display: flex; width: max-content; animation: nvMobMarquee 16s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .nv-mob-marquee { animation: none; } }
+
 /* Accessibility: kill all decorative motion for users who opt out */
 @media (prefers-reduced-motion: reduce) {
   html.nv-motion [data-reveal] {
