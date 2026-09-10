@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../../context/CartContext'
+import { fittingRate, isVehicleType, type VehicleType } from '../../../lib/fitting'
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const FITTING_COST = 25.00
 const AU_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
 
 const DEFAULT_STORE = {
@@ -268,6 +268,22 @@ export default function CheckoutPage() {
     } catch {}
   }, [])
 
+  // The cart's fitting choice (fit vs pickup, vehicle type, how many) — same
+  // localStorage key CartContents.tsx writes to, so the summary here matches
+  // what the server actually charges instead of a flat guessed fee.
+  const [isFit,       setIsFit]       = useState(true)
+  const [vehicleType, setVehicleType] = useState<VehicleType>('passenger')
+  const [fitCount,    setFitCount]    = useState(cartCount)
+
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('nova_fitting') || '{}')
+      setIsFit(raw.method !== 'pickup')
+      setVehicleType(isVehicleType(raw.vehicleType) ? raw.vehicleType : 'passenger')
+      setFitCount(Number.isFinite(raw.fitCount) ? raw.fitCount : cartCount)
+    } catch {}
+  }, [cartCount])
+
   // Misc
   const [notes,         setNotes]         = useState('')
   const [placed,        setPlaced]        = useState(false)
@@ -312,7 +328,8 @@ export default function CheckoutPage() {
     }
   }, []) // runs once on mount only
 
-  const total   = cartTotal + FITTING_COST
+  const fittingFee = isFit ? fittingRate(vehicleType) * fitCount : 0
+  const total      = cartTotal + fittingFee
   const divider = <div style={{ height: '1px', background: '#F0F0F0', margin: '0 24px' }} />
 
   // ── Billing details forwarded to Stripe (avoids duplicate fields in PaymentElement) ──
@@ -688,7 +705,9 @@ export default function CheckoutPage() {
             <div style={{ padding: '4px 20px 20px' }}>
               {[
                 { label: `Subtotal (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`, value: `$${cartTotal.toFixed(2)}` },
-                { label: 'Fitting & Balancing', value: `$${FITTING_COST.toFixed(2)}` },
+                isFit
+                  ? { label: 'Fitting & Balancing', value: `$${fittingFee.toFixed(2)}` }
+                  : { label: 'Pickup', value: 'Free' },
                 { label: 'GST Status', value: 'GST Included', muted: true },
               ].map(r => (
                 <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>

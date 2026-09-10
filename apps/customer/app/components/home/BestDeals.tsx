@@ -276,13 +276,28 @@ export default function BestDeals() {
       `}</style>
 
       {/* ── Header ── */}
-      <div data-reveal style={{ marginBottom: '26px' }}>
-        <p style={{ margin: '0 0 8px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E8572A' }}>
-          This week
-        </p>
-        <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(34px,4vw,46px)', letterSpacing: '0.02em', color: '#1C3A2B' }}>
-          Best deals on tyres &amp; wheels
-        </h2>
+      <div data-reveal style={{
+        display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between',
+        gap: '16px 24px', marginBottom: '26px',
+      }}>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8572A' }}>
+            Best deals
+          </p>
+          <h2 style={{ margin: 0, fontSize: 'clamp(30px,3.6vw,42px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#16211B' }}>
+            Warehouse-direct pricing, every day
+          </h2>
+        </div>
+        <Link href="/tyres/results" style={{
+          display: 'inline-flex', alignItems: 'center', gap: '7px',
+          fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+          color: '#076330', textDecoration: 'none', whiteSpace: 'nowrap', paddingBottom: '4px',
+        }}>
+          View all deals
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Link>
       </div>
 
       {/* ── Grid — admin-curated via each product's "Featured" flag ── */}

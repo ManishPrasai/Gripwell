@@ -16,7 +16,7 @@ export default function InStoreServices() {
   return (
     <section
       style={{
-        background: '#FFFFFF', borderTop: '1px solid #E7E5DE',
+        background: '#FAF9F5',
         padding: 'clamp(46px,5.4vw,72px) 0', fontFamily: "'DM Sans', sans-serif",
       }}
     >

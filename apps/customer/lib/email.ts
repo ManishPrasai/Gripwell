@@ -236,6 +236,82 @@ function newsletterConfirmHtml(confirmUrl: string): string {
 </body></html>`
 }
 
+/* ── Warranty / refund claim ────────────────────────────────────────────────
+   Two emails per submission: a branded confirmation to the customer, and a
+   plain internal notice to staff (the claim itself lives in the Enquiry
+   table — same model the admin dashboard's live enquiries feed already
+   queries — this email is just so nobody has to be staring at the dashboard
+   to catch a time-sensitive claim). */
+const WARRANTY_NOTIFY_EMAIL = process.env.WARRANTY_NOTIFY_EMAIL || 'info@novatyres.com.au'
+
+export interface WarrantyClaimData {
+  claimType:    'warranty' | 'refund'
+  name:         string
+  email:        string
+  phone:        string
+  address:      string
+  orderNumber?: string
+  productName:  string
+  tyreCount?:   string
+  reason:       string
+  receiptUrl:   string
+  photoUrls:    string[]
+}
+
+export async function sendWarrantyClaimConfirmation(d: WarrantyClaimData): Promise<boolean> {
+  if (!d.email) return false
+  const label = d.claimType === 'warranty' ? 'warranty claim' : 'refund request'
+  return sendEmail({
+    to:      d.email,
+    subject: `We've received your ${label} — Nova Tyres`,
+    html:    `<!doctype html>
+<html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;padding:24px 16px">
+    <div style="background:#076330;border-radius:16px 16px 0 0;padding:26px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    </div>
+    <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px">
+      <h1 style="margin:0 0 10px;color:#16211B;font-size:22px;line-height:1.25">Thanks, ${esc(d.name)} — we've got your ${label}.</h1>
+      <p style="margin:0 0 20px;color:#47554D;font-size:14px;line-height:1.6">Our Customer Support team will review it and get back to you with an outcome within <strong>5 working days</strong>. If a physical inspection is needed, we'll be in touch to arrange it.</p>
+      <div style="background:#F5F4EF;border-radius:10px;padding:14px 16px;font-size:13.5px;color:#47554D;line-height:1.7">
+        <div><strong>Product:</strong> ${esc(d.productName)}</div>
+        ${d.orderNumber ? `<div><strong>Order:</strong> ${esc(d.orderNumber)}</div>` : ''}
+        <div><strong>Details:</strong> ${esc(d.reason)}</div>
+      </div>
+      <p style="margin:24px 0 0;color:#85908A;font-size:12.5px;line-height:1.6">Questions in the meantime? Reply to this email.</p>
+    </div>
+  </div>
+</body></html>`,
+  })
+}
+
+export async function sendWarrantyClaimNotification(d: WarrantyClaimData): Promise<boolean> {
+  const label = d.claimType === 'warranty' ? 'Warranty claim' : 'Refund request'
+  const photos = d.photoUrls.length
+    ? d.photoUrls.map(u => `<a href="${esc(SITE_URL + u)}">${esc(SITE_URL + u)}</a>`).join('<br>')
+    : '<em>none attached</em>'
+  return sendEmail({
+    to:      WARRANTY_NOTIFY_EMAIL,
+    subject: `${label}: ${d.name} — ${d.productName}`,
+    replyTo: d.email,
+    html:    `<div style="font-family:sans-serif;font-size:14px;line-height:1.7;color:#16211B">
+      <p><strong>${esc(label)}</strong> submitted via the website.</p>
+      <p>
+        <strong>Name:</strong> ${esc(d.name)}<br>
+        <strong>Email:</strong> ${esc(d.email)}<br>
+        <strong>Phone:</strong> ${esc(d.phone)}<br>
+        <strong>Address:</strong> ${esc(d.address)}<br>
+        ${d.orderNumber ? `<strong>Order number:</strong> ${esc(d.orderNumber)}<br>` : ''}
+        <strong>Product:</strong> ${esc(d.productName)}<br>
+        ${d.tyreCount ? `<strong>Tyres affected:</strong> ${esc(d.tyreCount)}<br>` : ''}
+      </p>
+      <p><strong>Description:</strong><br>${esc(d.reason)}</p>
+      <p><strong>Receipt / proof of purchase:</strong><br><a href="${esc(SITE_URL + d.receiptUrl)}">${esc(SITE_URL + d.receiptUrl)}</a></p>
+      <p><strong>Fault photos:</strong><br>${photos}</p>
+    </div>`,
+  })
+}
+
 function esc(s: string): string {
   return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string))
 }
