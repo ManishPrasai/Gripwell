@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true
-  }
+  },
+  transpilePackages: ['@nova/database']
 };
 export default nextConfig;
