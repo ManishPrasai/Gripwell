@@ -101,7 +101,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
           background:   '#fff',
           borderRadius: '16px',
           border:       '1px solid #E5E5E5',
-          height:       '360px',
+          height:       '400px',
           boxShadow:    hovered
             ? '0 12px 40px rgba(0,0,0,0.14)'
             : '0 1px 4px rgba(0,0,0,0.04)',
@@ -234,7 +234,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
 /* ── Skeleton card ────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ height: '360px', borderRadius: '16px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
+    <div style={{ height: '400px', borderRadius: '16px', border: '1px solid #E5E5E5', background: '#fff', overflow: 'hidden' }}>
       <div style={{ height: '200px', background: '#F0F0F0', margin: '16px 16px 0' }} />
       <div style={{ padding: '14px 16px' }}>
         <div style={{ width: '64px', height: '20px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '12px' }} />

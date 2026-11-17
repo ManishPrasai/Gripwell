@@ -47,7 +47,8 @@ export default function SocialGrid() {
         </div>
       </div>
 
-      <div className="nv-social-grid">
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
+      <div className="nv-social-grid" style={{ border: '1px solid #E7E5DE', borderRadius: '22px', overflow: 'hidden' }}>
         {PICS.map((sp, i) => (
           <a
             key={i}
@@ -79,6 +80,7 @@ export default function SocialGrid() {
             </span>
           </a>
         ))}
+      </div>
       </div>
     </section>
   )

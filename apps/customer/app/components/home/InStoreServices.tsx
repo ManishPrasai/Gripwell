@@ -22,11 +22,16 @@ export default function InStoreServices() {
     >
       <style>{`
         .nv-svc-cta:hover { border-color: #076330; background: #E8F5EE; }
-        .nv-svc-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; align-items: stretch; }
-        .nv-svc-cards  { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3,1fr); gap: 14px; height: 100%; }
-        .nv-svc-photo  { position: relative; min-height: 260px; border-radius: 14px; overflow: hidden; }
+        .nv-svc-layout {
+          display: grid; grid-template-columns: 1fr 1.5fr; gap: 28px; align-items: stretch;
+          border: 1px solid #E7E5DE; border-radius: 22px; padding: 24px;
+          box-shadow: 0 4px 6px rgba(20,25,22,0.05), 0 20px 44px -28px rgba(20,25,22,0.16);
+          height: 520px; overflow: hidden;
+        }
+        .nv-svc-cards  { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3,1fr); gap: 14px; height: 100%; overflow: hidden; }
+        .nv-svc-photo  { position: relative; height: 100%; border-radius: 14px; overflow: hidden; }
         @media (max-width: 900px) {
-          .nv-svc-layout { grid-template-columns: 1fr; }
+          .nv-svc-layout { grid-template-columns: 1fr; height: auto; }
           .nv-svc-photo  { min-height: 200px; }
         }
         @media (max-width: 560px) {

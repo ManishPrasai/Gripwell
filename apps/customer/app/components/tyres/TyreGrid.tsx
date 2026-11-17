@@ -115,7 +115,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
           border:       `1px solid ${hovered ? 'rgba(7,99,48,0.45)' : 'rgba(7,99,48,0.16)'}`,
           overflow:     'hidden',
           position:     'relative',
-          height:       '100%',
+          height:       '400px',
           display:      'flex',
           flexDirection:'column',
           boxShadow:    hovered ? '0 16px 34px rgba(17,24,20,0.14)' : '0 4px 14px rgba(17,24,20,0.08)',
@@ -123,8 +123,8 @@ function TyreCard({ product }: { product: TyreProduct }) {
           transition:   'transform 0.4s cubic-bezier(.22,1,.36,1), box-shadow 0.4s ease, border-color 0.3s ease',
         }}
       >
-        {/* ── Photo — full tyre, 3:2 ── */}
-        <div style={{ position: 'relative', aspectRatio: '3 / 2', background: '#fff', overflow: 'hidden' }}>
+        {/* ── Photo — fixed height to match target card size ── */}
+        <div style={{ position: 'relative', height: '220px', flexShrink: 0, background: '#fff', overflow: 'hidden' }}>
           {/* SALE badge */}
           {product.isSale && (
             <span style={{
@@ -255,8 +255,8 @@ function TyreCard({ product }: { product: TyreProduct }) {
 /* ── Skeleton card ────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ height: '320px', borderRadius: '16px', border: '1px solid rgba(7,99,48,0.16)', background: '#fff', overflow: 'hidden' }}>
-      <div style={{ height: '170px', background: '#F0F0F0', margin: '16px 16px 0' }} />
+    <div style={{ height: '400px', borderRadius: '16px', border: '1px solid rgba(7,99,48,0.16)', background: '#fff', overflow: 'hidden' }}>
+      <div style={{ height: '220px', background: '#F0F0F0', margin: '16px 16px 0' }} />
       <div style={{ padding: '14px 16px' }}>
         <div style={{ width: '64px', height: '18px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '10px' }} />
         <div style={{ width: '80%', height: '14px', background: '#F0F0F0', borderRadius: '4px', marginBottom: '8px' }} />

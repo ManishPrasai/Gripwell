@@ -354,6 +354,7 @@ export default function CartContents() {
                           const full = stores.find(s => s.id === m.id)
                           if (full) handleStoreSelect(full)
                         }}
+                        fullDetail
                       />
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', fontSize: '13px', color: C.muted }}>

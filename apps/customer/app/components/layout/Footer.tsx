@@ -47,209 +47,181 @@ const payments = [
 /* ── Shared styles ───────────────────────────────────────────────────────── */
 
 const colHeading: React.CSSProperties = {
-  fontFamily:    "'DM Sans', sans-serif",
-  fontWeight:    900,
-  fontSize:      '20px',
+  fontFamily:    "'Bebas Neue', sans-serif",
+  fontSize:      '15px',
+  letterSpacing: '.06em',
   textTransform: 'uppercase',
-  letterSpacing: '.02em',
-  color:         '#FFFFFF',
+  color:         '#16211B',
   marginBottom:  '14px',
 }
 
 const footLink = 'nv-footlink'
 
-/* Brand-coloured social tiles, matching the design's 42px chip row */
+/* White-tile social row, matching the design's utility-bar chip style */
 const socialTile: React.CSSProperties = {
+  width:          '32px',
+  height:         '32px',
+  borderRadius:   '8px',
+  background:     '#FFFFFF',
   display:        'inline-flex',
   alignItems:     'center',
   justifyContent: 'center',
-  width:          '42px',
-  height:         '42px',
-  borderRadius:   '10px',
-  color:          '#FFFFFF',
   textDecoration: 'none',
 }
 
 /* ── Component ───────────────────────────────────────────────────────────── */
 export default function Footer() {
   return (
-    <footer
-      style={{
-        background: '#002A13',
-        color:      '#F1EFE7',
-        padding:    'clamp(44px,5.5vw,72px) clamp(16px,4vw,40px) 26px',
-        fontFamily: "'DM Sans', sans-serif",
-      }}
-    >
+    <footer style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
         .nv-footlink {
-          font-size: 15px;
-          font-weight: 700;
-          color: #AAAAAA;
+          font-size: 14px;
+          color: #16211B;
           text-decoration: none;
           transition: color .2s;
         }
-        .nv-footlink:hover { color: #FF6817; }
+        .nv-footlink:hover { color: #E8572A; }
         .nv-social { transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .2s; }
-        .nv-social:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -12px rgba(0,0,0,0.8); }
-        .nv-legal { color: #FFFFFF; text-decoration: none; transition: color .2s; font-size: 15px; font-weight: 700; }
-        .nv-legal:hover { color: #FF6817; }
+        .nv-social:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -12px rgba(0,0,0,0.35); }
+        .nv-legal { color: #CFE5D8; text-decoration: none; transition: color .2s; font-size: 13.5px; }
+        .nv-legal:hover { color: #FFB07A; }
+        .nv-foot-cols { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr 1.2fr; gap: 32px 28px; }
+        @media (max-width: 1000px) { .nv-foot-cols { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 560px)  { .nv-foot-cols { grid-template-columns: 1fr; } }
       `}</style>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div
-          style={{
-            display:             'grid',
-            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,240px),1fr))',
-            gap:                 'clamp(30px,3.6vw,46px) clamp(22px,2.8vw,44px)',
-          }}
-        >
+      {/* ── Link columns: light band ── */}
+      <div style={{ background: '#F4F4F1', padding: 'clamp(40px,5vw,56px) clamp(16px,4vw,40px) 40px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <div className="nv-foot-cols">
 
-          {/* ── Col 1: brand · tyre sizes · social ── */}
-          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
-            <div>
-              <Image
-                src="/images/nova-emblem.png"
-                alt="Nova Tyres"
-                width={152}
-                height={152}
-                style={{ display: 'block', width: '152px', height: '152px' }}
-              />
-              <div style={{ fontWeight: 900, fontSize: '27px', letterSpacing: '.03em', color: '#FFFFFF', marginTop: '18px' }}>
-                NOVA TYRES
+            {/* ── Col 1: brand · tyre sizes ── */}
+            <div style={{ display: 'grid', gap: '22px', alignContent: 'start', minWidth: 0 }}>
+              <div>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', letterSpacing: '.03em', color: '#16211B' }}>
+                  NOVA TYRES
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '14.5px', color: '#6E7C74' }}>
+                  Best Deals on Tyres &amp; Wheels
+                </p>
               </div>
-              <p style={{ margin: 0, marginTop: '4px', fontSize: '15px', fontWeight: 500, color: '#CFE5D8' }}>
-                Best Deals on Tyres &amp; Wheels
-              </p>
-            </div>
-
-            <div>
-              <div style={colHeading}>Tyre Sizes</div>
-              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
-                {sizeLinks.map(l => (
-                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
-                ))}
+              <div>
+                <div style={colHeading}>Tyre Sizes</div>
+                <div style={{ display: 'grid', gap: '11px', justifyItems: 'start' }}>
+                  {sizeLinks.map(l => (
+                    <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div>
-              <div style={colHeading}>Connect With Us</div>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {/* Review-platform marks use the real logo artwork we ship */}
-                <a href="https://www.productreview.com.au" aria-label="ProductReview" target="_blank" rel="noopener noreferrer"
-                  className="nv-social" style={{ ...socialTile, width: 'auto', padding: '0 10px', background: '#FFFFFF' }}>
-                  <Image src="/images/footer/social-productreview.png" alt="ProductReview"
-                    width={120} height={26} style={{ objectFit: 'contain', height: '22px', width: 'auto' }} />
-                </a>
-                <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"
-                  className="nv-social" style={{ ...socialTile, background: '#0A66C2' }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2.9 21h4.16V9.4H2.9V21Zm7.02 0h4.16v-6.3c0-1.66.6-2.66 2.02-2.66 1.32 0 1.86.94 1.86 2.7V21H22.1v-6.9c0-3.4-1.82-4.98-4.24-4.98-1.96 0-2.84 1.08-3.33 1.84V9.4H9.92c.06 1.16 0 11.6 0 11.6Z"/></svg>
-                </a>
-                <a href="https://www.yelp.com/biz/nova-tyres-springvale-2?uid=byxWfoz3h2Opm18Y9dweaQ&utm_campaign=www_business_share_popup&utm_medium=copy_link&utm_source=(direct)" aria-label="Yelp" target="_blank" rel="noopener noreferrer"
-                  className="nv-social" style={{ ...socialTile, width: 'auto', padding: '0 12px', background: '#FFFFFF' }}>
-                  <Image src="/images/footer/social-yelp.png" alt="Yelp"
-                    width={60} height={26} style={{ objectFit: 'contain', height: '22px', width: 'auto' }} />
-                </a>
-                <a href="https://facebook.com/Novatyres.Official" aria-label="Facebook" target="_blank" rel="noopener noreferrer"
-                  className="nv-social" style={{ ...socialTile, background: '#1877F2' }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.44 2.91h-2.34V22c4.78-.76 8.44-4.92 8.44-9.94Z"/></svg>
-                </a>
-                <a href="https://instagram.com/novatyres" aria-label="Instagram" target="_blank" rel="noopener noreferrer"
-                  className="nv-social" style={{ ...socialTile, background: 'linear-gradient(45deg,#F09433,#DC2743,#BC1888)' }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07Zm0 5.68a4.16 4.16 0 1 0 0 8.32 4.16 4.16 0 0 0 0-8.32Zm0 6.86a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4Zm5.3-7.02a.97.97 0 1 1-1.94 0 .97.97 0 0 1 1.94 0Z"/></svg>
-                </a>
+            {/* ── Col 2: quick links · top models ── */}
+            <div style={{ display: 'grid', gap: '28px', alignContent: 'start', minWidth: 0 }}>
+              <div>
+                <div style={colHeading}>Quick Links</div>
+                <div style={{ display: 'grid', gap: '11px', justifyItems: 'start' }}>
+                  {quickLinks.map(l => (
+                    <Link key={l.href} href={l.href} className={footLink}>{l.label}</Link>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div style={colHeading}>Top Tyre Models</div>
+                <div style={{ display: 'grid', gap: '11px', justifyItems: 'start' }}>
+                  {modelLinks.map(l => (
+                    <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ── Col 2: quick links · top models ── */}
-          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
-            <div>
-              <div style={colHeading}>Quick Links</div>
-              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
-                {quickLinks.map(l => (
-                  <Link key={l.href} href={l.href} className={footLink}>{l.label}</Link>
-                ))}
+            {/* ── Col 3: stores ── */}
+            <div style={{ display: 'grid', gap: '28px', alignContent: 'start', minWidth: 0 }}>
+              <div>
+                <div style={colHeading}>Our Stores</div>
+                <div style={{ display: 'grid', gap: '11px', justifyItems: 'start' }}>
+                  {STORES.map(s => (
+                    <Link key={s.id} href="/#locations" className={footLink}>
+                      {s.short} — {s.state}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
-            <div>
-              <div style={colHeading}>Top Tyre Models</div>
-              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
-                {modelLinks.map(l => (
-                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* ── Col 3: stores · service ── */}
-          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
-            <div>
-              <div style={colHeading}>Our Stores</div>
-              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
-                {STORES.map(s => (
-                  <Link key={s.id} href="/#locations" className={footLink}>
-                    {s.short} – {s.state}
-                  </Link>
-                ))}
+            {/* ── Col 4: service ── */}
+            <div style={{ display: 'grid', gap: '28px', alignContent: 'start', minWidth: 0 }}>
+              <div>
+                <div style={colHeading}>Service</div>
+                <div style={{ display: 'grid', gap: '11px', justifyItems: 'start' }}>
+                  {serviceLinks.map(l => (
+                    <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
+                  ))}
+                </div>
               </div>
             </div>
-            <div>
-              <div style={colHeading}>Service</div>
-              <div style={{ display: 'grid', gap: '13px', justifyItems: 'start' }}>
-                {serviceLinks.map(l => (
-                  <Link key={l.label} href={l.href} className={footLink}>{l.label}</Link>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* ── Col 4: about · payments ── */}
-          <div style={{ display: 'grid', gap: '34px', alignContent: 'start', minWidth: 0 }}>
-            <div>
-              <div style={colHeading}>About Nova Tyres</div>
-              <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#9DB0A5', textWrap: 'pretty' }}>
-                <Link href="/" style={{ color: '#FFFFFF', fontWeight: 700, textDecoration: 'underline' }}>Nova Tyres</Link>
-                {' '}is an Australian tyre and wheel retailer offering affordable products,
-                professional fitting, balancing, alignments and automotive services for
-                passenger, SUV, 4WD and commercial vehicles across {STORES.length} locations.
-              </p>
-            </div>
-            <div>
-              <div style={colHeading}>Payments</div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', maxWidth: '260px' }}>
-                {payments.map(p => (
-                  <span key={p.name} aria-label={p.name}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: '60px', height: '32px', borderRadius: '5px',
-                      background: '#FFFFFF', overflow: 'hidden',
-                    }}
-                  >
-                    <Image src={p.src} alt={p.name} width={52} height={22}
-                      style={{ objectFit: 'contain', height: '20px', width: 'auto' }} />
-                  </span>
-                ))}
+            {/* ── Col 5: about ── */}
+            <div style={{ display: 'grid', gap: '28px', alignContent: 'start', minWidth: 0 }}>
+              <div>
+                <div style={colHeading}>About Nova Tyres</div>
+                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.65, color: '#6E7C74', textWrap: 'pretty' }}>
+                  <strong style={{ color: '#16211B' }}>Nova Tyres</strong> is an Australian tyre and wheel
+                  retailer offering affordable products, professional fitting, balancing, alignments and
+                  automotive services for passenger, SUV, 4WD and commercial vehicles across {STORES.length} locations.
+                </p>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ── Bottom bar ── */}
-        <div style={{ height: '4px', background: '#808080', borderRadius: '2px', marginTop: 'clamp(32px,4vw,50px)' }} />
-        <div
-          style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            gap: '12px', flexWrap: 'wrap', paddingTop: '20px',
-            fontSize: '15px', fontWeight: 700, color: '#FFFFFF',
-          }}
-        >
-          <span>© {new Date().getFullYear()} Nova Tyres All rights reserved</span>
-          <span style={{ display: 'flex', gap: '8px 28px', flexWrap: 'wrap' }}>
-            <Link href="/warranty" className="nv-legal">Warranty &amp; Returns</Link>
-            <Link href="/privacy" className="nv-legal">Privacy Policy</Link>
-            <Link href="/terms" className="nv-legal">Terms of Service</Link>
+      {/* ── Utility bar: green band ── */}
+      <div style={{ background: '#076330', color: '#F1EFE7', padding: 'clamp(18px,2.4vw,22px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px 32px' }}>
+          <span style={{ fontSize: '13.5px', color: '#CFE5D8' }}>
+            © {new Date().getFullYear()} Nova Tyres. All rights reserved
           </span>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {payments.map(p => (
+              <span key={p.name} aria-label={p.name}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: '52px', height: '30px', borderRadius: '6px',
+                  background: '#FFFFFF', overflow: 'hidden',
+                }}
+              >
+                <Image src={p.src} alt={p.name} width={44} height={18}
+                  style={{ objectFit: 'contain', height: '18px', width: 'auto' }} />
+              </span>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#CFE5D8' }}>Follow Us</span>
+            <a href="https://linkedin.com" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="nv-social" style={{ ...socialTile, color: '#0A66C2' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2.9 21h4.16V9.4H2.9V21Zm7.02 0h4.16v-6.3c0-1.66.6-2.66 2.02-2.66 1.32 0 1.86.94 1.86 2.7V21H22.1v-6.9c0-3.4-1.82-4.98-4.24-4.98-1.96 0-2.84 1.08-3.33 1.84V9.4H9.92c.06 1.16 0 11.6 0 11.6Z"/></svg>
+            </a>
+            <a href="https://facebook.com/Novatyres.Official" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="nv-social" style={{ ...socialTile, color: '#1877F2' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.5l.4-3H13.5V8.3c0-.9.3-1.5 1.6-1.5h1.5V4.2C16.3 4.1 15.2 4 14 4c-2.5 0-4.2 1.5-4.2 4.3v2.2H7.3v3h2.5V21h3.7z"/></svg>
+            </a>
+            <a href="https://instagram.com/novatyres" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="nv-social" style={{ ...socialTile, color: '#E1306C' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" /></svg>
+            </a>
+            <a href="https://www.yelp.com/biz/nova-tyres-springvale-2?uid=byxWfoz3h2Opm18Y9dweaQ&utm_campaign=www_business_share_popup&utm_medium=copy_link&utm_source=(direct)" aria-label="Yelp" target="_blank" rel="noopener noreferrer" className="nv-social" style={{ ...socialTile, padding: '4px' }}>
+              <Image src="/images/footer/social-yelp.png" alt="Yelp" width={24} height={24} style={{ objectFit: 'contain', width: '100%', height: '100%' }} />
+            </a>
+            <a href="https://www.productreview.com.au" aria-label="ProductReview" target="_blank" rel="noopener noreferrer" className="nv-social" style={{ ...socialTile, padding: '4px' }}>
+              <Image src="/images/footer/social-productreview.png" alt="ProductReview" width={24} height={24} style={{ objectFit: 'contain', width: '100%', height: '100%' }} />
+            </a>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: '1400px', margin: '14px auto 0', paddingTop: '14px', borderTop: '1px solid rgba(241,239,231,0.18)', display: 'flex', gap: '8px 24px', flexWrap: 'wrap' }}>
+          <Link href="/warranty" className="nv-legal">Warranty &amp; Returns</Link>
+          <Link href="/privacy" className="nv-legal">Privacy Policy</Link>
+          <Link href="/terms" className="nv-legal">Terms of Service</Link>
         </div>
       </div>
     </footer>

@@ -106,11 +106,11 @@ function mapWheel(w: WheelItem): Deal {
 /* ─── Skeleton ────────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #DEDCD4', borderRadius: '18px', padding: '22px', height: '420px' }}>
-      <div style={{ height: '180px', background: '#F0EFE9', borderRadius: '10px', marginBottom: '18px' }} />
-      <div style={{ width: '120px', height: '34px', background: '#F0EFE9', borderRadius: '8px', marginBottom: '14px' }} />
-      <div style={{ width: '70%', height: '19px', background: '#F0EFE9', borderRadius: '4px', marginBottom: '8px' }} />
-      <div style={{ width: '45%', height: '14px', background: '#F0EFE9', borderRadius: '4px' }} />
+    <div style={{ height: '410px', background: '#FFFFFF', border: '1px solid #DEDCD4', borderRadius: '18px', padding: '20px', boxSizing: 'border-box' }}>
+      <div style={{ height: '172px', background: '#F0EFE9', borderRadius: '10px', marginBottom: '14px' }} />
+      <div style={{ width: '110px', height: '30px', background: '#F0EFE9', borderRadius: '8px', marginBottom: '12px' }} />
+      <div style={{ width: '70%', height: '17px', background: '#F0EFE9', borderRadius: '4px', marginBottom: '8px' }} />
+      <div style={{ width: '45%', height: '13px', background: '#F0EFE9', borderRadius: '4px' }} />
     </div>
   )
 }
@@ -142,9 +142,10 @@ function DealCard({ deal }: { deal: Deal }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'relative', minWidth: 0, display: 'flex', flexDirection: 'column',
+        position: 'relative', minWidth: 0, height: '410px', boxSizing: 'border-box', overflow: 'hidden',
+        display: 'flex', flexDirection: 'column',
         background: '#FFFFFF', border: `1px solid ${hovered ? '#C9C7BE' : '#DEDCD4'}`,
-        borderRadius: '18px', padding: '22px', textDecoration: 'none', color: '#16211B',
+        borderRadius: '18px', padding: '20px', textDecoration: 'none', color: '#16211B',
         boxShadow: hovered
           ? '0 6px 10px rgba(20,25,22,0.08), 0 26px 50px -22px rgba(20,25,22,0.34)'
           : '0 4px 6px rgba(20,25,22,0.06), 0 10px 24px -14px rgba(20,25,22,0.14)',
@@ -162,7 +163,7 @@ function DealCard({ deal }: { deal: Deal }) {
         </span>
       )}
 
-      <span style={{ position: 'relative', display: 'block', height: '180px', marginBottom: '18px' }}>
+      <span style={{ position: 'relative', display: 'block', height: '172px', flexShrink: 0, marginBottom: '14px' }}>
         <Image
           src={deal.image}
           alt={`${deal.brand} ${deal.model}`}
@@ -177,58 +178,58 @@ function DealCard({ deal }: { deal: Deal }) {
         <span style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           alignSelf: 'flex-start', border: '1px solid #E7E5DE', borderRadius: '8px',
-          height: '34px', minWidth: '120px', padding: '0 14px', marginBottom: '14px', background: '#FFFFFF',
+          height: '30px', minWidth: '110px', padding: '0 12px', marginBottom: '12px', background: '#FFFFFF',
         }}>
-          <Image src={deal.brandLogo} alt={deal.brand} width={96} height={14}
-            style={{ objectFit: 'contain', width: '96px', height: '14px' }} />
+          <Image src={deal.brandLogo} alt={deal.brand} width={88} height={13}
+            style={{ objectFit: 'contain', width: '88px', height: '13px' }} />
         </span>
       ) : (
         <span style={{
           display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start',
-          border: '1px solid #E7E5DE', borderRadius: '8px', height: '34px',
-          padding: '0 14px', marginBottom: '14px', background: '#FFFFFF',
-          fontFamily: "'Bebas Neue', sans-serif", fontSize: '17px',
-          letterSpacing: '0.08em', color: '#1C3A2B',
+          border: '1px solid #E7E5DE', borderRadius: '8px', height: '30px',
+          padding: '0 12px', marginBottom: '12px', background: '#FFFFFF',
+          fontFamily: "'Bebas Neue', sans-serif", fontSize: '15px',
+          letterSpacing: '0.08em', color: '#16211B',
         }}>
           {deal.brand.toUpperCase()}
         </span>
       )}
 
-      <span style={{ display: 'block', fontSize: '19px', fontWeight: 700, color: '#1A1A1A', marginBottom: '5px' }}>
+      <span style={{ display: 'block', fontSize: '17px', fontWeight: 700, color: '#1A1A1A', marginBottom: '3px' }}>
         {deal.model}
       </span>
-      <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '13.5px', color: '#6E7C74', marginBottom: '16px', overflowWrap: 'anywhere' }}>
+      <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12.5px', color: '#6E7C74', marginBottom: '10px', overflowWrap: 'anywhere' }}>
         {deal.size}{deal.spec ? `  ${deal.spec}` : ''}
       </span>
 
       <span style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        gap: '12px', marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #E7E5DE',
+        gap: '10px', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #E7E5DE',
       }}>
-        <span style={{ display: 'flex', alignItems: 'baseline', gap: '7px', flexWrap: 'wrap', minWidth: 0 }}>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap', minWidth: 0 }}>
           <span style={{
-            fontFamily: "'Bebas Neue', sans-serif", fontSize: '30px', lineHeight: 1,
-            color: deal.was != null ? '#E23B2E' : '#1C3A2B',
+            fontFamily: "'Bebas Neue', sans-serif", fontSize: '25px', lineHeight: 1,
+            color: deal.was != null ? '#E8572A' : '#16211B',
           }}>
             ${deal.price.toFixed(0)}
           </span>
-          <span style={{ fontSize: '12.5px', color: '#6E7C74' }}>{unit}</span>
+          <span style={{ fontSize: '11.5px', color: '#6E7C74' }}>{unit}</span>
         </span>
 
         <button
           onClick={handleAdd}
           aria-label={`Add ${deal.brand} ${deal.model} to cart`}
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: '7px',
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
             background: justAdded ? '#0A7D3D' : '#076330', color: '#fff',
-            padding: '10px 14px', borderRadius: '8px', border: 'none',
-            fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700,
-            flexShrink: 0, cursor: 'pointer', transition: 'background .2s',
+            padding: '9px 13px', borderRadius: '8px', border: 'none',
+            fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 700,
+            flexShrink: 0, cursor: 'pointer', transition: 'background .2s', whiteSpace: 'nowrap',
           }}
         >
           {justAdded ? 'Added' : 'Add'}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             {justAdded
               ? <path d="M20 6 9 17l-5-5" />
               : <><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h2.2l2.4 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H5.5" /></>}

@@ -51,28 +51,31 @@ export default function BrandsStrip() {
       </div>
 
       {/* Edges fade out under a mask so logos enter and leave without a hard cut */}
-      <div
-        style={{
-          position: 'relative', borderTop: '1px solid #E7E5DE', padding: 'clamp(24px,3vw,34px) 0',
-          WebkitMaskImage: 'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
-          maskImage:       'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
-        }}
-      >
-        <div className="nv-marquee" style={{ display: 'flex', width: 'max-content', gap: '16px' }}>
-          {LOOP.map((b, i) => (
-            <span
-              key={`${b.name}-${i}`}
-              role="img"
-              aria-label={i < BRANDS.length ? b.name : undefined}
-              aria-hidden={i >= BRANDS.length}
-              style={{
-                flex: '0 0 auto', width: '176px', height: '76px',
-                border: '1px solid #E7E5DE', borderRadius: '12px', backgroundColor: '#FFFFFF',
-                backgroundImage: `url('${b.src}')`, backgroundSize: '104px auto',
-                backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
-              }}
-            />
-          ))}
+      <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
+        <div
+          style={{
+            position: 'relative', padding: 'clamp(24px,3vw,34px) 0',
+            border: '1px solid #E7E5DE', borderRadius: '22px', overflow: 'hidden',
+            WebkitMaskImage: 'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
+            maskImage:       'linear-gradient(to right,transparent,#000 6%,#000 94%,transparent)',
+          }}
+        >
+          <div className="nv-marquee" style={{ display: 'flex', width: 'max-content', gap: '16px' }}>
+            {LOOP.map((b, i) => (
+              <span
+                key={`${b.name}-${i}`}
+                role="img"
+                aria-label={i < BRANDS.length ? b.name : undefined}
+                aria-hidden={i >= BRANDS.length}
+                style={{
+                  flex: '0 0 auto', width: '176px', height: '76px',
+                  border: '1px solid #E7E5DE', borderRadius: '12px', backgroundColor: '#FFFFFF',
+                  backgroundImage: `url('${b.src}')`, backgroundSize: '104px auto',
+                  backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>

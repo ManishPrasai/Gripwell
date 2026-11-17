@@ -253,7 +253,7 @@ export default function Navbar() {
       {/* ── Announcement strip ── */}
       <div
         style={{
-          background: '#04331B', color: '#CFE5D8', fontSize: '13px',
+          background: '#054d25', color: '#CFE5D8', fontSize: '13px',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           gap: '8px', flexWrap: 'wrap', padding: '9px 16px', textAlign: 'center',
           fontFamily: "'DM Sans', sans-serif",
@@ -263,7 +263,7 @@ export default function Navbar() {
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
         <span>{STORE_NETWORK_LABEL}</span>
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
-        <span>Call <a href={NOVA_PHONE_HREF} style={{ color: '#FF8A5C', fontWeight: 700, textDecoration: 'none' }}>{NOVA_PHONE}</a></span>
+        <span>Call <a href={NOVA_PHONE_HREF} style={{ color: '#FFB07A', fontWeight: 700, textDecoration: 'none' }}>{NOVA_PHONE}</a></span>
       </div>
 
       {/* ── Sticky green header ── */}
@@ -342,21 +342,21 @@ export default function Navbar() {
             <Link href="/cart"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '9px',
-                background: '#FF6817', color: '#fff', textDecoration: 'none',
+                background: '#E8572A', color: '#fff', textDecoration: 'none',
                 borderRadius: '8px', padding: '11px 17px', fontSize: '12.5px',
                 fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
-                transition: 'transform .18s cubic-bezier(.22,1,.36,1)',
+                transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s',
               }}
-              onMouseOver={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-              onMouseOut={e  => (e.currentTarget.style.transform = 'translateY(0)')}
+              onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#FF6817' }}
+              onMouseOut={e  => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = '#E8572A' }}
             >
               <CartIcon />
               Cart
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 minWidth: '19px', height: '19px', padding: '0 5px', borderRadius: '999px',
-                background: 'rgba(13,26,18,0.35)', fontSize: '11px', lineHeight: 1,
+                background: 'rgba(0,0,0,0.25)', fontSize: '11px', lineHeight: 1,
               }}>
                 {cartCount}
               </span>
