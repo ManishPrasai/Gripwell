@@ -12,6 +12,8 @@ import MobileStickyBar   from '../components/layout/MobileStickyBar'
 import MobileHome        from '../components/home/mobile/MobileHome'
 import { pageMetadata }  from '../../lib/seo'
 import { STORES }        from '../../lib/stores'
+import { loadBoard, type Board } from '../../lib/fitting-board'
+import DeparturesHero    from '../components/home/departures/DeparturesHero'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'   // always reflect live PageSEO from admin
@@ -23,7 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  // A failed load shows the board's own "call us" state, never a broken page.
+  const board: Board | null = await loadBoard().catch(e => { console.error('[home] board', e); return null })
+  const hero = <DeparturesHero board={board} />
+
   return (
     <>
       {/*
@@ -40,6 +46,7 @@ export default function HomePage() {
 
       <div data-vw="desktop">
         <main style={{ background: '#FAF9F5', color: '#1A1D23' }}>
+          {hero}
           <HeroSection />
           <BestDeals />
           <BrowseByCategory />
@@ -55,7 +62,7 @@ export default function HomePage() {
       </div>
 
       <div data-vw="mobile">
-        <MobileHome />
+        <MobileHome hero={hero} />
       </div>
     </>
   )

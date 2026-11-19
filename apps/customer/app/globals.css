@@ -27,6 +27,34 @@
 
   --radius: 0.625rem;
 
+  /* ── Gripwell redesign tokens (Fitting Departures) ─────────────────────
+     Contrast measured, WCAG 2.x: ink/paper 14.8, ink-2/paper 7.4,
+     ink-3/paper 5.5, dark text on orange 5.6, amber/board 10.2,
+     amber-2/board 8.3, amber-3/board 6.5, board-text 16.6,
+     board-muted 8.5. Orange is never a text colour on paper (2.6). */
+  --gw-paper:       #F4F5F6;
+  --gw-surface:     #FFFFFF;
+  --gw-ink:         #1E2128;
+  --gw-ink-2:       #4A505B;
+  --gw-ink-3:       #5C6370;
+  --gw-line:        #D9DCE1;
+  --gw-graphite:    #2A2E36;
+  --gw-orange:      #FF6A1A;
+  --gw-orange-ink:  #1E2128;
+  --gw-orange-down: #E85A0E;
+  --gw-board:       #111317;
+  --gw-board-line:  #2B2F37;
+  --gw-board-row:   #191C21;
+  --gw-board-text:  #F1F2F4;
+  --gw-board-text-2:#D4D8DE;
+  --gw-board-muted: #A9B0BA;
+  --gw-amber:       #FFB000;
+  --gw-amber-2:     #E0A21E;
+  --gw-amber-3:     #C68F1F;
+  --gw-font:        var(--font-manrope), system-ui, sans-serif;
+  --gw-font-dots:   var(--font-doto), var(--font-manrope), monospace;
+  --gw-ease:        cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Gripwell Brand */
   --nova-green: #2A2E36;
   --nova-green-mid: #3D4350;

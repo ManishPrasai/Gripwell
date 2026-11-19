@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bebas_Neue, DM_Sans, DM_Mono, Inter } from 'next/font/google'
+import { Bebas_Neue, DM_Sans, DM_Mono, Inter, Manrope, Doto } from 'next/font/google'
 import './globals.css'
 import Providers from './providers'
 import { Analytics } from '@vercel/analytics/next'
@@ -40,6 +40,21 @@ const inter = Inter({
   display:  'swap',
 })
 
+/* Redesign type system: Manrope everywhere (the logo's wordmark face),
+   Doto (OFL dot-matrix) only for the departure board's numerals. */
+const manrope = Manrope({
+  subsets:  ['latin'],
+  variable: '--font-manrope',
+  display:  'swap',
+})
+
+const doto = Doto({
+  weight:   ['700', '900'],
+  subsets:  ['latin'],
+  variable: '--font-doto',
+  display:  'swap',
+})
+
 export const metadata: Metadata = {
   title:       'Gripwell — Tyres & Wheels, London',
   description: 'Buy tyres and wheels online and get them fitted same day at one of our 7 stores across London.',
@@ -59,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable} ${inter.variable}`}
+      className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable} ${inter.variable} ${manrope.variable} ${doto.variable}`}
     >
       <head>
         {/* Tabler icons CDN — kept here as it is a CSS icon font, not a text font */}

@@ -56,13 +56,14 @@ const SOCIAL = [
   { src: '/images/social/social-4.jpg', tag: 'IG', alt: 'Front end of a customer car' },
 ]
 
-export default function MobileHome() {
+export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
   const storeList = STORES
 
   return (
     <div style={{ background: '#1A1D23' }}>
       <div className="nv-mob-shell" style={{ background: '#FAF9F5', fontFamily: "'DM Sans', sans-serif", maxWidth: '480px', margin: '0 auto' }}>
         <MobileHeader />
+        {hero}
 
         {/* ── Hero ────────────────────────────────────────────── */}
         <section style={{ background: '#1A1D23', padding: '52px 24px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '20px' }}>

@@ -7,7 +7,7 @@
     "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
     "postinstall": "npm run prisma:generate",
     "build": "next build",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/order-math.test.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/order-math.test.mjs lib/fitting-slots.test.mjs",
     "start": "next start",
     "lint": "next lint",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
