@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       before: safeParse(r.beforeState),
       after: safeParse(r.afterState),
       at: r.createdAt.toISOString(),
-      when: r.createdAt.toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      when: r.createdAt.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
     }))
 
     return NextResponse.json({

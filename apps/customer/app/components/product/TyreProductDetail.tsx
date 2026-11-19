@@ -4,29 +4,22 @@
 
 import { useState } from 'react'
 import { useCart, DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER } from '../../context/CartContext'
-import { STORES } from '../../../lib/stores'
 import './pdp.css'
 import {
   Breadcrumb, TrustBadges, Accordion, SimilarGrid,
-  PaymentsPanel, PickupPanel, ExpertPanel, FittingPanel, ReviewPanel,
+  PaymentsPanel, PickupPanel, ExpertPanel, FittingPanel,
   type SimilarItem,
 } from './PdpParts'
+import { money } from '../../../lib/fitting'
 
-const BRAND_LOGOS: Record<string, string> = {
-  Continental:    '/images/brands/continental.svg',
-  Hankook:        '/images/brands/hankook.svg',
-  Pirelli:        '/images/brands/pirelli.svg',
-  Maxxis:         '/images/brands/maxxis.svg',
-  Yokohama:       '/images/brands/yokohama.svg',
-  Michelin:       '/images/brands/michelin.svg',
-  'BF Goodrich':  '/images/brands/bfgoodrich.svg',
-}
+/* No manufacturer artwork: every brand renders as a text wordmark. */
+const BRAND_LOGOS: Record<string, string> = {}
 
 const SIMILAR_TYRES: SimilarItem[] = [
-  { brand: 'Michelin', sub: 'Pilot Sport 4',  price: 185, slug: 'michelin-pilot-sport-4', image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Hankook',  sub: 'Ventus S1',      price: 165, slug: 'hankook-ventus-s1',      image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Pirelli',  sub: 'P Zero',         price: 210, slug: 'pirelli-p-zero',         image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Maxxis',   sub: 'Victra Sport',   price: 155, slug: 'maxxis-victra-sport',    image: '/images/tyres/Tyre 1.png' },
+  { brand: 'Veltex', sub: 'Velocity 4',     price: 185, slug: 'veltex-velocity-4', image: '/images/tyres/Tyre 1.png' },
+  { brand: 'Kova',  sub: 'Apex S1',        price: 165, slug: 'kova-apex-s1',      image: '/images/tyres/Tyre 1.png' },
+  { brand: 'Corsaro',  sub: 'Strada',         price: 210, slug: 'corsaro-strada',         image: '/images/tyres/Tyre 1.png' },
+  { brand: 'Terrain X',   sub: 'Velo Sport',     price: 155, slug: 'terrain-x-velo-sport',    image: '/images/tyres/Tyre 1.png' },
 ]
 
 interface TyreProduct {
@@ -40,7 +33,6 @@ interface TyreProduct {
   reviews: { id: string; rating: number; title?: string; body?: string; createdAt: string; customer: { firstName: string; lastName: string } }[]
 }
 
-const money = (n: number) => `A$${n.toFixed(2)}`
 const titleCase = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
 export default function TyreProductDetail({ product, similar }: { product: TyreProduct; similar?: SimilarItem[] }) {
@@ -61,13 +53,9 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
   /* Real fitment-based recommendations from the API; fall back to demo picks. */
   const similarItems = similar && similar.length > 0 ? similar : SIMILAR_TYRES
 
-  const avg = product.reviews.length > 0
-    ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
-    : 4.8
-  const reviewCount = product.reviews.length > 0 ? product.reviews.length : 126
+  const reviewCount = product.reviews.length
+  const avg = reviewCount > 0 ? product.reviews.reduce((s, r) => s + r.rating, 0) / reviewCount : 0
 
-  const nearby     = STORES.slice(0, 4).map(s => s.short).join(', ')
-  const extraCount = STORES.length - 4
 
   function handleAdd() {
     addToCart(
@@ -116,7 +104,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
                 <li>Confident grip in wet and dry conditions</li>
                 <li>Low road noise for everyday comfort</li>
                 <li>Even-wearing tread compound</li>
-                <li>Fitted and balanced at any Nova store</li>
+                <li>Fitted and balanced at any Gripwell store</li>
               </ul>
             </section>
 
@@ -146,8 +134,12 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
             {product.type && <span className="pdp-category">{titleCase(product.type)}</span>}
             <h1 className="pdp-title">{product.model}</h1>
             <div className="pdp-rate">
-              <span className="stars">★★★★★</span>
-              <span className="count"><b>{avg.toFixed(1)}</b> ({reviewCount} reviews)</span>
+              {reviewCount > 0 && (
+                <>
+                  <span className="stars" aria-hidden="true">★★★★★</span>
+                  <span className="count"><b>{avg.toFixed(1)}</b> ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+                </>
+              )}
               <span className="spec">{sizeStr}{loadSpeed !== '—' ? ` · ${loadSpeed}` : ''}</span>
             </div>
 
@@ -155,7 +147,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
               <div className="pdp-price">
                 <span className="amount">{money(price)}</span>
               </div>
-              <div className="pdp-per">per tyre · GST included</div>
+              <div className="pdp-per">per tyre · VAT included</div>
               <div className={`pdp-stock${inStock ? '' : ' out'}`}>
                 {inStock ? '● In stock — fitted same day, or ready for pickup' : '● Out of stock'}
               </div>
@@ -182,9 +174,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
                   : null}
 
               <div className="pdp-fitnote">
-                <b>Fitted at your local store</b> — usually same day, under an hour. In stock at{' '}
-                <span className="stores">{nearby}</span>
-                {extraCount > 0 ? ` +${extraCount} more` : ''} ·{' '}
+                <b>Fitted at your local store</b> — usually same day, under an hour ·{' '}
                 <a href="/#locations">All stores →</a>
               </div>
             </div>
@@ -194,7 +184,6 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
               { title: 'Pickup & Installation',    body: <PickupPanel /> },
               { title: 'Talk to a tyre expert',    body: <ExpertPanel kind="tyre" /> },
               { title: 'Fitting at our stores',    body: <FittingPanel /> },
-              { title: 'Write a review',           body: <ReviewPanel /> },
             ]} />
           </div>
         </div>

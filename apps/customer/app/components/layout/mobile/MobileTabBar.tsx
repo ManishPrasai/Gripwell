@@ -43,7 +43,7 @@ function TabInner({ icon, label, badge }: { icon: React.ReactNode; label: string
         {badge != null && badge > 0 && (
           <span style={{
             position: 'absolute', top: '-6px', right: '-9px', minWidth: '15px', height: '15px',
-            padding: '0 3px', borderRadius: '999px', background: '#E8572A', color: '#fff',
+            padding: '0 3px', borderRadius: '999px', background: '#FF6A1A', color: '#fff',
             fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {badge}

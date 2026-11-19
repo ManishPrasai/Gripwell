@@ -4,25 +4,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
+import { money, DEFAULT_FITTING_PRICES } from '../../../lib/fitting'
 
 /* ─── Brand logo map ──────────────────────────────────────────────────────── */
-const BRAND_LOGOS: Record<string, string> = {
-  'continental':  '/images/brands/continental.svg',
-  'hankook':      '/images/brands/hankook.svg',
-  'pirelli':      '/images/brands/pirelli.svg',
-  'maxxis':       '/images/brands/maxxis.svg',
-  'yokohama':     '/images/brands/yokohama.svg',
-  'bridgestone':  '/images/brands/bridgestone.svg',
-  'michelin':     '/images/brands/michelin.svg',
-  'bf goodrich':  '/images/brands/bfgoodrich.svg',
-  'bfgoodrich':   '/images/brands/bfgoodrich.svg',
-  'black rhino':  '/images/brands/Black Rino.svg',
-  'roh':          '/images/brands/roh.svg',
-  'king wheels':  '/images/brands/king-wheels.svg',
-  'sonix':        '/images/brands/sonix.svg',
-  'nitto':        '/images/brands/nitto.svg',
-  'atlander':     '/images/brands/atlander.svg',
-}
+/* No manufacturer artwork: every brand renders as a text wordmark. */
+const BRAND_LOGOS: Record<string, string> = {}
 
 /* Brands without artwork fall back to a Bebas wordmark chip rather than a
    wrong logo — the design supports both chip variants. */
@@ -117,7 +103,7 @@ function SkeletonCard() {
 
 /* ─── Card ────────────────────────────────────────────────────────────────── */
 function DealCard({ deal }: { deal: Deal }) {
-  const unit = deal.tab === 'wheels' ? 'per wheel, fitted' : 'per tyre, fitted'
+  const unit = `per ${deal.tab === 'wheels' ? 'wheel' : 'tyre'} · fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}`
   const { addToCart } = useCart()
   const [hovered, setHovered] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
@@ -145,7 +131,7 @@ function DealCard({ deal }: { deal: Deal }) {
         position: 'relative', minWidth: 0, height: '410px', boxSizing: 'border-box', overflow: 'hidden',
         display: 'flex', flexDirection: 'column',
         background: '#FFFFFF', border: `1px solid ${hovered ? '#C9C7BE' : '#DEDCD4'}`,
-        borderRadius: '18px', padding: '20px', textDecoration: 'none', color: '#16211B',
+        borderRadius: '18px', padding: '20px', textDecoration: 'none', color: '#1A1D23',
         boxShadow: hovered
           ? '0 6px 10px rgba(20,25,22,0.08), 0 26px 50px -22px rgba(20,25,22,0.34)'
           : '0 4px 6px rgba(20,25,22,0.06), 0 10px 24px -14px rgba(20,25,22,0.14)',
@@ -155,7 +141,7 @@ function DealCard({ deal }: { deal: Deal }) {
     >
       {deal.was != null && (
         <span style={{
-          position: 'absolute', top: 0, right: 0, background: '#E8572A', color: '#fff',
+          position: 'absolute', top: 0, right: 0, background: '#FF6A1A', color: '#fff',
           fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em',
           padding: '6px 14px', borderRadius: '0 18px 0 12px', zIndex: 1,
         }}>
@@ -189,7 +175,7 @@ function DealCard({ deal }: { deal: Deal }) {
           border: '1px solid #E7E5DE', borderRadius: '8px', height: '30px',
           padding: '0 12px', marginBottom: '12px', background: '#FFFFFF',
           fontFamily: "'Bebas Neue', sans-serif", fontSize: '15px',
-          letterSpacing: '0.08em', color: '#16211B',
+          letterSpacing: '0.08em', color: '#1A1D23',
         }}>
           {deal.brand.toUpperCase()}
         </span>
@@ -198,7 +184,7 @@ function DealCard({ deal }: { deal: Deal }) {
       <span style={{ display: 'block', fontSize: '17px', fontWeight: 700, color: '#1A1A1A', marginBottom: '3px' }}>
         {deal.model}
       </span>
-      <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12.5px', color: '#6E7C74', marginBottom: '10px', overflowWrap: 'anywhere' }}>
+      <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12.5px', color: '#6B7280', marginBottom: '10px', overflowWrap: 'anywhere' }}>
         {deal.size}{deal.spec ? `  ${deal.spec}` : ''}
       </span>
 
@@ -209,11 +195,11 @@ function DealCard({ deal }: { deal: Deal }) {
         <span style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap', minWidth: 0 }}>
           <span style={{
             fontFamily: "'Bebas Neue', sans-serif", fontSize: '25px', lineHeight: 1,
-            color: deal.was != null ? '#E8572A' : '#16211B',
+            color: deal.was != null ? '#FF6A1A' : '#1A1D23',
           }}>
-            ${deal.price.toFixed(0)}
+            {money(deal.price, { whole: true })}
           </span>
-          <span style={{ fontSize: '11.5px', color: '#6E7C74' }}>{unit}</span>
+          <span style={{ fontSize: '11.5px', color: '#6B7280' }}>{unit}</span>
         </span>
 
         <button
@@ -221,7 +207,7 @@ function DealCard({ deal }: { deal: Deal }) {
           aria-label={`Add ${deal.brand} ${deal.model} to cart`}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
-            background: justAdded ? '#0A7D3D' : '#076330', color: '#fff',
+            background: justAdded ? '#0A7D3D' : '#2A2E36', color: '#fff',
             padding: '9px 13px', borderRadius: '8px', border: 'none',
             fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 700,
             flexShrink: 0, cursor: 'pointer', transition: 'background .2s', whiteSpace: 'nowrap',
@@ -283,17 +269,17 @@ export default function BestDeals() {
         gap: '16px 24px', marginBottom: '26px',
       }}>
         <div style={{ minWidth: 0 }}>
-          <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8572A' }}>
+          <p style={{ margin: '0 0 10px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#FF6A1A' }}>
             Best deals
           </p>
-          <h2 style={{ margin: 0, fontSize: 'clamp(30px,3.6vw,42px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#16211B' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(30px,3.6vw,42px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#1A1D23' }}>
             Warehouse-direct pricing, every day
           </h2>
         </div>
         <Link href="/tyres/results" style={{
           display: 'inline-flex', alignItems: 'center', gap: '7px',
           fontSize: '13px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-          color: '#076330', textDecoration: 'none', whiteSpace: 'nowrap', paddingBottom: '4px',
+          color: '#2A2E36', textDecoration: 'none', whiteSpace: 'nowrap', paddingBottom: '4px',
         }}>
           View all deals
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -310,7 +296,7 @@ export default function BestDeals() {
       </div>
 
       {!loading && deals.length === 0 && (
-        <p style={{ textAlign: 'center', color: '#6E7C74', fontSize: '15px', padding: '32px 0' }}>
+        <p style={{ textAlign: 'center', color: '#6B7280', fontSize: '15px', padding: '32px 0' }}>
           No featured deals right now — check back soon.
         </p>
       )}

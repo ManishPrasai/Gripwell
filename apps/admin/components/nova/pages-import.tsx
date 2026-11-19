@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · Import Products (ported)
+   Gripwell — Admin · Import Products (ported)
    CSV bulk import + manual single-product entry
    ============================================================ */
 import * as React from "react";
@@ -59,9 +59,9 @@ function StepUpload({ onParsed }: { onParsed: (text: string, name?: string) => v
   function downloadTemplate() {
     const csv = [
       "name,brand,category,size,type,price,stock,sku,description",
-      'Pilot Sport 4,Michelin,Tyres,225/45R17,Passenger,420,12,MCH-PS4-225,"High-performance summer tyre for sport cars"',
-      'P Zero,Pirelli,Tyres,245/40R18,Passenger,380,8,PIR-PZ-245,"Ultra-high performance tyre"',
-      'Scorpion ATR,Pirelli,Tyres,265/65R17,SUV,310,10,PIR-SC-265,"All-terrain SUV tyre"',
+      'Pilot Sport 4,Veltex,Tyres,225/45R17,Passenger,420,12,MCH-PS4-225,"High-performance summer tyre for sport cars"',
+      'P Zero,Corsaro,Tyres,245/40R18,Passenger,380,8,PIR-PZ-245,"Ultra-high performance tyre"',
+      'Scorpion ATR,Corsaro,Tyres,265/65R17,SUV,310,10,PIR-SC-265,"All-terrain SUV tyre"',
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
@@ -233,7 +233,7 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
 
   function handleParsed(text: string) {
     const { headers: h, rows: r } = parseCSVText(text);
-    if (!h.length) { toast({ kind: "err", title: "Couldn't read file", body: "Make sure the first row has column headers." }); return; }
+    if (!h.length) { toast({ kind: "err", title: "Couldn’t read file", body: "Make sure the first row has column headers." }); return; }
     setHeaders(h); setCsvRows(r); setMapping(autoMap(h)); setStep("map");
   }
 
@@ -283,8 +283,8 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
   const [form, setForm] = useState<any>(emptyForm);
   const [added, setAdded] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
-  // Images are uploaded as soon as they're picked; these are the resulting
-  // /media/... paths, sent with the product so they're attached on create.
+  // Images are uploaded as soon as they’re picked; these are the resulting
+  // /media/... paths, sent with the product so they’re attached on create.
   // [0] is the main photo, [1..3] the extra angles.
   const [images, setImages] = useState<(string | null)[]>([null, null, null, null]);
   const setImageAt = (n: number, url: string | null) =>
@@ -314,10 +314,10 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
         setForm(emptyForm);
         setImages([null, null, null, null]);
       } else {
-        toast({ kind: "err", title: "Couldn't add product", body: res.errors?.[0]?.reason || "Check the details and try again." });
+        toast({ kind: "err", title: "Couldn’t add product", body: res.errors?.[0]?.reason || "Check the details and try again." });
       }
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't add product", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t add product", body: e?.message || "Please try again." });
     } finally {
       setSaving(false);
     }
@@ -364,11 +364,11 @@ export function ImportPage({ ctx, nav }: { ctx?: any; nav?: (p: string) => void 
             <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 20 }}>Product details</div>
 
             <div className="field"><label>Product name <span style={{ color: "var(--accent)" }}>*</span></label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Michelin Pilot Sport 4" />
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Veltex Apex 4" />
             </div>
 
             <div className="form-grid">
-              <div className="field"><label>Brand</label><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Michelin" /></div>
+              <div className="field"><label>Brand</label><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Veltex" /></div>
               <div className="field"><label>Category</label>
                 <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                   {IMPORT_CATS.map((c) => <option key={c}>{c}</option>)}

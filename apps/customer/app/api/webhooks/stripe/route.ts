@@ -25,19 +25,19 @@ let _devStoreId: string | null = null
 async function devStoreId(): Promise<string> {
   if (_devStoreId) return _devStoreId
   const s = await prisma.store.upsert({
-    where:  { slug: 'nova-tyres-sefton' },
+    where:  { slug: 'gripwell-sefton' },
     update: {},
     create: {
-      name:      'Nova Tyres Sefton',
-      slug:      'nova-tyres-sefton',
-      address:   '107 Carlingford St',
-      suburb:    'Sefton',
-      state:     'NSW',
-      postcode:  '2162',
-      latitude:  -33.8952,
-      longitude: 151.0114,
-      phone:     '0403388774',
-      email:     'sefton.novatyres@gmail.com',
+      name:      'Gripwell Camden',
+      slug:      'gripwell-camden',
+      address:   '14 Kentish Town Rd',
+      suburb:    'Camden',
+      state:     'North London',
+      postcode:  'NW1 9NX',
+      latitude:  51.5417,
+      longitude: -0.1428,
+      phone:     '+442079460101',
+      email:     'camden@gripwell.demo',
     },
     select: { id: true },
   })
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 // ── payment_intent.succeeded ──────────────────────────────────────────────────
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   const piId         = paymentIntent.id
-  // Stripe amount is in the smallest currency unit (cents for AUD).
+  // Stripe amount is in the smallest currency unit (pence for GBP).
   const stripeTotal  = paymentIntent.amount / 100
 
   // ── Idempotency: skip if an Order already exists for this PI ──────────────
@@ -176,7 +176,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     // Log a warning and do not create a duplicate. Stripe amount is the
     // ground truth; manual review may be needed.
     console.warn(
-      `[webhook/stripe] PI ${piId} succeeded (A$${stripeTotal.toFixed(2)}) ` +
+      `[webhook/stripe] PI ${piId} succeeded (£${stripeTotal.toFixed(2)}) ` +
       `but cart is empty and no Order exists — requires manual review.`,
     )
     return
@@ -241,6 +241,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         total,
         paymentMethod:         'stripe',
         stripePaymentIntentId: piId,
+        notes:                 meta.notes ? String(meta.notes).slice(0, 300) : null,
         items: {
           create: [
             // ── Product line items ────────────────────────────────────────
@@ -279,6 +280,6 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     return newOrder
   })
 
-  const orderNumber = `NVT-${order.id.slice(0, 8).toUpperCase()}`
-  console.log(`[webhook/stripe] Order ${orderNumber} created via webhook — A$${total.toFixed(2)}`)
+  const orderNumber = `GW-${order.id.slice(0, 8).toUpperCase()}`
+  console.log(`[webhook/stripe] Order ${orderNumber} created via webhook — £${total.toFixed(2)}`)
 }

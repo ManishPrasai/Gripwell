@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Select as SelectPrimitive } from 'radix-ui'
 import TyreSizeGuideModal from './TyreSizeGuideModal'
-import { STORES, STORE_STATES_SERVED } from '../../../lib/stores'
+import { STORES } from '../../../lib/stores'
+import { money, DEFAULT_FITTING_PRICES } from '../../../lib/fitting'
 
 /* ── Size ranges ─────────────────────────────────────────────────────────── */
 const TYRE_WIDTHS   = ['155','165','175','185','195','205','215','225','235','245','255','265','275','285','295','305','315']
@@ -27,7 +28,7 @@ const fieldLabel: React.CSSProperties = {
   fontFamily:    "'DM Mono', monospace",
   fontSize:      '10.5px',
   letterSpacing: '0.14em',
-  color:         '#6E7C74',
+  color:         '#6B7280',
 }
 
 const selectStyle: React.CSSProperties = {
@@ -38,7 +39,7 @@ const selectStyle: React.CSSProperties = {
   background:   '#FAF9F5',
   fontFamily:   "'DM Mono', monospace",
   fontSize:     '16px',
-  color:        '#16211B',
+  color:        '#1A1D23',
   cursor:       'pointer',
   transition:   'border-color .2s',
 }
@@ -68,7 +69,7 @@ function HeroSelect({
       <SelectPrimitive.Trigger className="nv-hero-select" style={triggerStyle} aria-label={ariaLabel}>
         <SelectPrimitive.Value />
         <SelectPrimitive.Icon asChild>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6E7C74" strokeWidth="2.4"
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2.4"
             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -96,7 +97,7 @@ const searchBtn: React.CSSProperties = {
   display:        'flex',
   alignItems:     'center',
   justifyContent: 'center',
-  background:     '#E8572A',
+  background:     '#FF6A1A',
   color:          '#fff',
   border:         'none',
   borderRadius:   '8px',
@@ -184,8 +185,8 @@ export default function HeroSection() {
           .nv-hero-fields-wheels { grid-template-columns: repeat(2,minmax(0,1fr)); }
           .nv-hero-cta           { grid-column: 1 / -1; }
         }
-        .nv-hero-select:hover   { border-color: #076330; }
-        .nv-hero-select[data-state=open] { border-color: #076330; }
+        .nv-hero-select:hover   { border-color: #2A2E36; }
+        .nv-hero-select[data-state=open] { border-color: #2A2E36; }
         .nv-hero-select-content {
           background: #FFFFFF; border: 1px solid #DEDCD4; border-radius: 8px;
           box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
@@ -196,20 +197,20 @@ export default function HeroSection() {
         }
         .nv-hero-select-item {
           padding: 9px 10px; border-radius: 6px; cursor: pointer; outline: none;
-          font-family: 'DM Mono', monospace; font-size: 15px; color: #16211B;
+          font-family: 'DM Mono', monospace; font-size: 15px; color: #1A1D23;
           transition: background .12s, color .12s;
         }
-        .nv-hero-select-item[data-highlighted] { background: #F0EFE9; color: #16211B; }
-        .nv-hero-select-item[data-state=checked] { background: #EAF3ED; color: #076330; font-weight: 700; }
-        .nv-hero-cta:hover      { background: #FF6817; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
+        .nv-hero-select-item[data-highlighted] { background: #F0EFE9; color: #1A1D23; }
+        .nv-hero-select-item[data-state=checked] { background: #EAF3ED; color: #2A2E36; font-weight: 700; }
+        .nv-hero-cta:hover      { background: #FF6A1A; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
         .nv-hero-cta:active     { transform: translateY(0); }
         .nv-trust-pill:hover    { background: rgba(250,249,245,0.14); border-color: rgba(250,249,245,0.34); }
-        .nv-size-help:hover     { color: #076330; }
+        .nv-size-help:hover     { color: #2A2E36; }
       `}</style>
 
       <section
         style={{
-          position: 'relative', overflow: 'hidden', background: '#0D1A12',
+          position: 'relative', overflow: 'hidden', background: '#1A1D23',
           /* 66px = sticky header row. The announcement strip scrolls away, so
              it is deliberately not subtracted — the hero fills what remains. */
           minHeight: 'calc(100vh - 66px)',
@@ -222,7 +223,7 @@ export default function HeroSection() {
           <span
             key={src}
             role="img"
-            aria-label="Nova Tyres workshop"
+            aria-label="Gripwell workshop"
             style={{
               position: 'absolute', inset: 0,
               backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center 62%',
@@ -251,7 +252,7 @@ export default function HeroSection() {
               textWrap: 'balance', maxWidth: '900px',
             }}
           >
-            Quality tyres,<br /><span style={{ color: '#E8572A' }}>fitted the same day.</span>
+            Quality tyres,<br /><span style={{ color: '#FF6A1A' }}>fitted the same day.</span>
           </h1>
 
           {/* ── Search card ── */}
@@ -271,10 +272,10 @@ export default function HeroSection() {
                     key={t} role="tab" aria-selected={on} onClick={() => setTab(t)}
                     style={{
                       flex: 1, padding: '12px 6px', cursor: 'pointer', border: 'none',
-                      borderBottom: on ? '2px solid #E8572A' : '2px solid transparent',
+                      borderBottom: on ? '2px solid #FF6A1A' : '2px solid transparent',
                       background: 'transparent', fontFamily: "'DM Sans', sans-serif",
                       fontWeight: on ? 700 : 400, fontSize: '15px',
-                      color: on ? '#1C3A2B' : '#6E7C74',
+                      color: on ? '#2A2E36' : '#6B7280',
                       transition: 'color .2s, border-color .2s',
                     }}
                   >
@@ -325,7 +326,7 @@ export default function HeroSection() {
 
             {/* Popular sizes + size-guide link */}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', marginTop: '16px' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10.5px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#6E7C74', marginRight: '4px' }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10.5px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#6B7280', marginRight: '4px' }}>
                 Popular
               </span>
               {POPULAR_SIZES.map(label => {
@@ -336,9 +337,9 @@ export default function HeroSection() {
                     style={{
                       fontFamily: "'DM Mono', monospace", fontSize: '12px', padding: '7px 12px',
                       borderRadius: '8px', cursor: 'pointer',
-                      border: `1px solid ${on ? '#076330' : '#E7E5DE'}`,
-                      background: on ? '#E8F5EE' : '#FFFFFF',
-                      color: on ? '#076330' : '#6E7C74',
+                      border: `1px solid ${on ? '#2A2E36' : '#E7E5DE'}`,
+                      background: on ? '#EDEEF0' : '#FFFFFF',
+                      color: on ? '#2A2E36' : '#6B7280',
                       transition: 'all .18s',
                     }}
                   >
@@ -352,7 +353,7 @@ export default function HeroSection() {
                 className="nv-size-help"
                 style={{
                   marginLeft: 'auto', fontFamily: "'DM Sans', sans-serif", fontSize: '13px',
-                  fontWeight: 600, color: '#47554D', background: 'none', border: 0, padding: '10px 2px',
+                  fontWeight: 600, color: '#4B5563', background: 'none', border: 0, padding: '10px 2px',
                   cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '4px',
                   transition: 'color .2s',
                 }}
@@ -365,20 +366,17 @@ export default function HeroSection() {
           {/* ── Trust pills ── */}
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px' }}>
             <TrustPill
-              title="4.8 on Google" sub="1,240+ reviews"
+              title={`Fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}`} sub="per tyre, VAT incl."
               icon={
-                <span style={pillIconWrap('#FFFFFF')}>
-                  <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <span style={pillIconWrap('rgba(232,87,42,0.18)')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF8A5C" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z" /><circle cx="7.5" cy="7.5" r="1.5" />
                   </svg>
                 </span>
               }
             />
             <TrustPill
-              title={`${STORES.length} stores`} sub={`${STORE_STATES_SERVED.length} states`}
+              title={`${STORES.length} branches`} sub="across London"
               icon={
                 <span style={pillIconWrap('rgba(232,87,42,0.18)')}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF8A5C" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -416,7 +414,7 @@ export default function HeroSection() {
             >
               <span style={{
                 display: 'block', width: i === heroSlide ? '30px' : '9px', height: '4px', borderRadius: '999px',
-                background: i === heroSlide ? '#E8572A' : 'rgba(250,249,245,0.42)',
+                background: i === heroSlide ? '#FF6A1A' : 'rgba(250,249,245,0.42)',
                 transition: 'width .35s cubic-bezier(.22,1,.36,1), background .3s',
               }} />
             </button>

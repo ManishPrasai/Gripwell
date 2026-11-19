@@ -10,27 +10,26 @@ import { useEffect, useState } from 'react'
 */
 
 const FEATURED = [
-  { av: 'JM', c: '#FF5A1F', name: 'Jessica M.', meta: '2 days ago · Springvale', q: '"Top-notch service — honest, fast and the team genuinely cares. Couldn’t be happier!"' },
-  { av: 'AP', c: '#2D6BFF', name: 'Andrew P.', meta: '5 days ago · Bayswater', q: '"Best workshop I’ve used. Clear quotes, quality parts, and they stand by their work."' },
-  { av: 'ML', c: '#19D26A', name: 'Mei L.', meta: '1 week ago · Sefton', q: '"Booked online, sorted same day. Sydney finally has a Nova Tyres — so happy!"' },
+  { av: 'JM', c: '#FF5A1F', name: 'Jessica M.', meta: '2 days ago · Camden', q: '"Top-notch service — honest, fast and the team genuinely cares. Couldn’t be happier!"' },
+  { av: 'AP', c: '#2D6BFF', name: 'Andrew P.', meta: '5 days ago · Shoreditch', q: '"Best workshop I’ve used. Clear quotes, quality parts, and they stand by their work."' },
+  { av: 'ML', c: '#19D26A', name: 'Mei L.', meta: '1 week ago · Brixton', q: '"Booked online, sorted same day. Brilliant service from start to finish."' },
 ]
 
 const RATING_BARS = [
   { k: 5, w: 86, n: '2,041' }, { k: 4, w: 10, n: '243' }, { k: 3, w: 4, n: '61' }, { k: 2, w: 2, n: '24' }, { k: 1, w: 1, n: '15' },
 ]
 
-const LOCATIONS = ['All locations', 'Springvale', 'Dandenong', 'Bayswater', 'Alphington', 'Sunshine', 'Sefton']
+const LOCATIONS = ['All locations', 'Camden', 'Shoreditch', 'Brixton', 'Hammersmith', 'Islington', 'Greenwich', 'City']
 
 const REVIEW_CARDS = [
-  { id: 'springvale', store: 'NOVA TYRES SPRINGVALE', loc: 'Springvale, VIC', rating: 4.9, count: 842, c: '#FF5A1F', av: 'DM', reviewer: 'Daniel M.', when: '2 weeks ago', quote: 'Same-day log book service, warranty stamp and all — no upsell.' },
-  { id: 'dandenong', store: 'NOVA TYRES DANDENONG', loc: 'Dandenong, VIC', rating: 4.8, count: 511, c: '#2D6BFF', av: 'SK', reviewer: 'Sophie K.', when: '1 week ago', quote: 'Free pre-RWC check saved me a fortune. Genuinely helpful crew.' },
-  { id: 'bayswater', store: 'NOVA TYRES BAYSWATER', loc: 'Bayswater, VIC', rating: 4.9, count: 388, c: '#19D26A', av: 'RT', reviewer: 'Raj T.', when: '3 days ago', quote: 'Ultimate Service and it drives like new. Call-back within the hour.' },
-  { id: 'alphington', store: 'NOVA TYRES MELBOURNE', loc: 'Alphington, VIC', rating: 4.7, count: 276, c: '#FFB300', av: 'LN', reviewer: 'Lauren N.', when: '5 days ago', quote: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.' },
-  { id: 'sunshine', store: 'NOVA TYRES SUNSHINE', loc: 'Sunshine, VIC', rating: 4.8, count: 203, c: '#FF3B6B', av: 'MV', reviewer: 'Marco V.', when: '1 week ago', quote: 'Sorted my brakes same day and were clear about costs upfront.' },
-  { id: 'sefton', store: 'NOVA TYRES SEFTON', loc: 'Sefton, NSW', rating: 4.9, count: 164, c: '#8B5CF6', av: 'PS', reviewer: 'Priya S.', when: '4 days ago', quote: 'So glad they’re in Sydney now. Quick, honest and tidy work.' },
+  { id: 'camden', store: 'Gripwell CAMDEN', loc: 'Camden, North', rating: 4.9, count: 842, c: '#FF5A1F', av: 'DM', reviewer: 'Daniel M.', when: '2 weeks ago', quote: 'Same-day service, honest pricing and no upsell. Exactly what you want.' },
+  { id: 'shoreditch', store: 'Gripwell SHOREDITCH', loc: 'Shoreditch, East', rating: 4.8, count: 511, c: '#2D6BFF', av: 'SK', reviewer: 'Sophie K.', when: '1 week ago', quote: 'Free safety check saved me a fortune. Genuinely helpful crew.' },
+  { id: 'brixton', store: 'Gripwell BRIXTON', loc: 'Brixton, South', rating: 4.9, count: 388, c: '#19D26A', av: 'RT', reviewer: 'Raj T.', when: '3 days ago', quote: 'Ultimate Service and it drives like new. Call-back within the hour.' },
+  { id: 'hammersmith', store: 'Gripwell HAMMERSMITH', loc: 'Hammersmith, West', rating: 4.7, count: 276, c: '#FFB300', av: 'LN', reviewer: 'Lauren N.', when: '5 days ago', quote: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.' },
+  { id: 'islington', store: 'Gripwell ISLINGTON', loc: 'Islington, North', rating: 4.8, count: 203, c: '#FF3B6B', av: 'MV', reviewer: 'Marco V.', when: '1 week ago', quote: 'Sorted my brakes same day and were clear about costs upfront.' },
+  { id: 'citycentre', store: 'Gripwell CITY', loc: 'City, Central', rating: 4.9, count: 164, c: '#8B5CF6', av: 'PS', reviewer: 'Priya S.', when: '4 days ago', quote: 'So convenient in the City. Quick, honest and tidy work.' },
 ]
 
-const GOOGLE_REVIEWS_URL = 'https://www.google.com/search?q=Nova+Tyres+reviews'
 
 export default function MobileServiceReviews() {
   const [featIdx, setFeatIdx] = useState(0)
@@ -53,18 +52,14 @@ export default function MobileServiceReviews() {
 
   return (
     <section style={{ background: '#FAF9F5', padding: '22px 16px 24px', borderTop: '1px solid #E7E5DE' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700 }}>G</span>
-        <span style={{ color: '#E8572A', fontSize: '9px' }}>★★★★★</span>
-        <span style={{ fontSize: '10px', color: '#666' }}><b>4.8</b> average rating</span>
-      </div>
-      <h2 style={{ margin: '0 0 12px', fontSize: '17px', fontWeight: 800, color: '#16211B', lineHeight: 1.2 }}>
-        Google reviews across our stores.
+      <div style={{ marginBottom: '6px' }}><span style={{ display: 'inline-block', background: '#2A2E36', color: '#fff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', padding: '3px 8px', borderRadius: '4px' }}>SAMPLE DATA</span></div>
+      <h2 style={{ margin: '0 0 6px', fontSize: '17px', fontWeight: 800, color: '#1A1D23', lineHeight: 1.2 }}>
+        Example reviews across our stores.
       </h2>
+      <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#4B5563', lineHeight: 1.5 }}>Gripwell is a fictional shop, so these reviews, ratings and counts are made up to show the layout.</p>
 
       {/* Featured rotator */}
       <div style={{ background: '#fff', border: '1px solid #E7E5DE', borderRadius: '12px', padding: '14px', position: 'relative' }}>
-        <span style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '11px', fontWeight: 700 }}>G</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: '26px', height: '26px', borderRadius: '50%', background: feat.c, color: '#fff', fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{feat.av}</span>
           <div>
@@ -72,13 +67,13 @@ export default function MobileServiceReviews() {
             <span style={{ fontSize: '8.5px', color: '#999' }}>{feat.meta}</span>
           </div>
         </div>
-        <span style={{ display: 'block', color: '#E8572A', fontSize: '10px', marginTop: '8px' }}>★★★★★</span>
+        <span style={{ display: 'block', color: '#FF6A1A', fontSize: '10px', marginTop: '8px' }}>★★★★★</span>
         <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#444', lineHeight: 1.5 }}>{feat.q}</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
           <button type="button" aria-label="Previous review" onClick={() => setFeatIdx(i => (i - 1 + FEATURED.length) % FEATURED.length)} style={navBtn}>‹</button>
           <span style={{ display: 'flex', gap: '4px' }}>
             {FEATURED.map((_, i) => (
-              <i key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === featIdx ? '#E8572A' : '#ddd', display: 'block' }} />
+              <i key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === featIdx ? '#FF6A1A' : '#ddd', display: 'block' }} />
             ))}
           </span>
           <button type="button" aria-label="Next review" onClick={() => setFeatIdx(i => (i + 1) % FEATURED.length)} style={navBtn}>›</button>
@@ -91,18 +86,12 @@ export default function MobileServiceReviews() {
           <div key={b.k} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '9px', color: '#666', width: '18px' }}>{b.k}★</span>
             <span style={{ flex: 1, height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
-              <i style={{ display: 'block', height: '100%', width: `${b.w}%`, background: '#E8572A' }} />
+              <i style={{ display: 'block', height: '100%', width: `${b.w}%`, background: '#FF6A1A' }} />
             </span>
             <span style={{ fontSize: '8.5px', color: '#999', width: '30px', textAlign: 'right' }}>{b.n}</span>
           </div>
         ))}
       </div>
-      <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', fontSize: '10.5px', fontWeight: 700, marginTop: '8px', color: '#076330', textDecoration: 'none' }}>
-        View all reviews on Google →
-      </a>
-      <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'block', textAlign: 'center', background: '#16211B', color: '#fff', borderRadius: '8px', padding: '10px', fontSize: '11px', fontWeight: 700, marginTop: '10px', textDecoration: 'none' }}>
-        ✎ Leave us a review
-      </a>
 
       {/* Location filter chips */}
       <div className="nv-mob-pills" style={{ marginTop: '16px' }}>
@@ -114,7 +103,7 @@ export default function MobileServiceReviews() {
               type="button"
               onClick={() => { setLoc(l); setStoreIdx(0) }}
               style={{
-                background: on ? '#076330' : '#fff', color: on ? '#fff' : '#666',
+                background: on ? '#2A2E36' : '#fff', color: on ? '#fff' : '#666',
                 border: on ? 'none' : '1px solid #E7E5DE', fontSize: '10px', fontWeight: 700,
                 borderRadius: '14px', padding: '6px 12px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
               }}
@@ -135,7 +124,7 @@ export default function MobileServiceReviews() {
           <span style={{ display: 'block', fontSize: '11.5px', fontWeight: 800, letterSpacing: '0.02em' }}>{cur.store}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px' }}>
             <b style={{ fontSize: '10.5px' }}>{cur.rating}</b>
-            <span style={{ color: '#E8572A', fontSize: '9px' }}>★★★★★</span>
+            <span style={{ color: '#FF6A1A', fontSize: '9px' }}>★★★★★</span>
             <span style={{ fontSize: '8.5px', color: '#999' }}>({cur.count})</span>
           </span>
           <div style={{ display: 'flex', gap: '7px', marginTop: '8px' }}>
@@ -145,8 +134,7 @@ export default function MobileServiceReviews() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '6px', marginTop: '9px' }}>
-            <a href={`https://www.google.com/search?q=Nova+Tyres+${cur.id}+reviews`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', border: '1px solid #E7E5DE', borderRadius: '6px', padding: '7px', fontSize: '9.5px', fontWeight: 700, color: '#16211B', textDecoration: 'none' }}>View reviews</a>
-            <a href={`https://www.google.com/search?q=Nova+Tyres+${cur.id}+reviews`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', background: '#2D6BFF', color: '#fff', borderRadius: '6px', padding: '7px', fontSize: '9.5px', fontWeight: 700, textDecoration: 'none' }}>Open on Google ↗</a>
+            <a href={`https://www.google.com/search?q=Gripwell+${cur.id}+reviews`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', border: '1px solid #E7E5DE', borderRadius: '6px', padding: '7px', fontSize: '9.5px', fontWeight: 700, color: '#1A1D23', textDecoration: 'none' }}>View reviews</a>
           </div>
         </div>
       </div>
@@ -154,7 +142,7 @@ export default function MobileServiceReviews() {
         <button type="button" aria-label="Previous store" onClick={() => setStoreIdx(i => (i - 1 + cards.length) % cards.length)} style={{ ...navBtn, fontSize: '14px' }}>‹</button>
         <span style={{ display: 'flex', gap: '4px' }}>
           {cards.map((_, i) => (
-            <i key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === safeIdx ? '#E8572A' : '#ddd', display: 'block' }} />
+            <i key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === safeIdx ? '#FF6A1A' : '#ddd', display: 'block' }} />
           ))}
         </span>
         <button type="button" aria-label="Next store" onClick={() => setStoreIdx(i => (i + 1) % cards.length)} style={{ ...navBtn, fontSize: '14px' }}>›</button>

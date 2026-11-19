@@ -8,13 +8,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 function WidthIcon() {
   return (
     <svg width="34" height="34" viewBox="0 0 56 56" aria-hidden="true">
-      <rect x="19" y="6" width="18" height="30" rx="6" fill="#0F231A" stroke="#E8572A" strokeWidth="2" />
+      <rect x="19" y="6" width="18" height="30" rx="6" fill="#0F231A" stroke="#FF6A1A" strokeWidth="2" />
       <line x1="24" y1="12" x2="24" y2="30" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="28" y1="12" x2="28" y2="30" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="32" y1="12" x2="32" y2="30" stroke="#5C7568" strokeWidth="1.6" />
-      <line x1="15" y1="45" x2="41" y2="45" stroke="#9DB0A5" strokeWidth="1.8" />
-      <path d="M15 45 L19.5 41.5 M15 45 L19.5 48.5" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M41 45 L36.5 41.5 M41 45 L36.5 48.5" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="15" y1="45" x2="41" y2="45" stroke="#9EA3AD" strokeWidth="1.8" />
+      <path d="M15 45 L19.5 41.5 M15 45 L19.5 48.5" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M41 45 L36.5 41.5 M41 45 L36.5 48.5" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -22,10 +22,10 @@ function ProfileIcon() {
   return (
     <svg width="34" height="34" viewBox="0 0 56 56" aria-hidden="true">
       <circle cx="24" cy="26" r="19" fill="#0F231A" stroke="#5C7568" strokeWidth="2" />
-      <circle cx="24" cy="26" r="9" fill="#132A1F" stroke="#E8572A" strokeWidth="2" />
-      <line x1="48" y1="8" x2="48" y2="18" stroke="#9DB0A5" strokeWidth="1.8" />
-      <path d="M48 8 L45 11 M48 8 L51 11" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M48 18 L45 15 M48 18 L51 15" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="24" cy="26" r="9" fill="#132A1F" stroke="#FF6A1A" strokeWidth="2" />
+      <line x1="48" y1="8" x2="48" y2="18" stroke="#9EA3AD" strokeWidth="1.8" />
+      <path d="M48 8 L45 11 M48 8 L51 11" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M48 18 L45 15 M48 18 L51 15" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -33,16 +33,16 @@ function RimIcon() {
   return (
     <svg width="34" height="34" viewBox="0 0 56 56" aria-hidden="true">
       <circle cx="28" cy="26" r="18" fill="#0F231A" stroke="#5C7568" strokeWidth="2" />
-      <circle cx="28" cy="26" r="13" fill="none" stroke="#E8572A" strokeWidth="2" />
-      <circle cx="28" cy="26" r="3.5" fill="#E8572A" />
+      <circle cx="28" cy="26" r="13" fill="none" stroke="#FF6A1A" strokeWidth="2" />
+      <circle cx="28" cy="26" r="3.5" fill="#FF6A1A" />
       <line x1="28" y1="26" x2="28" y2="14" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="28" y1="26" x2="38.4" y2="19.6" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="28" y1="26" x2="38.4" y2="32.4" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="28" y1="26" x2="17.6" y2="32.4" stroke="#5C7568" strokeWidth="1.6" />
       <line x1="28" y1="26" x2="17.6" y2="19.6" stroke="#5C7568" strokeWidth="1.6" />
-      <line x1="16" y1="47" x2="40" y2="47" stroke="#9DB0A5" strokeWidth="1.8" />
-      <path d="M16 47 L20.5 43.5 M16 47 L20.5 50.5" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M40 47 L35.5 43.5 M40 47 L35.5 50.5" stroke="#9DB0A5" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="16" y1="47" x2="40" y2="47" stroke="#9EA3AD" strokeWidth="1.8" />
+      <path d="M16 47 L20.5 43.5 M16 47 L20.5 50.5" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M40 47 L35.5 43.5 M40 47 L35.5 50.5" stroke="#9EA3AD" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -187,13 +187,13 @@ export default function TyreSizeGuideModal({ onClose }: { onClose: () => void })
           padding: 16px 12px;
           border-bottom: 1px solid #F0EFE9;
         }
-        .m-head .title { text-align: center; font-size: 16px; font-weight: 800; color: #16211B; letter-spacing: -0.01em; }
+        .m-head .title { text-align: center; font-size: 16px; font-weight: 800; color: #1A1D23; letter-spacing: -0.01em; }
         .m-iconbtn {
           width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
           display: inline-flex; align-items: center; justify-content: center;
-          background: transparent; border: 0; color: #6E7C74; transition: color .15s ease;
+          background: transparent; border: 0; color: #6B7280; transition: color .15s ease;
         }
-        .m-iconbtn:hover { color: #076330; }
+        .m-iconbtn:hover { color: #2A2E36; }
 
         .m-body { overflow-y: auto; overflow-x: hidden; padding: 22px 22px 6px; -webkit-overflow-scrolling: touch; }
         .m-body::-webkit-scrollbar { width: 8px; }
@@ -202,10 +202,10 @@ export default function TyreSizeGuideModal({ onClose }: { onClose: () => void })
         .sec-label {
           display: inline-flex; align-items: center; gap: 9px;
           font-family: 'DM Mono', monospace;
-          font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: #E8572A;
+          font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: #FF6A1A;
           margin-bottom: 14px;
         }
-        .sec-label .bar { width: 20px; height: 2px; background: #E8572A; border-radius: 2px; }
+        .sec-label .bar { width: 20px; height: 2px; background: #FF6A1A; border-radius: 2px; }
 
         .sw-panel {
           position: relative;
@@ -215,12 +215,12 @@ export default function TyreSizeGuideModal({ onClose }: { onClose: () => void })
         .sw-code { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
         .chip {
           font-family: 'DM Mono', monospace; font-weight: 700; font-size: 18px;
-          color: #16211B; background: #fff; border: 1px solid #E7E5DE;
+          color: #1A1D23; background: #fff; border: 1px solid #E7E5DE;
           border-radius: 8px; padding: 9px 12px; min-width: 38px; text-align: center; line-height: 1;
         }
-        .chip.hl { color: #fff; background: #076330; border-color: #076330; }
+        .chip.hl { color: #fff; background: #2A2E36; border-color: #2A2E36; }
         .chip.tiny { font-size: 14px; padding: 8px 9px; min-width: 30px; }
-        .slash { color: #9DB0A5; font-weight: 700; font-size: 18px; }
+        .slash { color: #9EA3AD; font-weight: 700; font-size: 18px; }
 
         .sw-icons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
         .iconcard {
@@ -229,26 +229,26 @@ export default function TyreSizeGuideModal({ onClose }: { onClose: () => void })
           display: flex; flex-direction: column; align-items: center; gap: 6px;
         }
         .iconcard svg { display: block; }
-        .iconcard .ic-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; color: #16211B; text-transform: uppercase; }
-        .iconcard .ic-sub { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; color: #E8572A; }
+        .iconcard .ic-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; color: #1A1D23; text-transform: uppercase; }
+        .iconcard .ic-sub { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 600; color: #FF6A1A; }
 
         .sw-legend { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
         .legend-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
         .legend-row .lk {
-          font-weight: 800; font-size: 11px; color: #16211B;
+          font-weight: 800; font-size: 11px; color: #1A1D23;
           background: #fff; border: 1px solid #E7E5DE; border-radius: 6px;
           padding: 3px 8px; min-width: 28px; text-align: center;
         }
-        .legend-row .lv { color: #6E7C74; font-weight: 500; }
+        .legend-row .lv { color: #6B7280; font-weight: 500; }
 
-        .m-text { font-size: 13px; line-height: 1.55; color: #6E7C74; margin: 16px 0 20px; }
-        .m-text strong { color: #16211B; font-weight: 700; }
+        .m-text { font-size: 13px; line-height: 1.55; color: #6B7280; margin: 16px 0 20px; }
+        .m-text strong { color: #1A1D23; font-weight: 700; }
 
         .m-foot { flex-shrink: 0; padding: 14px 18px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid #F0EFE9; }
         .got-btn {
           width: 100%; appearance: none; border: 0; cursor: pointer;
           font-family: inherit; font-size: 15px; font-weight: 700; color: #fff;
-          background: #E8572A; border-radius: 12px; padding: 14px;
+          background: #FF6A1A; border-radius: 12px; padding: 14px;
           transition: background .15s ease;
         }
         .got-btn:hover { background: #D8470F; }

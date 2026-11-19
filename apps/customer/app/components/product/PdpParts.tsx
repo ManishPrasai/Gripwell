@@ -9,19 +9,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { STORES, NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF, waHref } from '../../../lib/stores'
 
-/* Official Nova Tyres social profiles — reused by the footer + review share. */
+/* Official Gripwell social profiles — reused by the footer + review share. */
 export const NOVA_SOCIAL = {
-  facebook:  'https://www.facebook.com/Novatyres.Official',
-  instagram: 'https://www.instagram.com/novatyres/',
+  facebook:  'https://www.facebook.com/gripwell.Official',
+  instagram: 'https://www.instagram.com/gripwell/',
 }
 
 export const PAYMENT_LOGOS = [
   { name: 'Stripe',     src: '/images/footer/payment-stripe.png' },
   { name: 'VISA',       src: '/images/footer/payment-visa.png' },
   { name: 'Mastercard', src: '/images/footer/payment-mastercard.png' },
-  { name: 'Apple Pay',  src: '/images/footer/payment-applepay.png' },
-  { name: 'Afterpay',   src: '/images/footer/payment-afterpay.png' },
-  { name: 'Klarna',     src: '/images/footer/payment-klarna.png' },
 ]
 
 export const IcoCheck = () => (
@@ -95,7 +92,7 @@ export function PaymentsPanel() {
           <span key={p.name} className="pdp-pay"><img src={p.src} alt={p.name} /></span>
         ))}
       </div>
-      <p className="pdp-note">Pay online or in store — all prices include GST.</p>
+      <p className="pdp-note">Pay online or in store — all prices include VAT.</p>
     </>
   )
 }
@@ -124,16 +121,16 @@ export function ExpertPanel({ kind }: { kind: 'tyre' | 'wheel' }) {
           WhatsApp
         </a>
       </div>
-      <p className="pdp-note">Mon–Sat 8am–6pm AEST</p>
+      <p className="pdp-note">Mon–Fri 8am–5:30pm, Sat 8am–4pm</p>
     </>
   )
 }
 
 const FITTING_FEES = [
-  { label: 'Passenger car',        price: '$25 per tyre' },
-  { label: 'SUV, ute or 4WD',      price: '$30 per tyre' },
-  { label: 'Van / light commercial', price: '$35 per tyre' },
-  { label: 'Truck',                price: '$50 per tyre' },
+  { label: 'Passenger car',        price: '£25 per tyre' },
+  { label: 'SUV or 4x4',      price: '£30 per tyre' },
+  { label: 'Van / light commercial', price: '£35 per tyre' },
+  { label: 'Truck',                price: '£50 per tyre' },
 ]
 
 export function FittingPanel() {
@@ -148,46 +145,6 @@ export function FittingPanel() {
         Includes balancing, new valves &amp; disposal ·{' '}
         <Link href="/#locations">Find your store →</Link>
       </p>
-    </>
-  )
-}
-
-export function ReviewPanel() {
-  const [rating, setRating] = useState(5)
-  const [text, setText] = useState('')
-  const [sent, setSent] = useState(false)
-
-  if (sent) {
-    return (
-      <>
-        <p className="pdp-sent"><IcoCheck />Thanks! Your review has been submitted.</p>
-        <p className="pdp-note">It will appear once verified against a purchase.</p>
-      </>
-    )
-  }
-
-  return (
-    <>
-      <label className="pdp-field">
-        <span>Your rating</span>
-        <select value={rating} onChange={e => setRating(Number(e.target.value))}>
-          <option value={5}>★★★★★ — Excellent</option>
-          <option value={4}>★★★★ — Good</option>
-          <option value={3}>★★★ — Okay</option>
-          <option value={2}>★★ — Poor</option>
-          <option value={1}>★ — Bad</option>
-        </select>
-      </label>
-      <textarea
-        className="pdp-textarea"
-        rows={3}
-        placeholder="How does this product drive? Fitting experience?"
-        value={text}
-        onChange={e => setText(e.target.value)}
-      />
-      <button type="button" className="pdp-btn-solid full" onClick={() => setSent(true)}>
-        Submit review
-      </button>
     </>
   )
 }
@@ -214,7 +171,7 @@ export function SimilarGrid({ title, basePath, items }: {
             <span className="sc-photo"><img src={it.image} alt={`${it.brand} ${it.sub}`} /></span>
             <span className="sc-brand">{it.brand}</span>
             <span className="sc-model">{it.sub}</span>
-            <span className="sc-price">A${it.price.toFixed(2)}</span>
+            <span className="sc-price">£{it.price.toFixed(2)}</span>
           </Link>
         ))}
       </div>

@@ -1,6 +1,6 @@
 /* ============================================================
-   NOVA TYRES — Admin · icon set (ported)
-   <Icon name="store" /> — 1.5 stroke line icons
+   Gripwell â" Admin · icon set (ported)
+   <Icon name="store" /> â" 1.5 stroke line icons
    ============================================================ */
 import * as React from "react";
 

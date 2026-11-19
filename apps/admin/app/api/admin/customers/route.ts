@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       email: c.email,
       phone: c.phone ?? '—',
       active: c.isActive,
-      joined: c.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+      joined: c.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
       orders: c._count.orders,
       bookings: c._count.appointments,
       vehicles: c._count.vehicles,

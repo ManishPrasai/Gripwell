@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · Messages (chat) + Roles & Access (ported)
+   Gripwell — Admin · Messages (chat) + Roles & Access (ported)
    ============================================================ */
 import * as React from "react";
 import { useState, useRef, useEffect, useMemo } from "react";
@@ -25,7 +25,7 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
      `useState` above only seeds on mount, so without this the inbox went stale
      until a hard refresh. Keyed on a message-count signature so we only rebuild
      when something actually arrived — and we keep the open thread marked read
-     so incoming polls don't make it flash unread under the reader. */
+     so incoming polls don’t make it flash unread under the reader. */
   const sig = useMemo(
     () => ctx.scopeBy(D.conversations, "store").map((c: any) => `${c.id}:${c.messages.length}:${c.status}`).join("|"),
     [D.conversations, ctx.role, ctx.store],
@@ -79,7 +79,7 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setConvos((prev) => prev.map((x) => x.id === convoId ? { ...x, status: wasOpen ? "open" : "closed" } : x));  // rollback
-      toast({ kind: "err", title: "Couldn't update conversation", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t update conversation", body: e?.message || "Please try again." });
     }
   }
 
@@ -91,7 +91,7 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
       </div>
 
       {ctx.role === "admin" && (
-        <div className="monitor-banner"><Icon name="eye" /><span><b>Monitoring mode</b> — you can read and step into any store's conversation. Replies are sent as you.</span></div>
+        <div className="monitor-banner"><Icon name="eye" /><span><b>Monitoring mode</b> — you can read and step into any store’s conversation. Replies are sent as you.</span></div>
       )}
 
       <div className={"chat-layout" + (active ? " has-active" : "")}>
@@ -174,7 +174,7 @@ export function MessagesPage({ ctx }: { ctx: Ctx; nav?: any }) {
 /* ===================== ROLES & ACCESS ===================== */
 const LVL = ["None", "View", "Manage"];
 const LVL_CLS = ["", "view", "manage"];
-const ROLE_COLORS = ["#076330", "#2D6BE0", "#0EA5A5", "#7048E8", "#F76707", "#D6336C", "#E08600", "#0E9F57"];
+const ROLE_COLORS = ["#2A2E36", "#2D6BE0", "#0EA5A5", "#7048E8", "#F76707", "#D6336C", "#E08600", "#2D6BE0"];
 
 export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const D = (ctx as any)?.D || NOVA;
@@ -199,7 +199,7 @@ export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setRoles(prevRoles);
-      toast({ kind: "err", title: "Couldn't save role", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t save role", body: e?.message || "Please try again." });
     }
   }
   async function doDelete() {
@@ -212,7 +212,7 @@ export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setRoles(prevRoles);
-      toast({ kind: "err", title: "Couldn't delete role", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t delete role", body: e?.message || "Please try again." });
     }
   }
 
@@ -291,7 +291,7 @@ export function RolesPage({ ctx }: { ctx: Ctx; nav?: any }) {
         </Drawer>
       )}
 
-      {del && <ConfirmModal danger title={"Delete the " + del.name + " role?"} body={del.members > 0 ? del.members + " team member(s) will need a new role assigned." : "This role isn't assigned to anyone."} confirmLabel="Delete role" onConfirm={doDelete} onClose={() => setDel(null)} />}
+      {del && <ConfirmModal danger title={"Delete the " + del.name + " role?"} body={del.members > 0 ? del.members + " team member(s) will need a new role assigned." : "This role isn’t assigned to anyone."} confirmLabel="Delete role" onConfirm={doDelete} onClose={() => setDel(null)} />}
     </div>
   );
 }

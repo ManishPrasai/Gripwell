@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { STORES, STORE_STATES_SERVED } from '../../../../lib/stores'
+import { STORES } from '../../../../lib/stores'
+import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
 /*
   The phone hero's interactive core, ported from the "Mobile Hero — Find My
@@ -29,14 +30,14 @@ const selectStyle: React.CSSProperties = {
   textAlign: 'center',
   fontFamily: "'DM Mono', monospace",
   fontSize: '15px',
-  color: '#16211B',
+  color: '#1A1D23',
 }
 
 const labelStyle: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace",
   fontSize: '10px',
   letterSpacing: '0.1em',
-  color: '#6E7C74',
+  color: '#6B7280',
 }
 
 export default function MobileFindTyre() {
@@ -58,7 +59,7 @@ export default function MobileFindTyre() {
           style={{
             alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: '6px',
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            color: '#9DB0A5', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600,
+            color: '#9EA3AD', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600,
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
@@ -94,7 +95,7 @@ export default function MobileFindTyre() {
           onClick={search}
           className="nv-mob-press"
           style={{
-            border: 'none', cursor: 'pointer', background: '#E8572A', color: '#fff',
+            border: 'none', cursor: 'pointer', background: '#FF6A1A', color: '#fff',
             fontFamily: "'Bebas Neue', sans-serif", fontSize: '19px', letterSpacing: '0.05em',
             borderRadius: '8px', padding: '14px',
           }}
@@ -111,7 +112,7 @@ export default function MobileFindTyre() {
         onClick={() => setView('size')}
         className="nv-mob-press"
         style={{
-          border: 'none', cursor: 'pointer', background: '#E8572A', color: '#fff',
+          border: 'none', cursor: 'pointer', background: '#FF6A1A', color: '#fff',
           fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 700,
           letterSpacing: '0.04em', textTransform: 'uppercase', borderRadius: '10px', padding: '16px 32px',
         }}
@@ -122,18 +123,15 @@ export default function MobileFindTyre() {
       <div className="nv-mob-pills" style={{ width: '100%', marginTop: '14px' }}>
         {[
           {
-            n: '4.8 on Google', l: '1,240+ reviews', ring: '#FFFFFF',
+            n: `Fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}`, l: 'per tyre, VAT incl.', ring: '#FF6A1A',
             icon: (
-              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="#4285F4" d="M22 12.06c0-.7-.06-1.38-.18-2.03H12v3.83h5.6a4.8 4.8 0 0 1-2.08 3.15v2.6h3.36c1.97-1.81 3.12-4.48 3.12-7.55Z" />
-                <path fill="#34A853" d="M12 22c2.66 0 4.9-.88 6.52-2.39l-3.36-2.6c-.93.63-2.13 1-3.16 1a5.62 5.62 0 0 1-5.3-3.85H3.7v2.68A9.99 9.99 0 0 0 12 22Z" />
-                <path fill="#FBBC05" d="M6.7 13.66a5.87 5.87 0 0 1-.31-1.87c0-.65.11-1.28.31-1.87V7.24H3.7A9.98 9.98 0 0 0 2.66 12c0 1.63.4 3.16 1.04 4.34l3-2.68Z" />
-                <path fill="#EA4335" d="M12 6.28c1.45 0 2.75.5 3.78 1.47l2.98-2.98A9.9 9.9 0 0 0 12 2 9.99 9.99 0 0 0 3.7 7.24l3 2.68A5.63 5.63 0 0 1 12 6.28Z" />
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z" /><circle cx="7.5" cy="7.5" r="1.5" />
               </svg>
             ),
           },
           {
-            n: `${STORES.length} stores`, l: `${STORE_STATES_SERVED.length} states`, ring: '#E8572A',
+            n: `${STORES.length} branches`, l: 'across London', ring: '#FF6A1A',
             icon: (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />

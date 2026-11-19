@@ -58,14 +58,14 @@ export default function StoreLocator() {
         <div className="mb-8">
           <div
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full uppercase tracking-wide mb-4"
-            style={{ background: 'rgba(232,87,42,0.2)', color: '#E8572A', letterSpacing: '0.1em', fontSize: '11px', fontWeight: 500 }}
+            style={{ background: 'rgba(232,87,42,0.2)', color: '#FF6A1A', letterSpacing: '0.1em', fontSize: '11px', fontWeight: 500 }}
           >
             <i className="ti ti-map-pin" style={{ fontSize: '12px' }} aria-hidden="true" />
             Our Locations
           </div>
           <h2 className="text-white leading-tight" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '0.02em', lineHeight: 1.1 }}>
             Multiple Stores{' '}
-            <em style={{ color: '#E8572A', fontStyle: 'italic' }}>one phone call</em>
+            <em style={{ color: '#FF6A1A', fontStyle: 'italic' }}>one phone call</em>
             <br />away for new tyres.
           </h2>
         </div>
@@ -120,7 +120,7 @@ export default function StoreLocator() {
               <Link
                 href="/locations"
                 className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full"
-                style={{ background: '#E8572A', color: 'white', fontSize: '14px', fontWeight: 600 }}
+                style={{ background: '#FF6A1A', color: 'white', fontSize: '14px', fontWeight: 600 }}
               >
                 View all locations
                 <i className="ti ti-arrow-right" style={{ fontSize: '14px' }} aria-hidden="true" />

@@ -8,13 +8,13 @@ import { useState } from 'react'
 */
 const TIERS = [
   {
-    id: 'logbook', num: '01', name: 'Log Book Service', eyebrow: 'Warranty-safe servicing', big: 'LOG', lab: 'per maker schedule',
-    desc: 'For newer vehicles still following their manufacturer log book schedule. Carried out by fully qualified mechanics — without affecting your new-car warranty.',
-    inc: ['Quality Parts & Oils', 'Log Book Stamp', 'Safety Inspection', 'Fully Qualified'],
+    id: 'logbook', num: '01', name: 'Manufacturer Service', eyebrow: 'Warranty-safe servicing', big: 'OEM', lab: 'per maker schedule',
+    desc: 'For newer vehicles still following their manufacturer service schedule. Carried out by fully qualified mechanics — without affecting your new-car warranty.',
+    inc: ['Quality Parts & Oils', 'Service Book Stamp', 'Safety Inspection', 'Fully Qualified'],
   },
   {
     id: 'yearly', num: '02', name: 'Yearly Service', eyebrow: 'Essential maintenance', big: '15K', lab: 'km · every 1 year',
-    desc: 'Usually done every 15,000 km. Prevents unnecessary wear and tear and keeps your car running in optimal condition.',
+    desc: 'Usually done every 10,000 miles. Prevents unnecessary wear and tear and keeps your car running in optimal condition.',
     inc: ['Engine Oil Change', 'Oil Filter', 'Safety Inspection', 'Under-Bonnet Check'],
   },
   {
@@ -53,28 +53,28 @@ export default function MobileServiceTiers() {
                 fontFamily: "'DM Sans', sans-serif", textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#16211B' }}>{t.num} {t.name}</span>
-              <span style={{ color: '#E8572A', fontSize: '12px', flexShrink: 0 }}>{isOpen ? '⌄' : '›'}</span>
+              <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#1A1D23' }}>{t.num} {t.name}</span>
+              <span style={{ color: '#FF6A1A', fontSize: '12px', flexShrink: 0 }}>{isOpen ? '⌄' : '›'}</span>
             </button>
 
             {isOpen && (
               <div style={{ padding: '0 2px 14px', animation: 'nvMobFade .2s ease' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '7px' }}>
-                  <span style={{ fontSize: '9px', color: '#E8572A', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{t.eyebrow}</span>
-                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#16211B', flexShrink: 0 }}>
+                  <span style={{ fontSize: '9px', color: '#FF6A1A', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{t.eyebrow}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 800, color: '#1A1D23', flexShrink: 0 }}>
                     {t.big} <span style={{ fontSize: '8px', color: '#999', fontWeight: 600 }}>· {t.lab}</span>
                   </span>
                 </div>
                 <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#666', lineHeight: 1.5 }}>{t.desc}</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
                   {t.inc.map(item => (
-                    <span key={item} style={{ fontSize: '11px', color: '#16211B', display: 'flex', gap: '5px' }}>
-                      <span style={{ color: '#076330' }}>✓</span>{item}
+                    <span key={item} style={{ fontSize: '11px', color: '#1A1D23', display: 'flex', gap: '5px' }}>
+                      <span style={{ color: '#2A2E36' }}>✓</span>{item}
                     </span>
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '12px' }}>
-                  <a href="#svc-book" style={{ background: '#E8572A', color: '#fff', fontSize: '11.5px', fontWeight: 700, borderRadius: '8px', padding: '9px 14px', textDecoration: 'none', flexShrink: 0 }}>
+                  <a href="#svc-book" style={{ background: '#FF6A1A', color: '#fff', fontSize: '11.5px', fontWeight: 700, borderRadius: '8px', padding: '9px 14px', textDecoration: 'none', flexShrink: 0 }}>
                     Book this service →
                   </a>
                   <span style={{ fontSize: '8.5px', color: '#999' }}>Call-back within the hour</span>

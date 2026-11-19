@@ -2,7 +2,7 @@ import HeroSection       from '../components/home/HeroSection'
 import BestDeals         from '../components/home/BestDeals'
 import BrowseByCategory  from '../components/home/BrowseByCategory'
 import InStoreServices   from '../components/home/InStoreServices'
-import WhyNovaTyres      from '../components/home/WhyNovaTyres'
+import Whygripwell      from '../components/home/Whygripwell'
 import BrandsStrip       from '../components/home/BrandsStrip'
 import CustomerReviews   from '../components/home/CustomerReviews'
 import StoreLocator      from '@/app/components/locations/StoreLocator'
@@ -18,8 +18,8 @@ export const dynamic = 'force-dynamic'   // always reflect live PageSEO from adm
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata('home', {
-    title: 'Nova Tyres — Warehouse Direct Tyres & Wheels',
-    description: `Warehouse-direct pricing on tyres and wheels with professional fitting across ${STORES.length} Australian stores.`,
+    title: 'Gripwell — Warehouse Direct Tyres & Wheels',
+    description: `Warehouse-direct pricing on tyres and wheels with professional fitting across ${STORES.length} London stores.`,
   })
 }
 
@@ -39,12 +39,12 @@ export default function HomePage() {
       <style>{`@media (max-width:1023.98px){.nv-shared-chrome{display:none!important}}`}</style>
 
       <div data-vw="desktop">
-        <main style={{ background: '#FAF9F5', color: '#16211B' }}>
+        <main style={{ background: '#FAF9F5', color: '#1A1D23' }}>
           <HeroSection />
           <BestDeals />
           <BrowseByCategory />
           <InStoreServices />
-          <WhyNovaTyres />
+          <Whygripwell />
           <BrandsStrip />
           <CustomerReviews />
           <StoreLocator />

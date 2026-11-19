@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · pages (more): Orders, Settings (ported)
+   Gripwell — Admin · pages (more): Orders, Settings (ported)
    (ContentPage from the prototype is superseded by WebsitePage)
    ============================================================ */
 import * as React from "react";
@@ -58,7 +58,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
         ...(partial ? { amount: amt } : {}),
         ...(refundReason.trim() ? { reason: refundReason.trim() } : {}),
       });
-      toast({ kind: "ok", title: "Refund processed", body: `A$${res.amount.toFixed(2)} refunded${order.hasStripe ? " via Stripe" : " (manual)"}.` });
+      toast({ kind: "ok", title: "Refund processed", body: `£${res.amount.toFixed(2)} refunded${order.hasStripe ? " via Stripe" : " (manual)"}.` });
       await ctx.refetch?.();
       setRefund(null); setRefundAmt(""); setRefundReason(""); setManage(null);
     } catch (e: any) {
@@ -118,12 +118,12 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
       </div>
       <Pager pager={pager} unit="orders" />
 
-      {/* ── Manage order drawer ── */}
+      {/* —€—€ Manage order drawer —€—€ */}
       {manage && (
         <Drawer title={manage.ref} sub={`${manage.customer} · ${manage.date}`} onClose={() => setManage(null)}>
           <div className="field"><label>Products</label><div style={{ fontSize: 13.5, color: "var(--ink-2)" }}>{manage.items}</div></div>
           <div className="form-grid">
-            <div className="field"><label>Total</label><div className="mono" style={{ fontSize: 16, fontWeight: 800 }}>A${manage.total.toFixed(2)}</div></div>
+            <div className="field"><label>Total</label><div className="mono" style={{ fontSize: 16, fontWeight: 800 }}>£{manage.total.toFixed(2)}</div></div>
             <div className="field"><label>Payment</label><div><span className={"badge dotless " + (PAY_TINT[manage.paymentStatus] || "")}>{prettyStatus(manage.paymentStatus || "unpaid")}</span></div></div>
           </div>
 
@@ -145,7 +145,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
               <div style={{ fontSize: 13.5, fontWeight: 800, marginBottom: 4 }}>Refund</div>
               <p className="muted" style={{ fontSize: 12.5, marginBottom: 12 }}>{manage.hasStripe ? "Refunds go back to the customer's card via Stripe." : "No card payment on file — this records a manual (cash/Zip) refund."}</p>
               <div className="form-grid">
-                <div className="field"><label>Amount (blank = full A${manage.total.toFixed(2)})</label><input type="number" min="0" step="0.01" max={manage.total} value={refundAmt} onChange={(e) => setRefundAmt(e.target.value)} placeholder={manage.total.toFixed(2)} /></div>
+                <div className="field"><label>Amount (blank = full £{manage.total.toFixed(2)})</label><input type="number" min="0" step="0.01" max={manage.total} value={refundAmt} onChange={(e) => setRefundAmt(e.target.value)} placeholder={manage.total.toFixed(2)} /></div>
                 <div className="field"><label>Reason (optional)</label><input value={refundReason} onChange={(e) => setRefundReason(e.target.value)} placeholder="e.g. Customer changed mind" /></div>
               </div>
               <button className="btn danger block" style={{ marginTop: 6 }} disabled={busy} onClick={() => setRefund(manage)}><Icon name="dollar" />Issue refund</button>
@@ -157,7 +157,7 @@ export function OrdersPage({ ctx }: { ctx: Ctx; nav?: any }) {
       {refund && (
         <ConfirmModal
           title="Confirm refund"
-          body={`Refund A$${(refundAmt.trim() && parseFloat(refundAmt) < refund.total ? parseFloat(refundAmt) : refund.total).toFixed(2)} for ${refund.ref}? ${refund.hasStripe ? "This will refund the customer's card via Stripe and cannot be undone." : "This records a manual refund."}`}
+          body={`Refund £${(refundAmt.trim() && parseFloat(refundAmt) < refund.total ? parseFloat(refundAmt) : refund.total).toFixed(2)} for ${refund.ref}? ${refund.hasStripe ? "This will refund the customer's card via Stripe and cannot be undone." : "This records a manual refund."}`}
           confirmLabel={busy ? "Processing…" : "Refund"}
           danger icon="dollar"
           onConfirm={doRefund}
@@ -307,8 +307,8 @@ export function SettingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
           {tab === "billing" && (
             <div className="panel" style={{ padding: 24 }}>
-              <div className="role-banner" style={{ marginTop: 0 }}><Icon name="sparkles" /><span>You're on the <b>Nova Business</b> plan — 6 stores, unlimited staff.</span></div>
-              <div className="set-row"><Icon name="card" style={{ width: 20, color: "var(--ink-3)" }} /><div className="set-txt"><b>Visa ending 4242</b><span>Next invoice 1 July 2026 · $349/mo</span></div><button className="btn ghost sm" onClick={() => toast({ kind: "info", title: "Update payment method" })}>Update</button></div>
+              <div className="role-banner" style={{ marginTop: 0 }}><Icon name="sparkles" /><span>You're on the <b>Gripwell Business</b> plan — 6 stores, unlimited staff.</span></div>
+              <div className="set-row"><Icon name="card" style={{ width: 20, color: "var(--ink-3)" }} /><div className="set-txt"><b>Visa ending 4242</b><span>Next invoice 1 July 2026 · £349/mo</span></div><button className="btn ghost sm" onClick={() => toast({ kind: "info", title: "Update payment method" })}>Update</button></div>
               <div className="set-row"><Icon name="download" style={{ width: 20, color: "var(--ink-3)" }} /><div className="set-txt"><b>Invoices</b><span>Download past statements.</span></div><button className="btn ghost sm" onClick={() => toast({ kind: "ok", title: "Invoice downloaded" })}>Latest</button></div>
             </div>
           )}

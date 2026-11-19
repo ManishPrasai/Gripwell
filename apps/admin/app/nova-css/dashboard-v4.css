@@ -1,5 +1,5 @@
 /* ============================================================
-   NOVA TYRES — Admin v4 · "Glass nav + motion" layer
+   Gripwell — Admin v4 · "Glass nav + motion" layer
    Loads LAST (after v3). Goals:
      • Re-introduce frosted GLASS — on the navbars ONLY
        (topbar + bottom dock). Every other surface stays flat.
@@ -223,11 +223,11 @@
   animation: cardIn .5s var(--ease-out) both;
 }
 .hero-card.primary {
-  background: linear-gradient(145deg, var(--brand-2, #0a7a3c), var(--brand, #076330));
+  background: linear-gradient(145deg, var(--brand-2, #0a7a3c), var(--brand, #2A2E36));
   box-shadow: 0 16px 34px -18px var(--brand);
 }
 .hero-card.balance {
-  background: linear-gradient(160deg, #FF7E3D, var(--accent, #FF6817));
+  background: linear-gradient(160deg, #FF7E3D, var(--accent, #FF6A1A));
   box-shadow: 0 16px 34px -18px var(--accent);
 }
 .hero-card::after {

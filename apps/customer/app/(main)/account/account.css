@@ -1,10 +1,10 @@
-/* ── Nova Tyres Account Dashboard ── */
+/* ── Gripwell Account Dashboard ── */
 :root {
-  --accent: #FF6817;
-  --green: #076330;
+  --accent: #FF6A1A;
+  --green: #2A2E36;
   --accent-ink: #FFFFFF;
   --accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
-  --green-soft: color-mix(in oklab, #076330 14%, transparent);
+  --green-soft: color-mix(in oklab, #2A2E36 14%, transparent);
   --radius: 22px;
   --radius-sm: 14px;
   --font-display: 'DM Sans', sans-serif;
@@ -194,7 +194,7 @@
   border-radius: var(--radius) var(--radius) 0 0;
   background:
     radial-gradient(120% 140% at 12% 0%, rgba(255,104,23,.42) 0%, transparent 55%),
-    linear-gradient(120deg, #04331B 0%, #076330 58%, #0A7D3D 100%);
+    linear-gradient(120deg, #04331B 0%, #2A2E36 58%, #0A7D3D 100%);
   position: relative;
   overflow: hidden;
 }

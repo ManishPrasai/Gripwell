@@ -2,7 +2,7 @@ import CollectionHero from '../../../components/tyres/CollectionHero'
 import TyreGrid       from '../../../components/tyres/TyreGrid'
 
 export const metadata = {
-  title: 'Tyre Search Results — Nova Tyres',
+  title: 'Tyre Search Results — Gripwell',
   description: 'Find tyres matching your size and brand requirements.',
 }
 

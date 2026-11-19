@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { prisma } from '@nova/database'
 import { sendOrderConfirmation } from '../../../../lib/email'
 import { resolveCartCustomerId, resolveOrderCustomerId, attachGuestCookie } from '../../../lib/guest-cart'
+import { vatIncluded, fittingPositions } from '../../../../lib/fitting'
 
 // STRIPE_SECRET_KEY is required here — this route decides whether an order
 // gets marked PAID, so unlike other best-effort Stripe lookups elsewhere, a
@@ -16,26 +17,26 @@ function getStripe(): Stripe {
   return _stripe
 }
 
-// ── Dev store (Nova Tyres Sefton — the default fitting station) ───────────────
+// -- Dev store (Gripwell Camden -- the default fitting station) ---------------
 // Order.storeId is a non-nullable FK, so we upsert the store once per process.
 let _devStoreId: string | null = null
 
 async function devStoreId(): Promise<string> {
   if (_devStoreId) return _devStoreId
   const s = await prisma.store.upsert({
-    where:  { slug: 'nova-tyres-sefton' },
+    where:  { slug: 'gripwell-camden' },
     update: {},
     create: {
-      name:      'Nova Tyres Sefton',
-      slug:      'nova-tyres-sefton',
-      address:   '107 Carlingford St',
-      suburb:    'Sefton',
-      state:     'NSW',
-      postcode:  '2162',
-      latitude:  -33.8952,
-      longitude: 151.0114,
-      phone:     '0403388774',
-      email:     'sefton.novatyres@gmail.com',
+      name:      'Gripwell Camden',
+      slug:      'gripwell-camden',
+      address:   '14 Kentish Town Rd',
+      suburb:    'Camden',
+      state:     'North London',
+      postcode:  'NW1 9NX',
+      latitude:  51.5417,
+      longitude: -0.1428,
+      phone:     '+442079460101',
+      email:     'camden@gripwell.demo',
     },
     select: { id: true },
   })
@@ -58,11 +59,12 @@ async function devStoreId(): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const body             = await req.json().catch(() => ({}))
-    const b                = body as { paymentIntentId?: string; email?: string; name?: string; storeName?: string }
+    const b                = body as { paymentIntentId?: string; email?: string; name?: string; storeName?: string; notes?: string }
     const paymentIntentId  = b.paymentIntentId ?? null
     const contactEmail     = (b.email ?? '').trim()
     const contactName      = (b.name ?? '').trim() || 'Customer'
     const storeName        = (b.storeName ?? '').trim()
+    const bodyNotes        = typeof b.notes === 'string' ? b.notes.trim().slice(0, 300) : ''
 
     const [{ customerId: userId, guestId, isNew }, storeId] = await Promise.all([
       resolveCartCustomerId(req),
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       return NextResponse.json({
         orderId:     existing.id,
-        orderNumber: `NVT-${existing.id.slice(0, 8).toUpperCase()}`,
+        orderNumber: `GW-${existing.id.slice(0, 8).toUpperCase()}`,
         total:       Number(existing.total),
       })
     }
@@ -148,19 +150,23 @@ export async function POST(req: NextRequest) {
       return sum + Number(row?.price ?? 0) * item.quantity
     }, 0)
 
-    // Recover discount + GST + fitting from the already-verified PaymentIntent's
+    // Recover discount + VAT + fitting from the already-verified PaymentIntent's
     // metadata (set by create-payment-intent when the charge was created).
     const m = intent.metadata
+    // Notes travel on the PaymentIntent (set by /api/checkout/notes); the body copy is a fallback.
+    const notes = (m.notes || bodyNotes).slice(0, 300)
     let discountAmount = 0
     let discountId = ''
     const dcents = Number(m.discountCents || 0)
     if (dcents > 0) { discountAmount = dcents / 100; discountId = m.discountId || '' }
-    const gst      = m.gstCents     != null ? Number(m.gstCents)     / 100 : Math.round(subtotal * 0.10 * 100) / 100
     const fitting  = m.fittingCents != null ? Number(m.fittingCents) / 100 : 0
     const fulfilMethod: 'fit' | 'pickup' = m.fulfilMethod === 'pickup' ? 'pickup' : 'fit'
     const fitCount = m.fitCount != null ? Number(m.fitCount) : 0
 
-    const total = Math.max(0, subtotal + gst + fitting - discountAmount)
+    // Prices are VAT-inclusive (lib/fitting.ts): VAT is the share inside the
+    // total, recorded for the invoice, never added on top.
+    const total = Math.max(0, subtotal + fitting - discountAmount)
+    const VAT   = m.VATCents != null ? Number(m.VATCents) / 100 : Math.round(vatIncluded(total) * 100) / 100
 
     // ── 6b. The charged amount must match what this cart computes right now —
     //  otherwise the cart was mutated after payment (e.g. pay for one cheap
@@ -191,6 +197,7 @@ export async function POST(req: NextRequest) {
           total,
           paymentMethod:         'stripe',
           stripePaymentIntentId: paymentIntentId,
+          notes:                 notes || null,
           items: {
             create: [
               // ── Product line items (tyres + wheels) ────────────────────────
@@ -229,9 +236,9 @@ export async function POST(req: NextRequest) {
       return newOrder
     })
 
-    const orderNumber = `NVT-${order.id.slice(0, 8).toUpperCase()}`
+    const orderNumber = `GW-${order.id.slice(0, 8).toUpperCase()}`
 
-    console.log(`[checkout/success] Order ${orderNumber} created — A$${total.toFixed(2)}`)
+    console.log(`[checkout/success] Order ${orderNumber} created — £${total.toFixed(2)}`)
 
     // ── 8. Order confirmation + invoice email (best-effort; never blocks) ─────
     if (contactEmail) {
@@ -251,11 +258,11 @@ export async function POST(req: NextRequest) {
           sub, qty: item.quantity, unitPrice: unit, total: unit * item.quantity,
         }
       })
-      const itemCount = cartItems.reduce((n, i) => n + i.quantity, 0)
+      const itemCount = fittingPositions(cartItems)   // wheel positions, as fitting is charged
       try {
         await sendOrderConfirmation({
           to: contactEmail, customerName: contactName, orderNumber, items: emailItems,
-          subtotal, gst, fitting, discount: discountAmount, total,
+          subtotal, VAT, fitting, discount: discountAmount, total,
           fulfilMethod, fitCount: fitCount || itemCount, itemCount,
           storeName: storeName || undefined,
         })

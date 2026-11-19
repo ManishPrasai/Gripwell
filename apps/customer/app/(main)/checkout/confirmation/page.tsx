@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { money } from '../../../../lib/fitting'
 
 // ── Order progress steps ──────────────────────────────────────────────────────
 const STEPS = [
@@ -15,16 +16,16 @@ const STEPS = [
 // ── Main confirmation content (uses useSearchParams — requires Suspense) ──────
 function ConfirmationContent() {
   const params      = useSearchParams()
-  const orderNumber = params.get('order') ?? 'NVT-UNKNOWN'
+  const orderNumber = params.get('order') ?? '—'
   const totalStr    = params.get('total')
   const total       = totalStr ? parseFloat(totalStr) : null
-  const orderDate   = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+  const orderDate   = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
-  const [store, setStore] = useState({ name: 'Nova Tyres Sefton', address: '107 Carlingford St, Sefton NSW 2162', phone: '0403 388 774' })
+  const [store, setStore] = useState({ name: 'Gripwell Camden', address: '14 Kentish Town Rd, Camden NW1 9NX', phone: '+44 20 7946 0101' })
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('nova_selected_store')
+      const raw = localStorage.getItem('gw_selected_store')
       if (raw) {
         const s = JSON.parse(raw)
         setStore({
@@ -37,7 +38,7 @@ function ConfirmationContent() {
   }, [])
 
   return (
-    <main style={{ background: '#0D1A12', minHeight: '100vh', paddingTop: '40px', paddingBottom: '80px', color: '#FAF9F5' }}>
+    <main style={{ background: '#1A1D23', minHeight: '100vh', paddingTop: '40px', paddingBottom: '80px', color: '#FAF9F5' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', padding: '40px 24px 56px' }}>
@@ -131,10 +132,9 @@ function ConfirmationContent() {
           {([
             { label: 'Order Number', value: orderNumber,    mono: true  },
             { label: 'Date',         value: orderDate                   },
-            { label: 'Payment',      value: 'Stripe — AUD'             },
-            { label: 'Fitting Fee',  value: 'A$25.00 (included)'       },
+            { label: 'Payment',      value: 'Card via Stripe (GBP)'    },
             total !== null
-              ? { label: 'Total Charged', value: `A$${total.toFixed(2)}`, highlight: true }
+              ? { label: 'Total Charged', value: `${money(total)} incl. VAT`, highlight: true }
               : null,
           ] as ({ label: string; value: string; mono?: boolean; highlight?: boolean } | null)[])
             .filter((r): r is { label: string; value: string; mono?: boolean; highlight?: boolean } => r !== null)
@@ -252,7 +252,7 @@ function ConfirmationContent() {
                 }}>
                   {step.done
                     ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D1A12" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A1D23" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )
@@ -301,7 +301,7 @@ function ConfirmationContent() {
                 icon: 'ti-truck',
                 color: '#FF5A1F',
                 title: 'Tyres dispatched to store',
-                body: 'Your tyres are shipped directly to Nova Tyres Sefton. Estimated arrival: 2–3 business days.',
+                body: 'Your tyres are shipped directly to your chosen Gripwell store. Estimated arrival: 2–3 business days.',
               },
               {
                 icon: 'ti-phone',
@@ -381,7 +381,7 @@ function ConfirmationContent() {
 function ConfirmationSkeleton() {
   return (
     <main style={{
-      background: '#0D1A12', minHeight: '100vh',
+      background: '#1A1D23', minHeight: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#3D5C48' }}>

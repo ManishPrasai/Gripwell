@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · shared UI primitives (ported)
+   Gripwell â" Admin · shared UI primitives (ported)
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -10,14 +10,14 @@ import { Icon } from "./icons";
    Drawers/modals used to size against the whole page instead of the viewport:
    every page sits inside `.page-enter`, whose `pageIn` animation applies a
    transform, and a transformed ancestor becomes the containing block for
-   `position: fixed` children. The fix lives in CSS — `.page-enter` is in the
+   `position: fixed` children. The fix lives in CSS â" `.page-enter` is in the
    `transform: none !important` rule in dashboard-v5.css, which removes the
    containing block at its source.
 
    NOTE: do NOT portal these to <body> via react-dom's createPortal. ui.tsx is
    imported by nearly every admin page (including /login), so that import pulls
    react-dom into the server bundle and the Worker throws 1101 on every SSR
-   route. Learned the hard way — see the c442b04e rollback. */
+   route. Learned the hard way â" see the c442b04e rollback. */
 export function OverlayPortal({ children }: { children: React.ReactNode }) {
   /* Lock the page scroller while an overlay is open so the background
      doesn't drift under the dialog. */
@@ -54,7 +54,7 @@ export class PageErrorBoundary extends React.Component<
               <Icon name="alert" style={{ width: 30, height: 30 }} />
             </div>
             <h3 style={{ fontSize: 19, fontWeight: 800 }}>This page hit a snag</h3>
-            <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 13.5 }}>Something went wrong while rendering. Your data is safe — try reloading this screen.</p>
+            <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 13.5 }}>Something went wrong while rendering. Your data is safe â" try reloading this screen.</p>
             <p className="mono" style={{ color: "var(--ink-3)", fontSize: 11.5, marginTop: 10, wordBreak: "break-word" }}>{this.state.error.message}</p>
             <button className="btn" style={{ marginTop: 20 }} onClick={() => { this.setState({ error: null }); this.props.onReset?.(); }}><Icon name="refresh" />Reload page</button>
           </div>
@@ -356,7 +356,7 @@ export function Pager({ pager, unit = "items" }: { pager: ReturnType<typeof useP
   if (pager.total <= pager.perPage) return null;
   return (
     <div className="pager">
-      <span className="pager-info muted">Showing <b>{pager.from}–{pager.to}</b> of {pager.total} {unit}</span>
+      <span className="pager-info muted">Showing <b>{pager.from}â"{pager.to}</b> of {pager.total} {unit}</span>
       <div className="pager-ctrls">
         <button className="btn ghost sm" disabled={pager.page <= 1} onClick={pager.prev}><Icon name="chevL" />Prev</button>
         <span className="pager-page">Page {pager.page} of {pager.totalPages}</span>

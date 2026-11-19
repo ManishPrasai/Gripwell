@@ -4,26 +4,22 @@
 
 import { useState } from 'react'
 import { useCart } from '../../context/CartContext'
-import { STORES } from '../../../lib/stores'
 import './pdp.css'
 import {
   Breadcrumb, TrustBadges, Accordion, SimilarGrid,
-  PaymentsPanel, PickupPanel, ExpertPanel, FittingPanel, ReviewPanel,
+  PaymentsPanel, PickupPanel, ExpertPanel, FittingPanel,
   type SimilarItem,
 } from './PdpParts'
+import { money } from '../../../lib/fitting'
 
-const BRAND_LOGOS: Record<string, string> = {
-  'Black Rhino': '/images/brands/Black Rino.svg',
-  'ROH':         '/images/brands/roh.svg',
-  'King Wheels': '/images/brands/king-wheels.svg',
-  'Sonix':       '/images/brands/sonix.svg',
-}
+/* No manufacturer artwork: every brand renders as a text wordmark. */
+const BRAND_LOGOS: Record<string, string> = {}
 
 const SIMILAR_WHEELS: SimilarItem[] = [
-  { brand: 'Black Rhino', sub: 'Arsenal 18×9',  price: 265, slug: 'black-rhino-arsenal-18x9', image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         sub: 'Terrain 16×8',  price: 195, slug: 'roh-terrain-16x8',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'ROH',         sub: 'Warrior 20×9',  price: 295, slug: 'roh-warrior-20x9',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'King Wheels', sub: 'Force 17×8',    price: 185, slug: 'king-force-17x8',          image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Halden',      sub: 'Bastion 18×9',  price: 265, slug: 'halden-bastion-18x9', image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Ostra',       sub: 'Ranger 16×8',   price: 195, slug: 'ostra-ranger-16x8',         image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Ostra',       sub: 'Summit 20×9',   price: 295, slug: 'ostra-summit-20x9',         image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Marlow',      sub: 'Stride 17×8',   price: 185, slug: 'marlow-stride-17x8',          image: '/images/wheel/Wheel 1.png' },
 ]
 
 interface WheelProduct {
@@ -34,7 +30,6 @@ interface WheelProduct {
   packages: { id: string; name: string; packagePrice: string }[]
 }
 
-const money = (n: number) => `A$${n.toFixed(2)}`
 
 export default function WheelProductDetail({ wheel, similar }: { wheel: WheelProduct; similar?: SimilarItem[] }) {
   const [activeImg, setActiveImg] = useState(0)
@@ -52,8 +47,6 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
   /* Real fitment-based recommendations from the API; fall back to demo picks. */
   const similarItems = similar && similar.length > 0 ? similar : SIMILAR_WHEELS
 
-  const nearby     = STORES.slice(0, 4).map(s => s.short).join(', ')
-  const extraCount = STORES.length - 4
 
   function handleAdd() {
     addToCart(
@@ -102,7 +95,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
                 <li>Hub-centric fit for a vibration-free ride</li>
                 <li>Fully pressure-tested for strength</li>
                 <li>Durable powder-coat finish</li>
-                <li>Fitted and balanced at any Nova store</li>
+                <li>Fitted and balanced at any Gripwell store</li>
               </ul>
             </section>
 
@@ -130,8 +123,6 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
             </span>
             <h1 className="pdp-title">{wheel.model}</h1>
             <div className="pdp-rate">
-              <span className="stars">★★★★★</span>
-              <span className="count"><b>4.8</b> (126 reviews)</span>
               <span className="spec">{sizeStr} · {wheel.pcd}</span>
             </div>
 
@@ -139,7 +130,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
               <div className="pdp-price">
                 <span className="amount">{money(price)}</span>
               </div>
-              <div className="pdp-per">per wheel · GST included</div>
+              <div className="pdp-per">per wheel · VAT included</div>
               <div className={`pdp-stock${inStock ? '' : ' out'}`}>
                 {inStock ? '● In stock — fitted same day, or ready for pickup' : '● Out of stock'}
               </div>
@@ -160,9 +151,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
               </button>
 
               <div className="pdp-fitnote">
-                <b>Fitted at your local store</b> — usually same day, under an hour. In stock at{' '}
-                <span className="stores">{nearby}</span>
-                {extraCount > 0 ? ` +${extraCount} more` : ''} ·{' '}
+                <b>Fitted at your local store</b> — usually same day, under an hour ·{' '}
                 <a href="/#locations">All stores →</a>
               </div>
             </div>
@@ -172,7 +161,6 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
               { title: 'Pickup & Installation',    body: <PickupPanel /> },
               { title: 'Talk to a wheel expert',   body: <ExpertPanel kind="wheel" /> },
               { title: 'Fitting at our stores',    body: <FittingPanel /> },
-              { title: 'Write a review',           body: <ReviewPanel /> },
             ]} />
           </div>
         </div>

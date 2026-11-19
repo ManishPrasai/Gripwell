@@ -1,8 +1,8 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · product image upload
-   ImageSlot   — one drop target that uploads and previews
-   ProductGallery — manages the saved gallery of an existing product
+   Gripwell â" Admin · product image upload
+   ImageSlot   â" one drop target that uploads and previews
+   ProductGallery â" manages the saved gallery of an existing product
    ============================================================ */
 import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -11,7 +11,7 @@ import { toast } from "./ui";
 import { uploadProductImage } from "../../lib/imageUpload";
 import { adminFetch } from "../../lib/adminFetch";
 
-/* ── One upload slot ──────────────────────────────────────────────────────── */
+/* â"€â"€ One upload slot â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 export function ImageSlot({
   value, onChange, height = 230, placeholder = "Drop a product photo here", style, compact,
 }: {
@@ -97,7 +97,7 @@ export function ImageSlot({
   );
 }
 
-/* ── Gallery for a product that already exists ────────────────────────────── */
+/* â"€â"€ Gallery for a product that already exists â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 type GalleryImage = { id: string; url: string; altText: string | null; sortOrder: number };
 
 export function ProductGallery({ productId, onChanged }: { productId: string; onChanged?: () => void }) {
@@ -125,7 +125,7 @@ export function ProductGallery({ productId, onChanged }: { productId: string; on
     if (!files?.length || busy) return;
     setBusy(true);
     try {
-      // Sequential on purpose — keeps sortOrder deterministic and avoids
+      // Sequential on purpose â" keeps sortOrder deterministic and avoids
       // firing several multi-MB uploads at the Worker at once.
       for (const file of Array.from(files)) {
         const { url } = await uploadProductImage(file);

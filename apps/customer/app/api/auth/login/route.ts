@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma, verifyPassword, generateAccessToken, generateRefreshToken, hashRefreshToken } from '@nova/database'
 
 export async function POST(req: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check rate limiting â€” max 5 failed attempts in 15 minutes
+    // Check rate limiting — max 5 failed attempts in 15 minutes
     const recentFailedAttempts = await prisma.loginAttempt.count({
       where: {
         email: email.toLowerCase(),

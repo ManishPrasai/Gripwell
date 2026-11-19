@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · pages (ops): Inventory, Bookings, Reviews (ported)
+   Gripwell — Admin · pages (ops): Inventory, Bookings, Reviews (ported)
    ============================================================ */
 import * as React from "react";
 import { useState } from "react";
@@ -190,7 +190,7 @@ const BK_NEXT: Record<string, string> = { pending: "progress", progress: "ready"
 
 export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const D = (ctx as any)?.D || NOVA;
-  const storeNames = D.stores.map((s) => s.name);
+  const storeNames = D.stores.map((s: any) => s.name);
   const defaultStore = ctx.store || storeNames[0];
 
   const [rows, setRows] = useState<any[]>(ctx.scopeBy(D.bookings, "store"));
@@ -259,7 +259,7 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
   function makeLabel() {
     const parts: string[] = [];
-    if (rdDate) { const d = new Date(rdDate); parts.push(d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })); }
+    if (rdDate) { const d = new Date(rdDate); parts.push(d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })); }
     if (rdTime) { const [h, m] = rdTime.split(":"); const ap = +h >= 12 ? "pm" : "am"; parts.push(((+h % 12) || 12) + ":" + m + ap); }
     return parts.join(" · ");
   }
@@ -298,8 +298,8 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     let timeLabel = "Walk-in · now";
     if (form.mode === "scheduled") {
       timeLabel = form.date && form.time
-        ? new Date(form.date).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" }) + " · " + form.time
-        : form.date ? new Date(form.date).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })
+        ? new Date(form.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) + " · " + form.time
+        : form.date ? new Date(form.date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
         : "Scheduled · TBC";
     }
     const newRow = {
@@ -465,7 +465,7 @@ export function BookingsPage({ ctx }: { ctx: Ctx; nav?: any }) {
           <div className="field">
             <label>Store</label>
             <select value={form.store} onChange={(e) => setForm({ ...form, store: e.target.value })}>
-              {storeNames.map((s) => <option key={s} value={s}>{s}</option>)}
+              {storeNames.map((s: any) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </Drawer>
@@ -516,7 +516,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
     <div className="page page-enter">
       <div className="pagehead">
         <div className="ph-txt"><h2>Reviews &amp; Reputation</h2><p>Verified Google reviews{ctx.role === "manager" ? " for " + ctx.store : " across all stores"}.</p></div>
-        <div className="ph-actions"><a className="btn ghost" href="https://www.google.com/search?q=Nova+Tyres+reviews" target="_blank" rel="noopener"><Icon name="external" />Open on Google</a></div>
+        <div className="ph-actions"><a className="btn ghost" href="https://www.google.com/search?q=Gripwell+London+reviews" target="_blank" rel="noopener"><Icon name="external" />Open on Google</a></div>
       </div>
 
       <div className="grid-3" style={{ marginBottom: 16, gridTemplateColumns: "0.8fr 1.2fr 1fr" }}>
@@ -554,7 +554,7 @@ export function ReviewsPage({ ctx }: { ctx: Ctx; nav?: any }) {
               </div>
               <p className="rev-quote">&quot;{r.text}&quot;</p>
               {r.reply ? (
-                <div className="rev-reply"><div className="rl-head"><Icon name="reply" />Nova Tyres replied</div><p>{r.reply}</p></div>
+                <div className="rev-reply"><div className="rl-head"><Icon name="reply" />Gripwell replied</div><p>{r.reply}</p></div>
               ) : (
                 <div className="rev-card-foot"><button className="btn ghost sm" onClick={() => { setReply(r); setReplyText(""); }}><Icon name="reply" />Reply</button><span className="badge warn dotless" style={{ fontSize: 11 }}>Awaiting reply</span></div>
               )}

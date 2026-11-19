@@ -53,8 +53,8 @@ const shapeMessage = (m: { id: string; senderType: string; body: string; created
   id:   m.id,
   side: m.senderType === 'CUSTOMER' ? 'outbound' : 'inbound',
   text: m.body,
-  time: m.createdAt.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }),
-  day:  m.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+  time: m.createdAt.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }),
+  day:  m.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
   at:   m.createdAt.toISOString(),
 })
 

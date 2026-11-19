@@ -10,15 +10,13 @@ const prisma = new PrismaClient()
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STORES = [
-  { name: 'Nova Tyres Alphington',  slug: 'alphington',  address: '200 Grange Rd',       suburb: 'Alphington',    state: 'VIC', postcode: '3078', phone: '03 7009 7700', email: 'alphington@novatyres.com.au',  lat: -37.7787, lon: 145.0204 },
-  { name: 'Nova Tyres Springvale',  slug: 'springvale',  address: '4/134 Springvale Rd', suburb: 'Springvale',    state: 'VIC', postcode: '3171', phone: '03 9562 4269', email: 'springvale@novatyres.com.au',  lat: -37.9519, lon: 145.1523 },
-  { name: 'Nova Tyres Sefton',      slug: 'sefton',      address: '107 Carlingford St',  suburb: 'Sefton',        state: 'NSW', postcode: '2162', phone: '02 9644 0000', email: 'sefton@novatyres.com.au',      lat: -33.8918, lon: 151.0249 },
-  { name: 'Nova Tyres Dandenong',   slug: 'dandenong',   address: '308 S Gippsland Hwy', suburb: 'Dandenong',     state: 'VIC', postcode: '3175', phone: '03 8787 5846', email: 'dandenong@novatyres.com.au',   lat: -38.0026, lon: 145.2167 },
-  { name: 'Nova Tyres Bayswater',   slug: 'bayswater',   address: '194 Canterbury Rd',   suburb: 'Bayswater',     state: 'VIC', postcode: '3153', phone: '03 9720 9354', email: 'bayswater@novatyres.com.au',   lat: -37.8465, lon: 145.2683 },
-  { name: 'Nova Tyres Sunshine',    slug: 'sunshine',    address: '9 Devonshire Rd',     suburb: 'Sunshine',      state: 'VIC', postcode: '3020', phone: '03 9311 0000', email: 'sunshine@novatyres.com.au',    lat: -37.7893, lon: 144.8337 },
-  { name: 'Nova Tyres Geelong',     slug: 'geelong',     address: '1/118 Bellarine Hwy', suburb: 'Newcomb',       state: 'VIC', postcode: '3219', phone: '03 5221 0000', email: 'geelong@novatyres.com.au',     lat: -38.1510, lon: 144.3933 },
-  { name: 'Nova Tyres Brisbane',    slug: 'brisbane',    address: '123 Ipswich Rd',      suburb: 'Woolloongabba', state: 'QLD', postcode: '4102', phone: '07 3276 0000', email: 'brisbane@novatyres.com.au',    lat: -27.4975, lon: 153.0257 },
-  { name: 'Nova Tyres Adelaide',    slug: 'adelaide',    address: '456 Port Rd',         suburb: 'Hindmarsh',     state: 'SA',  postcode: '5007', phone: '08 8346 0000', email: 'adelaide@novatyres.com.au',    lat: -34.9001, lon: 138.5784 },
+  { name: 'Gripwell Camden',      slug: 'camden',      address: '14 Kentish Town Rd',  suburb: 'Camden',         state: 'North London',   postcode: 'NW1 9NX',  phone: '+44 20 7946 0101', email: 'camden@gripwell.demo',      lat: 51.5417,  lon: -0.1428 },
+  { name: 'Gripwell Shoreditch',  slug: 'shoreditch',  address: '82 Brick Lane',       suburb: 'Shoreditch',     state: 'East London',    postcode: 'E1 6RL',   phone: '+44 20 7946 0202', email: 'shoreditch@gripwell.demo',  lat: 51.5226,  lon: -0.0718 },
+  { name: 'Gripwell Brixton',     slug: 'brixton',     address: '31 Atlantic Rd',      suburb: 'Brixton',        state: 'South London',   postcode: 'SW9 8HX',  phone: '+44 20 7946 0303', email: 'brixton@gripwell.demo',     lat: 51.4613,  lon: -0.1156 },
+  { name: 'Gripwell Hammersmith', slug: 'hammersmith', address: '5 King St',           suburb: 'Hammersmith',    state: 'West London',    postcode: 'W6 9HR',   phone: '+44 20 7946 0404', email: 'hammersmith@gripwell.demo', lat: 51.4927,  lon: -0.2239 },
+  { name: 'Gripwell Islington',   slug: 'islington',   address: '118 Upper St',        suburb: 'Islington',      state: 'North London',   postcode: 'N1 1QP',   phone: '+44 20 7946 0505', email: 'islington@gripwell.demo',   lat: 51.5363,  lon: -0.1032 },
+  { name: 'Gripwell Greenwich',   slug: 'greenwich',   address: '47 Greenwich High Rd',suburb: 'Greenwich',      state: 'South East',     postcode: 'SE10 8JL', phone: '+44 20 7946 0606', email: 'greenwich@gripwell.demo',   lat: 51.4769,  lon: -0.0004 },
+  { name: 'Gripwell City',        slug: 'citycentre',  address: '9 Cheapside',         suburb: 'City of London', state: 'Central London', postcode: 'EC2V 6AA', phone: '+44 20 7946 0707', email: 'city@gripwell.demo',        lat: 51.5138,  lon: -0.0934 },
 ]
 
 const STORE_HOURS = [
@@ -32,9 +30,9 @@ const STORE_HOURS = [
 ]
 
 const SERVICES = [
-  { name: 'Free Pre-RWC Check',     description: 'Comprehensive pre-roadworthy certificate inspection to identify any issues before your official RWC test. Includes brakes, tyres, lights, steering and suspension.',         priceFrom: 0,   durationMinutes: 45  },
+  { name: 'Free MOT check',     description: 'Comprehensive pre-MOT certificate inspection to identify any issues before your official MOT test. Includes brakes, tyres, lights, steering and suspension.',         priceFrom: 0,   durationMinutes: 45  },
   { name: 'Free Safety Inspection', description: 'A thorough safety check of your vehicle covering tyres, brakes, lights, steering and fluid levels at no cost to you.',                                                       priceFrom: 0,   durationMinutes: 30  },
-  { name: 'Log Book Service',       description: "Full manufacturer-scheduled log book service to keep your new car warranty intact and your vehicle running at peak performance.",                                             priceFrom: 149, durationMinutes: 90  },
+  { name: 'Manufacturer Service',   description: "Full manufacturer-scheduled service, stamped in your service book, to keep your new car warranty intact and your vehicle running at peak performance.",                                             priceFrom: 149, durationMinutes: 90  },
   { name: 'Yearly Services',        description: 'Annual vehicle service covering oil and filter change, fluid top-ups, tyre rotation, brake inspection and a comprehensive safety check.',                                     priceFrom: 199, durationMinutes: 120 },
   { name: '3 Year Services',        description: 'Comprehensive 3-year service including all standard items plus coolant flush, brake fluid change, spark plug replacement and a full mechanical inspection.',                  priceFrom: 299, durationMinutes: 180 },
   { name: '6 Year Service',         description: 'Full 6-year major service covering timing belt/chain inspection, fuel system service, all fluid replacements and an in-depth mechanical and electrical health check.',        priceFrom: 449, durationMinutes: 240 },
@@ -62,100 +60,100 @@ const TYRE_TYPE_IMAGE: Record<string, string> = {
 
 const TYRES = [
   {
-    brand: 'Continental', model: 'CrossContact A/T',
-    slug: 'continental-crosscontact-at-245-70r16',
+    brand: 'Meridian', model: 'Trailmark A/T',
+    slug: 'meridian-trailmark-at-245-70r16',
     type: TyreType.SUV, sizeIdx: 0, price: 91.50,
     isBestSeller: true, isFeatured: true,
-    description: 'The CrossContact A/T combines on-road comfort with proven off-road capability. Ideal for SUVs and 4WDs that need reliable all-terrain performance year-round.',
+    description: 'The Trailmark A/T combines on-road comfort with proven off-road capability. Ideal for SUVs and 4x4s that need reliable all-terrain performance year-round.',
   },
   {
-    brand: 'Hankook', model: 'Ventus S1 evo3',
-    slug: 'hankook-ventus-s1-evo3-215-65r16',
+    brand: 'Kova', model: 'Apex S3',
+    slug: 'kova-apex-s3-215-65r16',
     type: TyreType.PASSENGER, sizeIdx: 1, price: 120.50,
     isBestSeller: false, isFeatured: true,
-    description: 'The Ventus S1 evo3 delivers outstanding dry and wet handling for sporty passenger vehicles. High-speed stability meets responsive, precise steering feel.',
+    description: 'The Apex S3 delivers outstanding dry and wet handling for sporty passenger vehicles. High-speed stability meets responsive, precise steering feel.',
   },
   {
-    brand: 'Continental', model: 'UltraContact UX7',
-    slug: 'continental-ultracontact-ux7-215-65r16',
+    brand: 'Meridian', model: 'Citadel UX7',
+    slug: 'meridian-citadel-ux7-215-65r16',
     type: TyreType.PASSENGER, sizeIdx: 1, price: 100.00,
     isBestSeller: true, isFeatured: false,
-    description: "Continental's advanced touring tyre offering exceptional comfort, fuel efficiency and all-weather safety — engineered for everyday drivers who demand more.",
+    description: "Meridian's advanced touring tyre offering exceptional comfort, fuel efficiency and all-weather safety — engineered for everyday drivers who demand more.",
   },
   {
-    brand: 'Pirelli', model: 'P Zero Sport',
-    slug: 'pirelli-p-zero-sport-245-45r18',
+    brand: 'Corsaro', model: 'Strada Sport',
+    slug: 'corsaro-strada-sport-245-45r18',
     type: TyreType.PASSENGER, sizeIdx: 2, price: 185.00,
     isBestSeller: false, isFeatured: true,
-    description: "Pirelli's flagship ultra-high-performance tyre. Track-derived technology delivers maximum dry grip and precise handling for performance and luxury vehicles.",
+    description: "Corsaro's flagship ultra-high-performance tyre. Track-derived technology delivers maximum dry grip and precise handling for performance and luxury vehicles.",
   },
   {
-    brand: 'Maxxis', model: 'Victra Sport 5',
-    slug: 'maxxis-victra-sport-5-225-40r18',
+    brand: 'Terrain X', model: 'Velo Sport 5',
+    slug: 'terrain-x-velo-sport-5-225-40r18',
     type: TyreType.PASSENGER, sizeIdx: 3, price: 145.00,
     isBestSeller: true, isFeatured: false,
-    description: 'The Victra Sport 5 provides high performance at a competitive price. Optimised for sports and performance vehicles with excellent handling in wet and dry conditions.',
+    description: 'The Velo Sport 5 provides high performance at a competitive price. Optimised for sports and performance vehicles with excellent handling in wet and dry conditions.',
   },
   {
-    brand: 'Hankook', model: 'Kinergy Eco 2',
-    slug: 'hankook-kinergy-eco2-205-55r16',
+    brand: 'Kova', model: 'Ecoline 2',
+    slug: 'kova-ecoline-2-205-55r16',
     type: TyreType.PASSENGER, sizeIdx: 4, price: 98.00,
     isBestSeller: false, isFeatured: false,
-    description: 'The Kinergy Eco 2 prioritises fuel efficiency and all-season safety. Perfect for everyday commuters seeking economy without compromising ride comfort or wet traction.',
+    description: 'The Ecoline 2 prioritises fuel efficiency and all-season safety. Perfect for everyday commuters seeking economy without compromising ride comfort or wet traction.',
   },
   {
-    brand: 'Pirelli', model: 'Cinturato P7',
-    slug: 'pirelli-cinturato-p7-225-50r17',
+    brand: 'Corsaro', model: 'Lumen P7',
+    slug: 'corsaro-lumen-p7-225-50r17',
     type: TyreType.PASSENGER, sizeIdx: 5, price: 160.00,
     isBestSeller: false, isFeatured: false,
-    description: "Pirelli's green performance tyre combining efficiency and safety with low rolling resistance. Engineered for premium vehicles that demand comfort and environmental responsibility.",
+    description: "Corsaro's green performance tyre combining efficiency and safety with low rolling resistance. Engineered for premium vehicles that demand comfort and environmental responsibility.",
   },
   {
-    brand: 'Yokohama', model: 'Geolandar A/T',
-    slug: 'yokohama-geolandar-at-265-70r16',
+    brand: 'Zetland', model: 'Ridgeline A/T',
+    slug: 'zetland-ridgeline-at-265-70r16',
     type: TyreType.MUD_TERRAIN, sizeIdx: 6, price: 199.00,
     isBestSeller: true, isFeatured: true,
-    description: "Australia's trusted all-terrain tyre for 4WDs and SUVs. Aggressive shoulder blocks deliver confident off-road grip while maintaining quiet, comfortable highway manners.",
+    description: "A proven all-terrain tyre for 4x4s and SUVs. Aggressive shoulder blocks deliver confident off-road grip while maintaining quiet, comfortable highway manners.",
   },
   {
-    brand: 'BF Goodrich', model: 'Mud Terrain T/A',
-    slug: 'bfgoodrich-mud-terrain-ta-275-55r20',
+    brand: 'Brackley', model: 'Mudline M/T',
+    slug: 'brackley-mudline-mt-275-55r20',
     type: TyreType.MUD_TERRAIN, sizeIdx: 7, price: 329.00,
     isBestSeller: false, isFeatured: true,
-    description: 'Legendary mud terrain tyre engineered for maximum off-road traction in the toughest conditions. Massive tread lugs self-clean in deep mud, rocks and loose terrain.',
+    description: 'Serious mud-terrain tyre engineered for maximum off-road traction in the toughest conditions. Massive tread lugs self-clean in deep mud, rocks and loose terrain.',
   },
 ]
 
 const WHEELS = [
   {
-    brand: 'Black Rhino', model: 'AWOL',    slug: 'black-rhino-awol-17x85',
+    brand: 'Halden', model: 'Outrider', slug: 'halden-outrider-17x85',
     diameter: 17, width: 8.5, pcd: '6×139.7', offset: -18, finish: 'Matte Black',  price: 230.00,
-    description: 'Premium off-road alloy wheel built for serious 4WD performance. Deep dish design with aggressive styling and high load rating for heavy-duty applications.',
+    description: 'Premium off-road alloy wheel built for serious 4x4 performance. Deep dish design with aggressive styling and high load rating for heavy-duty applications.',
   },
   {
-    brand: 'Black Rhino', model: 'Arsenal', slug: 'black-rhino-arsenal-18x9',
+    brand: 'Halden', model: 'Bastion', slug: 'halden-bastion-18x9',
     diameter: 18, width: 9.0, pcd: '5×114.3', offset: 12,  finish: 'Bronze',       price: 265.00,
-    description: 'Military-grade durability meets refined aesthetics. Multi-spoke design in striking bronze pairs perfectly with lifted SUVs and dual-cab utes.',
+    description: 'Heavy-duty durability meets refined aesthetics. Multi-spoke design in striking bronze pairs perfectly with lifted SUVs and double-cab pickups.',
   },
   {
-    brand: 'ROH', model: 'Terrain',         slug: 'roh-terrain-16x8',
+    brand: 'Ostra', model: 'Ranger',    slug: 'ostra-ranger-16x8',
     diameter: 16, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gunmetal',     price: 195.00,
-    description: "Australia's trusted off-road wheel. The ROH Terrain is engineered for tough conditions with a proven track record across all terrains — mud, rock and everything in between.",
+    description: "A tough, proven off-road wheel. The Ostra Ranger is engineered for tough conditions with a proven track record across all terrains — mud, rock and everything in between.",
   },
   {
-    brand: 'ROH', model: 'Warrior',         slug: 'roh-warrior-20x9',
+    brand: 'Ostra', model: 'Summit',    slug: 'ostra-summit-20x9',
     diameter: 20, width: 9.0, pcd: '5×150',   offset: 18,  finish: 'Satin Black',  price: 295.00,
     description: 'Combines aggressive styling with everyday usability. Large diameter options for lifted trucks and SUVs that need presence without sacrificing practicality.',
   },
   {
-    brand: 'King Wheels', model: 'Force',   slug: 'king-force-17x8',
+    brand: 'Marlow', model: 'Stride',   slug: 'marlow-stride-17x8',
     diameter: 17, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gloss Black',  price: 185.00,
-    description: 'Value-packed alloy wheel offering great looks at an accessible price. The King Force is the perfect upgrade for 4WDs and utes seeking style and strength.',
+    description: 'Value-packed alloy wheel offering great looks at an accessible price. The Marlow Stride is the perfect upgrade for 4x4s and pickups seeking style and strength.',
   },
   {
-    brand: 'Sonix', model: 'XR7',           slug: 'sonix-xr7-18x85',
+    brand: 'Vanta', model: 'XR7',       slug: 'vanta-xr7-18x85',
     diameter: 18, width: 8.5, pcd: '5×112',   offset: 35,  finish: 'Hyper Silver', price: 175.00,
-    description: 'European styling at an Australian price. The XR7 features a refined multi-spoke design in hyper silver that complements European and Japanese passenger vehicles.',
+    description: 'European styling at a sensible price. The XR7 features a refined multi-spoke design in hyper silver that complements European and Japanese passenger vehicles.',
   },
 ]
 
@@ -173,9 +171,9 @@ async function main() {
   // ── Super Admin ─────────────────────────────────────────────────────────────
   const passwordHash = await hashPassword('admin123456')
   const superAdmin = await prisma.adminUser.upsert({
-    where: { email: 'admin@novatyres.com.au' },
+    where: { email: 'admin@gripwell.demo' },
     update: {},
-    create: { firstName: 'Nova', lastName: 'Admin', email: 'admin@novatyres.com.au', passwordHash, role: 'SUPER_ADMIN', isActive: true },
+    create: { firstName: 'Gripwell', lastName: 'Admin', email: 'admin@gripwell.demo', passwordHash, role: 'SUPER_ADMIN', isActive: true },
   })
   console.log('✅ Super Admin:', superAdmin.email)
 
@@ -265,18 +263,21 @@ async function main() {
   console.log(`✅ ${TYRE_SIZES.length} tyre sizes seeded`)
 
   // ── Tyres ───────────────────────────────────────────────────────────────────
+  const tyreIdBySlug: Record<string, string> = {}
   for (const t of TYRES) {
     const tyre = await prisma.tyre.upsert({
       where: { slug: t.slug },
-      update: { description: t.description, price: t.price, isBestSeller: t.isBestSeller, isFeatured: t.isFeatured },
+      // No was-price: SALE only shows where a real former price exists (UK pricing rules).
+      update: { description: t.description, price: t.price, compareAtPrice: null, isBestSeller: t.isBestSeller, isFeatured: t.isFeatured },
       create: {
         brand: t.brand, model: t.model, description: t.description, slug: t.slug,
         type: t.type, tyreSizeId: sizeIds[t.sizeIdx], price: t.price,
-        compareAtPrice: parseFloat((t.price * 1.2).toFixed(2)),
+        compareAtPrice: null,
         stockQuantity: Math.floor(Math.random() * 30) + 10,
         isBestSeller: t.isBestSeller, isFeatured: t.isFeatured, isActive: true,
       },
     })
+    tyreIdBySlug[t.slug] = tyre.id
     const imageCount = await prisma.tyreImage.count({ where: { tyreId: tyre.id } })
     if (imageCount === 0) {
       await prisma.tyreImage.create({
@@ -288,18 +289,20 @@ async function main() {
   console.log('✅ Tyres seeded')
 
   // ── Wheels ──────────────────────────────────────────────────────────────────
+  const wheelIdBySlug: Record<string, string> = {}
   for (const w of WHEELS) {
     const wheel = await prisma.wheel.upsert({
       where: { slug: w.slug },
-      update: { description: w.description, price: w.price },
+      update: { description: w.description, price: w.price, compareAtPrice: null },
       create: {
         brand: w.brand, model: w.model, description: w.description, slug: w.slug,
         diameter: w.diameter, width: w.width, pcd: w.pcd, offset: w.offset,
         material: 'Alloy', finish: w.finish, price: w.price,
-        compareAtPrice: parseFloat((w.price * 1.2).toFixed(2)),
+        compareAtPrice: null,
         stockQuantity: Math.floor(Math.random() * 16) + 4, isActive: true,
       },
     })
+    wheelIdBySlug[w.slug] = wheel.id
     const imageCount = await prisma.wheelImage.count({ where: { wheelId: wheel.id } })
     if (imageCount === 0) {
       await prisma.wheelImage.create({
@@ -310,209 +313,270 @@ async function main() {
   }
   console.log('✅ Wheels seeded')
 
+  // ── Retire leftovers from the previous (Australian) business ────────────────
+  //  Upserts never remove rows, so old AU stores, the old real-brand catalogue
+  //  and the £0 test product stayed live. Hide them (isActive=false) rather than
+  //  delete, so historical orders/appointments keep their foreign keys.
+  const retiredStores = await prisma.store.updateMany({
+    where: { slug: { notIn: STORES.map(s => s.slug) }, isActive: true },
+    data:  { isActive: false },
+  })
+  const retiredTyres = await prisma.tyre.updateMany({
+    where: { isActive: true, OR: [{ slug: { notIn: TYRES.map(t => t.slug) } }, { price: { lte: 0 } }] },
+    data:  { isActive: false },
+  })
+  const retiredWheels = await prisma.wheel.updateMany({
+    where: { isActive: true, OR: [{ slug: { notIn: WHEELS.map(w => w.slug) } }, { price: { lte: 0 } }] },
+    data:  { isActive: false },
+  })
+  console.log(`✅ Retired ${retiredStores.count} old stores, ${retiredTyres.count} tyres, ${retiredWheels.count} wheels not in the Gripwell catalogue`)
+
   // ── Store Manager Admin Users ────────────────────────────────────────────────
   const managerPassword = await hashPassword('manager123456')
   const MANAGERS = [
-    { first: 'Daniel',  last: 'Mercer',  email: 'daniel.m@novatyres.com.au',  slug: 'springvale' },
-    { first: 'Sophie',  last: 'Kaur',    email: 'sophie.k@novatyres.com.au',  slug: 'dandenong'  },
-    { first: 'Raj',     last: 'Thakur',  email: 'raj.t@novatyres.com.au',     slug: 'bayswater'  },
-    { first: 'Lauren',  last: 'Nguyen',  email: 'lauren.n@novatyres.com.au',  slug: 'alphington' },
-    { first: 'Priya',   last: 'Sharma',  email: 'priya.s@novatyres.com.au',   slug: 'sefton'     },
-    { first: 'Marco',   last: 'Vella',   email: 'marco.v@novatyres.com.au',   slug: 'sunshine'   },
+    { first: 'Daniel',  last: 'Mercer',  email: 'daniel.m@gripwell.demo',  slug: 'camden'      },
+    { first: 'Sophie',  last: 'Kaur',    email: 'sophie.k@gripwell.demo',  slug: 'shoreditch'  },
+    { first: 'Raj',     last: 'Thakur',  email: 'raj.t@gripwell.demo',     slug: 'brixton'     },
+    { first: 'Lauren',  last: 'Nguyen',  email: 'lauren.n@gripwell.demo',  slug: 'hammersmith' },
+    { first: 'Priya',   last: 'Sharma',  email: 'priya.s@gripwell.demo',   slug: 'islington'   },
+    { first: 'Marco',   last: 'Vella',   email: 'marco.v@gripwell.demo',   slug: 'citycentre'  },
   ]
+  const managerIdBySlug: Record<string, string> = {}
   for (const m of MANAGERS) {
     const storeId = storeIdMap[m.slug]
     if (!storeId) continue
-    await prisma.adminUser.upsert({
+    managerIdBySlug[m.slug] = (await prisma.adminUser.upsert({
       where: { email: m.email },
       update: { storeId },
       create: { firstName: m.first, lastName: m.last, email: m.email, passwordHash: managerPassword, role: 'STORE_MANAGER', storeId, isActive: true },
-    })
+    })).id
   }
   console.log(`✅ ${MANAGERS.length} store managers seeded`)
 
-  // ── Reviews (uses real customer IDs from customer app) ───────────────────────
-  const CUSTOMER_IDS = [
-    '1468ff72-70de-4d4f-a0b1-67009914bd29',
-    '4e316087-25b8-441d-9af0-d068f206b8fb',
-    '97ea8174-be73-43d0-ab53-594bb6676ab6',
-  ]
-  const REVIEWS_DATA = [
-    { store: 'springvale', rating: 5, title: 'Excellent service', body: 'Same-day log book service, warranty stamp and all — no upsell. Honest and fast.' },
-    { store: 'dandenong',  rating: 5, title: 'Very helpful',      body: 'Free pre-RWC check saved me a fortune. Helpful crew who explained everything clearly.' },
-    { store: 'bayswater',  rating: 5, title: 'Drives like new',   body: 'Ultimate Service and it drives like new. Call-back within the hour as promised.' },
-    { store: 'alphington', rating: 4, title: 'Fast turnaround',   body: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.' },
-    { store: 'sunshine',   rating: 5, title: 'No hidden costs',   body: 'Sorted my brakes same day and were clear about costs upfront. No surprises.' },
-    { store: 'sefton',     rating: 3, title: 'Good work',         body: 'Good work but waited a little longer than quoted. Staff were apologetic.' },
-    { store: 'springvale', rating: 5, title: 'Best prices',       body: 'Best tyre prices in Melbourne. Had 4 Maxxis fitted quickly — professional service.' },
-    { store: 'dandenong',  rating: 4, title: 'Quality job',       body: 'Brake replacement done well. Slightly longer wait but quality work.' },
-    { store: 'bayswater',  rating: 5, title: 'Seamless experience', body: 'Entire service experience was seamless. Will return for next service.' },
-    { store: 'sefton',     rating: 5, title: 'Great communication', body: 'Tyres arrived and fitted perfectly. Great communication throughout.' },
-  ]
-  const reviewBase = new Date()
-  reviewBase.setDate(reviewBase.getDate() - 30)
-  const existingCustomers = await prisma.customer.findMany({ select: { id: true } })
-  const customerIds = existingCustomers.length > 0
-    ? existingCustomers.map(c => c.id)
-    : CUSTOMER_IDS
-  for (let i = 0; i < REVIEWS_DATA.length; i++) {
-    const r = REVIEWS_DATA[i]
-    const storeId = storeIdMap[r.store]
-    const customerId = customerIds[i % customerIds.length]
-    if (!storeId || !customerId) continue
-    const createdAt = new Date(reviewBase.getTime() + i * 3 * 24 * 60 * 60 * 1000)
-    await prisma.review.upsert({
-      where: { id: `review-seed-${i}` },
-      update: {},
-      create: {
-        id: `review-seed-${i}`,
-        customerId, storeId, rating: r.rating,
-        title: r.title, body: r.body,
-        isVerifiedPurchase: true, isApproved: true, createdAt,
+  // ── Demo dataset ─────────────────────────────────────────────────────────────
+  //  A deliberate, clearly fictional dataset, built only from the rows below:
+  //  never from real customers or rows left behind by tests.
+  //  • Customers use the reserved `.test` domain and Ofcom drama numbers
+  //    (07700 900xxx), so no real person can be emailed or called.
+  //  • Every demo row's id starts with "demo-". Each run deletes those rows (plus
+  //    rows from the older seed's "*-seed-*" ids) and rebuilds them, so the seed
+  //    is safe to run any number of times and dates stay inside the last 60 days.
+  //  • Store reviews are titled "[Demo] …" and never marked as verified purchases.
+  //  • Money follows the storefront rules (apps/customer/lib/fitting.ts): prices
+  //    include VAT and fitting is charged once per wheel position.
+  const DAY = 24 * 60 * 60 * 1000
+  const nowMs = Date.now()
+  const daysAgo = (d: number, hour = 10) => { const t = new Date(nowMs - d * DAY); t.setHours(hour, 0, 0, 0); return t }
+  const ids = (...prefixes: string[]) => ({ OR: prefixes.map(p => ({ id: { startsWith: p } })) })
+
+  // Reset: release slot bookings held by demo appointments, then delete demo rows child-first.
+  for (const a of await prisma.appointment.findMany({ where: ids('demo-', 'appt-seed-'), select: { appointmentSlotId: true } })) {
+    await prisma.appointmentSlot.updateMany({ where: { id: a.appointmentSlotId, currentBookings: { gt: 0 } }, data: { currentBookings: { decrement: 1 } } })
+  }
+  await prisma.chatMessage.deleteMany({ where: ids('demo-', 'msg-seed-') })
+  await prisma.chatConversation.deleteMany({ where: ids('demo-', 'conv-seed-') })
+  await prisma.review.deleteMany({ where: ids('demo-', 'review-seed-') })
+  await prisma.appointment.deleteMany({ where: ids('demo-', 'appt-seed-') })
+  await prisma.enquiry.deleteMany({ where: ids('demo-', 'enq-seed-') })
+  await prisma.payment.deleteMany({ where: ids('demo-') })
+  await prisma.orderStatusHistory.deleteMany({ where: ids('demo-') })
+  await prisma.orderItem.deleteMany({ where: ids('demo-') })
+  await prisma.order.deleteMany({ where: ids('demo-') })
+
+  // Customers: upserted by email, so their ids survive re-runs.
+  const DEMO_CUSTOMERS = [
+    ['Amara', 'Okafor'], ['Tom', 'Hollis'], ['Anika', 'Desai'], ['Callum', 'Reid'], ['Sofia', 'Marin'],
+    ['Daniel', 'Abbott'], ['Hannah', 'Leigh'], ['Kwame', 'Mensah'], ['Isla', 'Fraser'], ['Ravi', 'Chandran'],
+    ['Grace', 'Whitfield'], ['Luca', 'Bellini'], ['Nadia', 'Haddad'], ['Owen', 'Pryce'], ['Megan', 'Doyle'],
+  ] as const
+  const unusableHash = await hashPassword(`demo-no-login-${nowMs}`)   // demo accounts cannot sign in
+  const customers: { id: string; name: string; email: string; phone: string }[] = []
+  for (let i = 0; i < DEMO_CUSTOMERS.length; i++) {
+    const [firstName, lastName] = DEMO_CUSTOMERS[i]
+    const email = `${firstName}.${lastName}@demo.gripwell.test`.toLowerCase()
+    const phone = `+44 7700 900${String(101 + i * 7).padStart(3, '0')}`
+    const c = await prisma.customer.upsert({
+      where:  { email },
+      update: { firstName, lastName, phone, isActive: true, deletedAt: null },
+      create: { id: `demo-cust-${String(i + 1).padStart(2, '0')}`, firstName, lastName, email, phone, passwordHash: unusableHash, isVerified: true, createdAt: daysAgo(90 - i) },
+    })
+    customers.push({ id: c.id, name: `${firstName} ${lastName}`, email, phone })
+  }
+  console.log(`✅ ${customers.length} demo customers seeded`)
+
+  // Orders: 25 spread over the last 60 days, with mixed outcomes.
+  const RATE: Record<string, number> = { PASSENGER: 25, SUV: 30, MUD_TERRAIN: 30, COMMERCIAL: 35 }   // = DEFAULT_FITTING_PRICES
+  const ORDER_NOTES = ['Please call when the tyres arrive.', 'Locking wheel nut key is in the glovebox.', 'Can you check the tracking while it is in?']
+  const staffFor = (slug: string) => managerIdBySlug[slug] ?? superAdmin.id
+  const fittedOrders: { id: string; customerId: string; storeId: string; at: Date }[] = []
+  for (let i = 0; i < 25; i++) {
+    const id = `demo-order-${String(i + 1).padStart(2, '0')}`
+    const customer = customers[(i * 4) % customers.length]
+    const storeSlug = STORES[i % STORES.length].slug
+    const storeId = storeIdMap[storeSlug]
+    const age = 59 - Math.round(i * 57 / 24)                 // 59 days ago → 2 days ago
+    const createdAt = daysAgo(age, 9 + (i % 8))
+
+    const wheelsOnly = i % 8 === 5
+    const tyre  = wheelsOnly ? null : TYRES[i % TYRES.length]
+    const tyreQty = tyre ? [4, 4, 2, 4, 1][i % 5] : 0
+    const wheel = wheelsOnly || i % 6 === 2 ? WHEELS[i % WHEELS.length] : null
+    const wheelQty = wheel ? 4 : 0
+    const fit = i % 7 !== 3                                   // every 7th order is collected, not fitted
+    const positions = Math.max(tyreQty, wheelQty)
+    const fitting = fit ? (tyre ? RATE[tyre.type] : RATE.PASSENGER) * positions : 0
+    const subtotal = (tyre ? tyre.price * tyreQty : 0) + (wheel ? wheel.price * wheelQty : 0)
+    const total = subtotal + fitting
+
+    const [status, paymentStatus] =
+      i === 4 || i === 15 ? ['CANCELLED', 'REFUNDED'] :
+      i === 9 || i === 19 ? ['REFUNDED',  'REFUNDED'] :
+      i >= 23             ? ['PENDING',   'PAID'] :
+      age > 14            ? ['FITTED',    'PAID'] :
+                            ['CONFIRMED', 'PAID']
+
+    const items = [
+      ...(tyre  ? [{ id: `${id}-t`, itemType: 'tyre',  tyreId:  tyreIdBySlug[tyre.slug],   quantity: tyreQty,  unitPrice: tyre.price,  totalPrice: tyre.price * tyreQty }]   : []),
+      ...(wheel ? [{ id: `${id}-w`, itemType: 'wheel', wheelId: wheelIdBySlug[wheel.slug], quantity: wheelQty, unitPrice: wheel.price, totalPrice: wheel.price * wheelQty }] : []),
+      ...(fitting > 0 ? [{ id: `${id}-f`, itemType: 'fitting', quantity: 1, unitPrice: fitting, totalPrice: fitting }] : []),
+    ]
+    const later = new Date(createdAt.getTime() + (1 + (i % 3)) * DAY)
+    const history = [
+      { id: `${id}-h1`, status: status === 'PENDING' ? 'PENDING' : 'CONFIRMED', changedBy: staffFor(storeSlug), note: 'Payment received', createdAt },
+      ...(status === 'FITTED'    ? [{ id: `${id}-h2`, status, changedBy: staffFor(storeSlug), note: fit ? 'Fitted at branch' : 'Collected from branch', createdAt: later }] : []),
+      ...(status === 'CANCELLED' ? [{ id: `${id}-h2`, status, changedBy: staffFor(storeSlug), note: 'Cancelled at customer request, refunded in full', createdAt: later }] : []),
+      ...(status === 'REFUNDED'  ? [{ id: `${id}-h2`, status, changedBy: staffFor(storeSlug), note: 'Wrong size ordered, returned unused and refunded', createdAt: later }] : []),
+    ]
+    await prisma.order.create({
+      data: {
+        id, customerId: customer.id, storeId, createdAt,
+        status: status as any, paymentStatus: paymentStatus as any,
+        subtotal, discountAmount: 0, total, paymentMethod: 'stripe',
+        notes: i % 5 === 1 ? ORDER_NOTES[i % ORDER_NOTES.length] : null,
+        items: { create: items },
+        statusHistory: { create: history },
+        payments: { create: [{ id: `${id}-p`, method: 'card', amount: total, status: paymentStatus === 'REFUNDED' ? 'refunded' : 'succeeded', createdAt }] },
+      },
+    })
+    if (status === 'FITTED') fittedOrders.push({ id, customerId: customer.id, storeId, at: later })
+  }
+  console.log('✅ 25 demo orders seeded')
+
+  // Store reviews: left by customers after a fitted order, clearly marked as demo content.
+  const REVIEWS = [
+    [5, 'Quick and clear',        'Booked online, fitted within the hour and the price matched the basket exactly.'],
+    [4, 'Good, slight wait',       'Good job on the tyres. Waited about 20 minutes longer than quoted.'],
+    [5, 'Explained everything',    'They showed me the tread on the old tyres before swapping them. No upsell.'],
+    [3, 'Fine but busy',           'Work was fine, but the branch was busy and nobody told me it would take longer.'],
+    [5, 'Easy collection',         'Picked my wheels up on the way home. Everything was boxed and labelled.'],
+    [4, 'Fair price',              'Fitting price was what the site said. Would use again.'],
+    [5, 'Friendly team',           'Friendly, fast and they rebalanced a wheel I had not even mentioned.'],
+    [2, 'Had to come back',        'A valve was leaking the next day. They fixed it free, but it cost me a second trip.'],
+    [5, 'No surprises',            'Total on the receipt was the total I saw when I paid.'],
+    [4, 'Solid',                   'Good communication by text on the day.'],
+  ] as const
+  const reviewCount = Math.min(REVIEWS.length, fittedOrders.length)
+  for (let i = 0; i < reviewCount; i++) {
+    const o = fittedOrders[i]
+    const [rating, title, body] = REVIEWS[i]
+    await prisma.review.create({
+      data: {
+        id: `demo-review-${String(i + 1).padStart(2, '0')}`,
+        customerId: o.customerId, storeId: o.storeId, orderId: o.id,
+        rating, title: `[Demo] ${title}`, body,
+        isVerifiedPurchase: false, isApproved: true,
+        createdAt: new Date(Math.min(o.at.getTime() + DAY, nowMs)),
       },
     })
   }
-  console.log(`✅ ${REVIEWS_DATA.length} reviews seeded`)
+  console.log(`✅ ${reviewCount} demo store reviews seeded (titled "[Demo]")`)
 
-  // ── Appointments (uses real customer IDs + appointment slots) ────────────────
-  const now = new Date()
-  const slots = await prisma.appointmentSlot.findMany({
-    where: { isAvailable: true },
-    orderBy: { date: 'asc' },
-    take: 20,
-  })
-  const allServices = await prisma.service.findMany()
-  const APPT_DATA = [
-    { customer: 0, slot: 0, service: 2, status: 'PENDING',   vehicle: '2021 Toyota RAV4' },
-    { customer: 1, slot: 1, service: 0, status: 'PENDING',   vehicle: '2019 Mazda 3' },
-    { customer: 2, slot: 2, service: 3, status: 'CONFIRMED', vehicle: '2022 Ford Ranger' },
-    { customer: 0, slot: 3, service: 2, status: 'CONFIRMED', vehicle: '2020 VW Golf' },
-    { customer: 1, slot: 4, service: 6, status: 'COMPLETED', vehicle: '2018 Subaru WRX' },
-    { customer: 2, slot: 5, service: 2, status: 'CONFIRMED', vehicle: '2023 Tesla Model 3' },
-    { customer: 0, slot: 6, service: 4, status: 'COMPLETED', vehicle: '2017 Hyundai i30' },
-    { customer: 1, slot: 7, service: 2, status: 'COMPLETED', vehicle: '2021 Kia Sportage' },
-  ]
-  for (let i = 0; i < APPT_DATA.length; i++) {
-    const a = APPT_DATA[i]
-    const slot = slots[a.slot % slots.length]
-    const service = allServices[a.service % allServices.length]
-    const customerId = customerIds[a.customer % customerIds.length]
-    if (!slot || !service || !customerId) continue
-    await prisma.appointment.upsert({
-      where: { id: `appt-seed-${i}` },
-      update: {},
-      create: {
-        id: `appt-seed-${i}`,
-        customerId, storeId: slot.storeId,
-        appointmentSlotId: slot.id, serviceId: service.id,
-        date: slot.date, timeSlot: slot.time,
-        status: a.status as any, notes: null,
+  // Appointments: past (completed, a no-show, a cancellation) and upcoming.
+  const services = await prisma.service.findMany({ where: { id: { in: serviceIds } } })
+  const VEHICLES = ['2019 Ford Focus', '2021 Toyota RAV4', '2018 VW Golf', '2022 Kia Sportage', '2020 Nissan Qashqai', '2017 Vauxhall Astra']
+  const APPT_DAYS = [-41, -33, -27, -20, -14, -9, -5, -2, 2, 4, 8, 13]
+  for (let i = 0; i < APPT_DAYS.length; i++) {
+    const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + APPT_DAYS[i])
+    if (day.getDay() === 0) day.setDate(day.getDate() + 1)  // branches are closed on Sundays
+    const times = day.getDay() === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS
+    const time = times[i % times.length]
+    const storeId = storeIdMap[STORES[(i * 3) % STORES.length].slug]
+    const slot = await prisma.appointmentSlot.upsert({
+      where:  { storeId_date_time: { storeId, date: day, time } },
+      update: { currentBookings: { increment: 1 } },
+      create: { storeId, date: day, time, isAvailable: true, maxBookings: 2, currentBookings: 1 },
+    })
+    const past = APPT_DAYS[i] < 0
+    const status = past ? (i === 3 ? 'NO_SHOW' : i === 5 ? 'CANCELLED' : 'COMPLETED') : (i % 2 ? 'PENDING' : 'CONFIRMED')
+    await prisma.appointment.create({
+      data: {
+        id: `demo-appt-${String(i + 1).padStart(2, '0')}`,
+        customerId: customers[(i * 2 + 1) % customers.length].id, storeId,
+        appointmentSlotId: slot.id, serviceId: services[i % services.length].id,
+        date: day, timeSlot: time, status: status as any,
+        notes: `Vehicle: ${VEHICLES[i % VEHICLES.length]}`,
+        reminderSent: past, createdAt: daysAgo(Math.max(1, -APPT_DAYS[i] + 7)),
       },
     })
   }
-  console.log(`✅ ${APPT_DATA.length} appointments seeded`)
+  console.log(`✅ ${APPT_DAYS.length} demo appointments seeded`)
 
-  // ── Enquiries ────────────────────────────────────────────────────────────────
-  const ENQUIRY_DATA = [
-    { store: 'springvale', name: 'Harper Wells',   phone: '0412556030', email: 'harper.w@example.com', message: 'Hi, how much for 4 Michelin Pilot Sport for a Golf GTI?',          status: 'NEW'         },
-    { store: 'springvale', name: 'Marcus Lee',     phone: '0413220884', email: 'marcus.l@example.com', message: 'I need to book a log book service for a 2021 RAV4 this Friday.',   status: 'RESOLVED'    },
-    { store: 'dandenong',  name: 'Tina Alvarez',   phone: '0414905117', email: 'tina.a@example.com',   message: 'How much does a roadworthy cost and do I need to book?',            status: 'RESOLVED'    },
-    { store: 'bayswater',  name: 'Owen Brooks',    phone: '0415663422', email: 'owen.b@example.com',   message: 'My brakes are grinding — front pads need replacing on a Mazda CX-5.',status: 'RESOLVED'   },
-    { store: 'sefton',     name: 'Priya Naidu',    phone: '0417118990', email: 'priya.n@example.com',  message: 'What is the cost for a wheel alignment? I have a 2022 Kia Stinger.',status: 'NEW'         },
-    { store: 'springvale', name: 'Unknown Caller', phone: '0416770201', email: 'unknown@example.com',  message: 'Missed call — no voicemail left. Please call back.',                 status: 'NEW'         },
-    { store: 'alphington', name: 'Bella Martin',   phone: '0418334556', email: 'bella.m@example.com',  message: 'What is included in the 3 year service and how long does it take?', status: 'IN_PROGRESS' },
-    { store: 'dandenong',  name: 'Chris Taylor',   phone: '0419221007', email: 'chris.t@example.com',  message: 'Do you stock Bridgestone and Continental tyres in 225/45R17?',       status: 'RESOLVED'    },
-  ]
-  for (let i = 0; i < ENQUIRY_DATA.length; i++) {
-    const e = ENQUIRY_DATA[i]
-    const storeId = storeIdMap[e.store]
-    if (!storeId) continue
-    const createdAt = new Date(now)
-    createdAt.setHours(now.getHours() - i * 2)
-    await prisma.enquiry.upsert({
-      where: { id: `enq-seed-${i}` },
-      update: {},
-      create: {
-        id: `enq-seed-${i}`,
-        name: e.name, phone: e.phone, email: e.email,
-        message: e.message, type: 'general',
-        source: storeId,            // source field is the store FK in this schema
-        status: e.status as any, createdAt,
+  // Enquiries: a few, from demo customers.
+  const ENQUIRIES = [
+    ['camden',      'NEW',         'Do you have the Kova Apex S3 in 215/65R16 in stock for Saturday?'],
+    ['shoreditch',  'IN_PROGRESS', 'How much is a wheel alignment, and can it be done with new tyres?'],
+    ['brixton',     'RESOLVED',    'Can I collect my order on a different day from the one I picked?'],
+    ['greenwich',   'NEW',         'Is the free safety inspection available without booking?'],
+    ['hammersmith', 'RESOLVED',    'I think I ordered the wrong rim size. Can I swap before fitting?'],
+  ] as const
+  for (let i = 0; i < ENQUIRIES.length; i++) {
+    const [slug, status, message] = ENQUIRIES[i]
+    const c = customers[(i * 3 + 2) % customers.length]
+    await prisma.enquiry.create({
+      data: {
+        id: `demo-enq-${i + 1}`, customerId: c.id,
+        name: c.name, phone: c.phone, email: c.email, message, type: 'general',
+        regoOrVehicle: VEHICLES[(i + 2) % VEHICLES.length],
+        source: storeIdMap[slug], status: status as any, createdAt: daysAgo(i * 3 + 1, 11),
       },
     })
   }
-  console.log(`✅ ${ENQUIRY_DATA.length} enquiries seeded`)
+  console.log(`✅ ${ENQUIRIES.length} demo enquiries seeded`)
 
-  // ── Chat conversations + messages ─────────────────────────────────────────────
-  const CHAT_DATA = [
-    {
-      store: 'springvale', status: 'active',
-      messages: [
-        { senderType: 'CUSTOMER', body: 'Hi, how much for a log book service on a 2021 RAV4?', minsAgo: 60 },
-        { senderType: 'AGENT',    body: 'Morning! A log book service for the RAV4 is $149 incl. parts and a warranty stamp.', minsAgo: 55 },
-        { senderType: 'CUSTOMER', body: 'Great. Can you fit me in this Friday?', minsAgo: 40 },
-        { senderType: 'CUSTOMER', body: 'Also do you do a free safety check with it?', minsAgo: 39 },
-      ],
-    },
-    {
-      store: 'springvale', status: 'active',
-      messages: [
-        { senderType: 'CUSTOMER', body: 'Do I need to book for the free pre-RWC check or can I just drop in?', minsAgo: 90 },
-      ],
-    },
-    {
-      store: 'sefton', status: 'active',
-      messages: [
-        { senderType: 'AGENT',    body: 'Hi, your 4 tyres have arrived and are ready to fit.', minsAgo: 180 },
-        { senderType: 'CUSTOMER', body: 'Perfect — I\'ll come by at 2pm today.', minsAgo: 160 },
-      ],
-    },
-    {
-      store: 'dandenong', status: 'resolved',
-      messages: [
-        { senderType: 'CUSTOMER', body: 'My brakes are squeaking, can you take a look?', minsAgo: 2880 },
-        { senderType: 'AGENT',    body: 'Of course — come in Thursday and we\'ll check the front pads.', minsAgo: 2820 },
-        { senderType: 'CUSTOMER', body: 'Thanks, much quieter now.', minsAgo: 1440 },
-      ],
-    },
-  ]
-  for (let i = 0; i < CHAT_DATA.length; i++) {
-    const cd = CHAT_DATA[i]
-    const storeId = storeIdMap[cd.store]
-    const customerId = customerIds[i % customerIds.length]
-    if (!storeId || !customerId) continue
-    const conv = await prisma.chatConversation.upsert({
-      where: { id: `conv-seed-${i}` },
-      update: {},
-      create: { id: `conv-seed-${i}`, storeId, customerId, status: cd.status },
-    })
-    for (let j = 0; j < cd.messages.length; j++) {
-      const m = cd.messages[j]
-      const createdAt = new Date(now.getTime() - m.minsAgo * 60 * 1000)
-      await prisma.chatMessage.upsert({
-        where: { id: `msg-seed-${i}-${j}` },
-        update: {},
-        create: {
-          id: `msg-seed-${i}-${j}`,
-          conversationId: conv.id,
-          senderType: m.senderType,
-          senderId: m.senderType === 'CUSTOMER' ? customerId : superAdmin.id,
-          body: m.body, isRead: m.minsAgo > 60, createdAt,
+  // Chats: a handful of short conversations with demo customers.
+  const CHATS = [
+    { store: 'camden', status: 'active', msgs: [['CUSTOMER', 'Hi, how much for a manufacturer service on a 2021 RAV4?', 60], ['AGENT', 'Morning! It is from £149, and we stamp your service book.', 55], ['CUSTOMER', 'Great. Can you fit me in this Friday?', 40]] },
+    { store: 'camden', status: 'active', msgs: [['CUSTOMER', 'Do I need to book the free MOT check or can I just drop in?', 90]] },
+    { store: 'greenwich', status: 'active', msgs: [['AGENT', 'Hi, your 4 tyres have arrived and are ready to fit.', 180], ['CUSTOMER', 'Perfect, I will come by at 2pm today.', 160]] },
+    { store: 'shoreditch', status: 'resolved', msgs: [['CUSTOMER', 'My brakes are squeaking, can you take a look?', 2880], ['AGENT', 'Of course. Come in Thursday and we will check the front pads.', 2820], ['CUSTOMER', 'Thanks, much quieter now.', 1440]] },
+  ] as const
+  for (let i = 0; i < CHATS.length; i++) {
+    const ch = CHATS[i]
+    const customerId = customers[(i * 5 + 3) % customers.length].id
+    await prisma.chatConversation.create({
+      data: {
+        id: `demo-chat-${i + 1}`, storeId: storeIdMap[ch.store], customerId, status: ch.status,
+        messages: {
+          create: ch.msgs.map(([senderType, body, minsAgo], j) => ({
+            id: `demo-chat-${i + 1}-m${j + 1}`, senderType, body,
+            senderId: senderType === 'CUSTOMER' ? customerId : staffFor(ch.store),
+            isRead: minsAgo > 60, createdAt: new Date(nowMs - minsAgo * 60 * 1000),
+          })),
         },
-      })
-    }
+      },
+    })
   }
-  console.log(`✅ ${CHAT_DATA.length} chat conversations seeded`)
+  console.log(`✅ ${CHATS.length} demo chat conversations seeded`)
 
   // ── PageSEO ───────────────────────────────────────────────────────────────────
   const SEO_PAGES = [
-    { entityType: 'page', entityId: 'home',      metaTitle: 'Nova Tyres | Warehouse Direct Tyres & Wheels',             metaDesc: 'Nova Tyres offers warehouse-direct pricing on tyres and wheels with professional fitting across 9 Australian locations.' },
-    { entityType: 'page', entityId: 'tyres',     metaTitle: 'Buy Tyres Online | Nova Tyres Australia',                  metaDesc: 'Search and buy tyres by size or brand. Wide range of passenger, SUV and 4WD tyres with same-day fitting.' },
-    { entityType: 'page', entityId: 'wheels',    metaTitle: 'Alloy Wheels Australia | Nova Tyres',                      metaDesc: 'Shop alloy wheels from top brands. Find the perfect set for your car with expert fitting at any Nova Tyres location.' },
-    { entityType: 'page', entityId: 'service',   metaTitle: 'Car Service Melbourne & Sydney | Nova Tyres',              metaDesc: 'Affordable car servicing including log book, yearly and 3/6 year service packages. Warranty-safe with genuine parts.' },
-    { entityType: 'page', entityId: 'locations', metaTitle: 'Nova Tyres Store Locations | Melbourne, Sydney & More',    metaDesc: 'Find your nearest Nova Tyres store across Melbourne, Sydney and Australia. Open 6 days a week.' },
-    { entityType: 'page', entityId: 'warranty',  metaTitle: 'Tyre Warranty & Returns | Nova Tyres',                    metaDesc: 'Nova Tyres warranty and returns policy. All products covered by manufacturer warranty.' },
-    { entityType: 'page', entityId: 'about',     metaTitle: 'About Nova Tyres | Australian Tyre Retailer',             metaDesc: 'Nova Tyres is an Australian tyre and wheel retailer with 9+ locations, 4.8★ rating and 2,000+ verified reviews.' },
+    { entityType: 'page', entityId: 'home',      metaTitle: 'Gripwell | Tyres & Wheels — London',                   metaDesc: 'Gripwell offers competitive pricing on tyres and wheels with professional fitting across 7 London stores.' },
+    { entityType: 'page', entityId: 'tyres',     metaTitle: 'Buy Tyres Online | Gripwell London',                   metaDesc: 'Search and buy tyres by size or brand. Wide range of passenger, SUV and 4x4 tyres with same-day fitting across London.' },
+    { entityType: 'page', entityId: 'wheels',    metaTitle: 'Alloy Wheels London | Gripwell',                       metaDesc: 'Shop alloy wheels from leading brands. Find the perfect set for your car with expert fitting at any Gripwell store.' },
+    { entityType: 'page', entityId: 'service',   metaTitle: 'Car Servicing London | Gripwell',                      metaDesc: 'Affordable car servicing including manufacturer-schedule, yearly and 3/6 year service packages. Warranty-safe with genuine parts.' },
+    { entityType: 'page', entityId: 'locations', metaTitle: 'Gripwell Store Locations | London',                    metaDesc: 'Find your nearest Gripwell store across London. Seven locations including Camden, Shoreditch, Brixton and more.' },
+    { entityType: 'page', entityId: 'warranty',  metaTitle: 'Tyre Warranty & Returns | Gripwell',                   metaDesc: 'Gripwell warranty and returns policy. All products covered by manufacturer warranty and UK Consumer Rights Act.' },
+    { entityType: 'page', entityId: 'about',     metaTitle: 'About Gripwell | London Tyre Retailer',                metaDesc: 'Gripwell is a London tyre and wheel retailer with 7 locations across the city.' },
   ]
   for (const page of SEO_PAGES) {
     await prisma.pageSEO.upsert({

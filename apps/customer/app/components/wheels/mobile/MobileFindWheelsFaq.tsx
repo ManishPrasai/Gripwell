@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { STORES, NOVA_SWITCHBOARD } from '../../../../lib/stores'
+import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
 /*
   FAQ accordion for the mobile /wheels page — same presentation as the mobile
@@ -22,7 +23,7 @@ const FAQS = [
   },
   {
     q: 'Is fitting and balancing included?',
-    a: `Yes — mounting, balancing and new valves are free with every wheel at our ${STORES.length} stores. Call ${NOVA_SWITCHBOARD} to book.`,
+    a: `Fitting is from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} a wheel and covers mounting, balancing and new valves at all ${STORES.length} branches. Your cart shows the exact total before you pay. Call ${NOVA_SWITCHBOARD} to book.`,
   },
 ]
 
@@ -42,14 +43,14 @@ export default function MobileFindWheelsFaq() {
               style={{
                 width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
                 padding: '12px 13px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 700, color: '#16211B',
+                fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 700, color: '#1A1D23',
               }}
             >
               {f.q}
-              <span aria-hidden="true" style={{ color: '#E8572A', fontSize: '15px', flexShrink: 0 }}>{isOpen ? '−' : '+'}</span>
+              <span aria-hidden="true" style={{ color: '#FF6A1A', fontSize: '15px', flexShrink: 0 }}>{isOpen ? '−' : '+'}</span>
             </button>
             {isOpen && (
-              <p style={{ margin: 0, padding: '0 13px 12px', fontSize: '12px', lineHeight: 1.55, color: '#6E7C74', animation: 'nvMobFade .2s ease' }}>
+              <p style={{ margin: 0, padding: '0 13px 12px', fontSize: '12px', lineHeight: 1.55, color: '#6B7280', animation: 'nvMobFade .2s ease' }}>
                 {f.a}
               </p>
             )}

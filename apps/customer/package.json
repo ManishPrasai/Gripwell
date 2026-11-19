@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3000 -H 0.0.0.0",
     "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
     "postinstall": "npm run prisma:generate",
     "build": "next build",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test lib/order-math.test.mjs",
     "start": "next start",
     "lint": "next lint",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",

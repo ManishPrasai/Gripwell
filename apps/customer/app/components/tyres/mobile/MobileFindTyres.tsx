@@ -25,16 +25,17 @@ const TYPES = [
 ]
 
 const BRAND_LOGOS = [
-  { name: 'Michelin',    src: '/images/brands/michelin.svg' },
-  { name: 'Pirelli',     src: '/images/brands/pirelli.svg' },
-  { name: 'Bridgestone', src: '/images/brands/bridgestone.svg' },
-  { name: 'Maxxis',      src: '/images/brands/maxxis.svg' },
-  { name: 'Hankook',     src: '/images/brands/hankook.svg' },
+  { name: 'Meridian' },
+  { name: 'Corsaro' },
+  { name: 'Kova' },
+  { name: 'Zetland' },
+  { name: 'Terrain X' },
+  { name: 'Brackley' },
 ]
 
 const kicker: React.CSSProperties = {
   display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em',
-  textTransform: 'uppercase', color: '#E8572A',
+  textTransform: 'uppercase', color: '#FF6A1A',
 }
 
 const tileBox: React.CSSProperties = {
@@ -44,7 +45,7 @@ const tileBox: React.CSSProperties = {
 
 export default function MobileFindTyres() {
   return (
-    <div style={{ background: '#0D1A12' }}>
+    <div style={{ background: '#1A1D23' }}>
       <div className="nv-mob-shell" style={{ background: '#FAF9F5', fontFamily: "'DM Sans', sans-serif", maxWidth: '480px', margin: '0 auto' }}>
         <MobileHeader />
 
@@ -53,7 +54,7 @@ export default function MobileFindTyres() {
           <span style={{ display: 'block', color: 'rgba(255,255,255,.7)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: '8px' }}>
             Premium Performance Every Journey
           </span>
-          <h1 style={{ margin: 0, color: '#E8572A', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.01em' }}>
+          <h1 style={{ margin: 0, color: '#FF6A1A', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.01em' }}>
             Our Tyre Collection
           </h1>
         </section>
@@ -61,7 +62,7 @@ export default function MobileFindTyres() {
         {/* ── Shop by tyre type ──────────────────────────────── */}
         <section style={{ padding: '18px 0 20px 16px' }}>
           <span style={{ ...kicker, marginBottom: '2px', paddingRight: '16px' }}>Every drive covered</span>
-          <h2 style={{ margin: '2px 0 12px', fontSize: '18px', fontWeight: 800, color: '#16211B', textTransform: 'uppercase', paddingRight: '16px' }}>
+          <h2 style={{ margin: '2px 0 12px', fontSize: '18px', fontWeight: 800, color: '#1A1D23', textTransform: 'uppercase', paddingRight: '16px' }}>
             Shop by tyre type
           </h2>
           <div className="nv-mob-rail" style={{ paddingRight: '16px' }}>
@@ -70,8 +71,8 @@ export default function MobileFindTyres() {
                 <div style={{ position: 'relative', aspectRatio: '1', marginBottom: '8px' }}>
                   <Image src={t.img} alt={t.alt} fill sizes="118px" style={{ objectFit: 'contain' }} />
                 </div>
-                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 800, color: '#16211B', textTransform: 'uppercase' }}>
-                  {t.name} <span style={{ color: '#E8572A' }}>→</span>
+                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontWeight: 800, color: '#1A1D23', textTransform: 'uppercase' }}>
+                  {t.name} <span style={{ color: '#FF6A1A' }}>→</span>
                 </span>
               </Link>
             ))}
@@ -82,20 +83,19 @@ export default function MobileFindTyres() {
         <section style={{ padding: '20px 16px', borderTop: '1px solid #E7E5DE' }}>
           <div style={{ marginBottom: '12px' }}>
             <span style={kicker}>Brands we serve</span>
-            <h2 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#16211B' }}>80+ brands, original stock</h2>
+            <h2 style={{ margin: '2px 0 0', fontSize: '16px', fontWeight: 800, color: '#1A1D23' }}>80+ brands, original stock</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px' }}>
             {BRAND_LOGOS.map(b => (
               <div key={b.name} style={tileBox}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={b.src} alt={b.name} loading="lazy" style={{ maxHeight: '22px', maxWidth: '100%', objectFit: 'contain' }} />
+                <span style={{ fontSize: '12px', fontFamily: "'DM Sans', sans-serif", fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1A1D23', textAlign: 'center' }}>{b.name}</span>
               </div>
             ))}
-            <Link href="/tyres/results" style={{ ...tileBox, textDecoration: 'none', fontSize: '10px', fontWeight: 800, color: '#6E7C74' }}>
+            <Link href="/tyres/results" style={{ ...tileBox, textDecoration: 'none', fontSize: '10px', fontWeight: 800, color: '#6B7280' }}>
               +75 more
             </Link>
           </div>
-          <Link href="/tyres/results" style={{ display: 'inline-block', marginTop: '12px', fontSize: '12.5px', fontWeight: 700, color: '#076330', textDecoration: 'none' }}>
+          <Link href="/tyres/results" style={{ display: 'inline-block', marginTop: '12px', fontSize: '12.5px', fontWeight: 700, color: '#2A2E36', textDecoration: 'none' }}>
             Shop all brands →
           </Link>
         </section>
@@ -105,7 +105,7 @@ export default function MobileFindTyres() {
 
         {/* ── FAQ ────────────────────────────────────────────── */}
         <section style={{ background: '#fff', padding: '20px 16px 24px', borderTop: '1px solid #E7E5DE' }}>
-          <h2 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 800, color: '#16211B', textTransform: 'uppercase' }}>
+          <h2 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 800, color: '#1A1D23', textTransform: 'uppercase' }}>
             Frequently asked questions
           </h2>
           <MobileFindTyresFaq />

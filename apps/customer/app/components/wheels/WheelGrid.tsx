@@ -4,16 +4,11 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
+import { money } from '../../../lib/fitting'
 
 /* ── Brand logo map ───────────────────────────────────────────────────────── */
-const BRAND_LOGOS: Record<string, string> = {
-  'black rhino':  '/images/brands/Black Rino.svg',
-  'roh':          '/images/brands/roh.svg',
-  'king wheels':  '/images/brands/king-wheels.svg',
-  'sonix':        '/images/brands/sonix.svg',
-  'fuel':         '/images/brands/fuel.svg',
-  'method':       '/images/brands/method.svg',
-}
+/* No manufacturer artwork: every brand renders as a text wordmark. */
+const BRAND_LOGOS: Record<string, string> = {}
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 interface WheelProduct {
@@ -46,12 +41,12 @@ function mapWheel(w: ApiWheel): WheelProduct {
     id:        w.id,
     slug:      w.slug,
     brand:     w.brand,
-    brandLogo: BRAND_LOGOS[w.brand.toLowerCase()] ?? '/images/wheel/Wheel 1.png',
+    brandLogo: BRAND_LOGOS[w.brand.toLowerCase()] ?? '',
     model:     w.model,
     size:      `${w.diameter}×${parseFloat(String(w.width)).toFixed(1)}`,
     spec:      w.pcd,
     price:     parseFloat(String(w.price)),
-    image:     w.images[0]?.url ?? '/images/wheel/Wheel 1.png',
+    image:     w.images[0]?.url ?? '',
   }
 }
 
@@ -62,7 +57,7 @@ const BUTTON_AREA_H = 54
 /* ── Brand logo with text fallback ───────────────────────────────────────── */
 function BrandLogoImg({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
-  if (err) return (
+  if (!src || err) return (
     <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#333' }}>{brand}</span>
   )
   return (
@@ -177,7 +172,7 @@ function WheelCard({ product }: { product: WheelProduct }) {
           </p>
 
           <p style={{ color: '#1A1A1A', fontFamily: "'DM Sans', sans-serif", fontSize: '19px', fontWeight: 800 }}>
-            A${product.price.toFixed(2)}
+            {money(product.price)}
           </p>
         </div>
 

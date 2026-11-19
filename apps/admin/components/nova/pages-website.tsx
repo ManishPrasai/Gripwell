@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · Website (Pages + Blog) · SEO · Page builder (ported)
+   Gripwell — Admin · Website (Pages + Blog) · SEO · Page builder (ported)
    ============================================================ */
 import * as React from "react";
 import { useState } from "react";
@@ -18,7 +18,7 @@ function seoBadge(score: number) {
 function PvSection({ type }: { type: string }) {
   const T = (NOVA.sectionTypes as any)[type] || { name: type };
   if (type === "hero") return (
-    <div className="pv-sec pv-hero"><span className="pv-kick">Servicing · Melbourne-wide</span><h3>Servicing done right.</h3><p>Qualified mechanics, quality parts and a warranty-safe log-book stamp.</p><span className="pv-btn">Explore services →</span></div>
+    <div className="pv-sec pv-hero"><span className="pv-kick">Servicing · Melbourne-wide</span><h3>Servicing done right.</h3><p>Qualified mechanics, quality parts and a warranty-safe log-book stamp.</p><span className="pv-btn">Explore services â†'</span></div>
   );
   if (["services", "tiers", "brands", "gallery"].includes(type)) return (
     <div className="pv-sec"><div className="pv-label"><Icon name={T.icon} />{T.name}</div><div className="pv-row">{[0, 1, 2].map((i) => <div className="pv-card" key={i}><Icon name={T.icon} /></div>)}</div></div>
@@ -33,7 +33,7 @@ function PvSection({ type }: { type: string }) {
     <div className="pv-sec"><div className="pv-label"><Icon name="pin" />Locations</div><div className="pv-card" style={{ height: 96, background: "color-mix(in oklab, var(--brand) 8%, var(--chip))" }}><Icon name="pin" /></div></div>
   );
   if (type === "cta") return (
-    <div className="pv-sec"><div className="pv-cta"><b>Book your free Pre-RWC check today</b><div className="pv-btn" style={{ background: "var(--accent)", color: "#fff", display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 9, fontSize: 12, fontWeight: 700 }}>Get started</div></div></div>
+    <div className="pv-sec"><div className="pv-cta"><b>Book your Free MOT check today</b><div className="pv-btn" style={{ background: "var(--accent)", color: "#fff", display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 9, fontSize: 12, fontWeight: 700 }}>Get started</div></div></div>
   );
   return (
     <div className="pv-sec"><div className="pv-label"><Icon name={T.icon || "file"} />{T.name}</div><div className="pv-lines"><i style={{ width: "92%" }}></i><i style={{ width: "100%" }}></i><i style={{ width: "78%" }}></i></div></div>
@@ -106,7 +106,7 @@ function PageBuilder({ ctx, page, onClose }: { ctx?: any; page: any; onClose: ()
           <div className="build-preview">
             <div className="build-preview-bar">
               <span className="badge ok dotless" style={{ fontSize: 11 }}><span className="bdot"></span>Live preview</span>
-              <span className="fakebar"><Icon name="lock" />novatyres.au{page.url}</span>
+              <span className="fakebar"><Icon name="lock" />gripwell.au{page.url}</span>
             </div>
             <div className="preview-scroll scroll">
               <div className="preview-doc">
@@ -138,11 +138,11 @@ function ScoreCircle({ score }: { score: number }) {
 
 /* ===================== SEO DRAWER ===================== */
 function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClose: () => void; onSave: (score: number, meta: { metaTitle: string; metaDesc: string }) => void }) {
-  const [m, setM] = useState({ metaTitle: item.metaTitle || (item.title + " | Nova Tyres"), metaDesc: item.metaDesc || "", slug: item.slug || item.url || "/", kw: item.kw || "" });
+  const [m, setM] = useState({ metaTitle: item.metaTitle || (item.title + " | Gripwell"), metaDesc: item.metaDesc || "", slug: item.slug || item.url || "/", kw: item.kw || "" });
   const titleLen = m.metaTitle.length, descLen = m.metaDesc.length;
   const checks: [string, boolean][] = [
-    ["Title length is ideal (50–60)", titleLen >= 40 && titleLen <= 60],
-    ["Description length is ideal (120–160)", descLen >= 110 && descLen <= 160],
+    ["Title length is ideal (50—60)", titleLen >= 40 && titleLen <= 60],
+    ["Description length is ideal (120—160)", descLen >= 110 && descLen <= 160],
     ["Focus keyword set", m.kw.trim().length > 0],
     ["Keyword appears in title", !!m.kw && m.metaTitle.toLowerCase().includes(m.kw.toLowerCase())],
     ["URL slug is clean", /^\/[a-z0-9\-\/]*$/.test(m.slug)],
@@ -173,7 +173,7 @@ function SeoDrawer({ item, onClose, onSave }: { item: any; kind?: string; onClos
       <hr className="hr" />
       <label style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-2)", display: "block", marginBottom: 8 }}>Google preview</label>
       <div className="serp">
-        <div className="surl"><Icon name="globe" />novatyres.au{m.slug} <Icon name="chevD" style={{ width: 12, height: 12 }} /></div>
+        <div className="surl"><Icon name="globe" />gripwell.au{m.slug} <Icon name="chevD" style={{ width: 12, height: 12 }} /></div>
         <div className="stitle">{m.metaTitle || "Page title"}</div>
         <div className="sdesc">{m.metaDesc || "Add a meta description to control how this page appears in search results."}</div>
       </div>
@@ -221,16 +221,16 @@ export function WebsitePage({ ctx }: { ctx?: any; nav?: any }) {
       toast({ kind: "ok", title: "SEO saved", body: target.title + " is live on the site." });
       ctx?.refetch?.();
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't save SEO", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t save SEO", body: e?.message || "Please try again." });
     }
   }
 
   return (
     <div className="page page-enter">
       <div className="pagehead">
-        <div className="ph-txt"><h2>Website &amp; Content</h2><p>Pages, blog posts and SEO for your public Nova Tyres site.</p></div>
+        <div className="ph-txt"><h2>Website &amp; Content</h2><p>Pages, blog posts and SEO for your public Gripwell site.</p></div>
         <div className="ph-actions">
-          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "Pages are fixed routes" : "Blog not enabled yet", body: tab === "pages" ? "Edit any existing page's content and SEO from the list below — new routes are added in code." : "Publishing blog posts needs a content model that isn't set up yet." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
+          <button className="btn" onClick={() => toast({ kind: "info", title: tab === "pages" ? "Pages are fixed routes" : "Blog not enabled yet", body: tab === "pages" ? "Edit any existing page's content and SEO from the list below — new routes are added in code." : "Publishing blog posts needs a content model that isn’t set up yet." })}><Icon name="plus" />New {tab === "pages" ? "page" : "post"}</button>
         </div>
       </div>
 

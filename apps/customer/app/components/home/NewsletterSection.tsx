@@ -40,23 +40,23 @@ export default function NewsletterSection() {
       <style>{`
         .nv-news-card { display: grid; gap: clamp(24px,4vw,48px); align-items: center; grid-template-columns: repeat(2,1fr); }
         @media (max-width: 1100px) { .nv-news-card { grid-template-columns: 1fr; } }
-        .nv-news-btn:hover  { background: #FF6817; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
+        .nv-news-btn:hover  { background: #FF6A1A; transform: translateY(-2px); box-shadow: 0 14px 26px -14px rgba(232,87,42,0.95); }
         .nv-news-btn:active { transform: translateY(0); }
       `}</style>
 
       <div
         data-reveal
         className="nv-news-card"
-        style={{ background: '#1C3A2B', borderRadius: '20px', padding: 'clamp(28px,4vw,52px)' }}
+        style={{ background: '#2A2E36', borderRadius: '20px', padding: 'clamp(28px,4vw,52px)' }}
       >
         <div>
-          <p style={{ margin: '0 0 10px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E8572A' }}>
-            Nova mailing list
+          <p style={{ margin: '0 0 10px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#FF6A1A' }}>
+            Gripwell mailing list
           </p>
           <h2 style={{ margin: '0 0 12px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(32px,4vw,46px)', letterSpacing: '0.02em', color: '#F1EFE7', lineHeight: 1.02 }}>
             Deals before they sell out
           </h2>
-          <p style={{ margin: 0, color: '#9DB0A5', fontSize: '15px', lineHeight: 1.65, maxWidth: '44ch' }}>
+          <p style={{ margin: 0, color: '#9EA3AD', fontSize: '15px', lineHeight: 1.65, maxWidth: '44ch' }}>
             Member-only discounts, new arrivals and seasonal tyre tips. One email a fortnight — unsubscribe any time.
           </p>
         </div>
@@ -70,13 +70,13 @@ export default function NewsletterSection() {
               style={{
                 flex: '1 1 220px', minWidth: 0, background: '#FFFFFF', border: '1px solid #E7E5DE',
                 borderRadius: '10px', padding: '0 18px', height: '54px', fontSize: '15px',
-                color: '#16211B', outline: 'none',
+                color: '#1A1D23', outline: 'none',
               }}
             />
             <button
               type="submit" className="nv-news-btn" disabled={submitting}
               style={{
-                background: '#E8572A', color: '#fff', border: 'none', borderRadius: '10px',
+                background: '#FF6A1A', color: '#fff', border: 'none', borderRadius: '10px',
                 padding: '0 30px', height: '54px', fontFamily: "'DM Sans', sans-serif",
                 fontSize: '15px', fontWeight: 700, cursor: submitting ? 'default' : 'pointer', whiteSpace: 'nowrap',
                 opacity: submitting ? 0.7 : 1,
@@ -88,7 +88,7 @@ export default function NewsletterSection() {
           </form>
 
           {error ? (
-            <p style={{ margin: '14px 0 0', color: '#E8572A', fontSize: '13px', fontWeight: 600 }}>
+            <p style={{ margin: '14px 0 0', color: '#FF6A1A', fontSize: '13px', fontWeight: 600 }}>
               {error}
             </p>
           ) : submitted ? (
@@ -99,7 +99,7 @@ export default function NewsletterSection() {
               You&apos;re on the list — check your inbox to confirm.
             </p>
           ) : (
-            <p style={{ margin: '14px 0 0', fontSize: '12.5px', color: '#9DB0A5' }}>
+            <p style={{ margin: '14px 0 0', fontSize: '12.5px', color: '#9EA3AD' }}>
               No spam. We never share your address.
             </p>
           )}

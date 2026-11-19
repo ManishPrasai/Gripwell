@@ -1,17 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF } from '../../../lib/stores'
 
 /* ── Static data ─────────────────────────────────────────────────────────── */
 
 const STORES = [
-  'Springvale', 'Dandenong', 'Melbourne (Alphington)',
-  'Bayswater', 'Sunshine', 'Geelong', 'Sefton', 'Brisbane', 'Adelaide',
+  'Camden', 'Shoreditch', 'Brixton',
+  'Hammersmith', 'Islington', 'Greenwich', 'City of London',
 ]
 
 const SERVICES = [
-  'Free Pre-RWC Check', 'Free Safety Inspection',
-  'Log Book Service', 'Yearly Service',
+  'Free MOT check', 'Free Safety Inspection',
+  'Manufacturer Service', 'Yearly Service',
   '3 Year Service', '6 Year Service', 'Ultimate Service',
 ]
 
@@ -213,13 +214,13 @@ export default function BookingSection() {
       <div className="relative z-10 max-w-3xl mx-auto text-center">
 
         <p className="uppercase tracking-widest mb-4"
-          style={{ color: '#E8572A', letterSpacing: '0.15em', fontSize: '12px', fontWeight: 500 }}>
+          style={{ color: '#FF6A1A', letterSpacing: '0.15em', fontSize: '12px', fontWeight: 500 }}>
           1 Minute Booking
         </p>
 
         <h2 className="mb-2 leading-tight"
           style={{ color: 'white', fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px, 5vw, 40px)', letterSpacing: '0.02em' }}>
-          <em style={{ color: '#E8572A', fontStyle: 'italic' }}>Walk in.</em>{' '}Drive out sharper.
+          <em style={{ color: '#FF6A1A', fontStyle: 'italic' }}>Walk in.</em>{' '}Drive out sharper.
         </h2>
         <p className="mb-8" style={{ color: 'rgba(255,255,255,0.6)', fontSize: '15px', fontWeight: 400 }}>
           Pick a store, pick a slot, confirm booking.
@@ -286,7 +287,7 @@ export default function BookingSection() {
                 className="w-full rounded-lg px-3 py-3 text-left flex items-center justify-between"
                 style={{
                   background:  locked ? 'rgba(255,255,255,0.04)' : pickerOpen ? 'rgba(255,255,255,0.11)' : 'rgba(255,255,255,0.08)',
-                  border:      `1px solid ${pickerOpen && !locked ? '#E8572A' : locked ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.15)'}`,
+                  border:      `1px solid ${pickerOpen && !locked ? '#FF6A1A' : locked ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.15)'}`,
                   color:       time ? 'white' : locked ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.4)',
                   fontSize:    '15px',
                   fontWeight:  400,
@@ -307,7 +308,7 @@ export default function BookingSection() {
           {pickerOpen && locked && (
             <div className="flex items-center gap-3 rounded-xl mb-4"
               style={{ background: 'rgba(232,87,42,0.07)', border: '1px solid rgba(232,87,42,0.18)', padding: '12px 16px' }}>
-              <i className="ti ti-lock flex-shrink-0" style={{ color: '#E8572A', fontSize: '16px' }} aria-hidden="true" />
+              <i className="ti ti-lock flex-shrink-0" style={{ color: '#FF6A1A', fontSize: '16px' }} aria-hidden="true" />
               <p className="text-left" style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: 400 }}>
                 Please select a <strong style={{ color: '#fff', fontWeight: 600 }}>Store</strong> and{' '}
                 <strong style={{ color: '#fff', fontWeight: 600 }}>Service</strong> before choosing a time slot.
@@ -341,8 +342,8 @@ export default function BookingSection() {
                         alignItems:    'center',
                         padding:       '8px 10px',
                         borderRadius:  '10px',
-                        background:    isSelected ? '#E8572A' : !available ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
-                        border:        `1px solid ${isSelected ? '#E8572A' : !available ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)'}`,
+                        background:    isSelected ? '#FF6A1A' : !available ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.06)',
+                        border:        `1px solid ${isSelected ? '#FF6A1A' : !available ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)'}`,
                         cursor:        !available ? 'not-allowed' : 'pointer',
                         opacity:       !available ? 0.35 : 1,
                         transition:    'all 0.18s',
@@ -390,11 +391,11 @@ export default function BookingSection() {
                           fontWeight:     isChosen ? 600 : 500,
                           cursor:         unavailable ? 'not-allowed' : 'pointer',
                           textAlign:      'center',
-                          background:     isChosen ? '#E8572A'
+                          background:     isChosen ? '#FF6A1A'
                                         : booked   ? 'rgba(255,255,255,0.03)'
                                         : past     ? 'transparent'
                                         :             'rgba(255,255,255,0.09)',
-                          border:         `1px solid ${isChosen ? '#E8572A'
+                          border:         `1px solid ${isChosen ? '#FF6A1A'
                                                      : booked   ? 'rgba(255,255,255,0.06)'
                                                      : past     ? 'rgba(255,255,255,0.04)'
                                                      :             'rgba(255,255,255,0.14)'}`,
@@ -452,11 +453,11 @@ export default function BookingSection() {
                                 fontSize:       '13px',
                                 fontWeight:     isChosen ? 600 : 500,
                                 cursor:         unavailable ? 'not-allowed' : 'pointer',
-                                background:     isChosen ? '#E8572A'
+                                background:     isChosen ? '#FF6A1A'
                                               : booked   ? 'rgba(255,255,255,0.03)'
                                               : past     ? 'transparent'
                                               :             'rgba(255,255,255,0.09)',
-                                border:         `1px solid ${isChosen ? '#E8572A'
+                                border:         `1px solid ${isChosen ? '#FF6A1A'
                                                            : booked   ? 'rgba(255,255,255,0.06)'
                                                            : past     ? 'rgba(255,255,255,0.04)'
                                                            :             'rgba(255,255,255,0.14)'}`,
@@ -535,14 +536,14 @@ export default function BookingSection() {
                 onClick={submitBooking}
                 disabled={submitting || !selectedSlot || !slotMap[selectedSlot]}
                 className="w-full text-white py-4 rounded-xl uppercase tracking-wide transition-opacity hover:opacity-90"
-                style={{ background: '#E8572A', letterSpacing: '0.08em', fontSize: '14px', fontWeight: 600, opacity: (submitting || !selectedSlot || !slotMap[selectedSlot]) ? 0.55 : 1, cursor: (!selectedSlot || !slotMap[selectedSlot]) ? 'not-allowed' : 'pointer' }}
+                style={{ background: '#FF6A1A', letterSpacing: '0.08em', fontSize: '14px', fontWeight: 600, opacity: (submitting || !selectedSlot || !slotMap[selectedSlot]) ? 0.55 : 1, cursor: (!selectedSlot || !slotMap[selectedSlot]) ? 'not-allowed' : 'pointer' }}
               >
                 {submitting ? 'Booking…' : selectedSlot ? 'Confirm booking' : 'Select a time to book'}
               </button>
               <p className="mt-3" style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', fontWeight: 500 }}>
                 Or call us directly on{' '}
-                <a href="tel:1300897337" style={{ color: '#E8572A' }}>1300 TYRES</a>
-                {' '}— Mon–Sat 8am–6pm AEST
+                <a href={NOVA_SWITCHBOARD_HREF} style={{ color: '#FF6A1A' }}>{NOVA_SWITCHBOARD}</a>
+                {' '}— Mon–Fri 8am–5:30pm, Sat 8am–4pm
               </p>
             </>
           )}
@@ -554,7 +555,7 @@ export default function BookingSection() {
           {['Pick your tyre & size', 'Choose place & time', 'We fit it on the spot'].map((step, i) => (
             <div key={step} className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-white flex-shrink-0"
-                style={{ background: '#E8572A', fontSize: '11px', fontWeight: 500 }}>
+                style={{ background: '#FF6A1A', fontSize: '11px', fontWeight: 500 }}>
                 {i + 1}
               </div>
               <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: 500 }}>{step}</span>

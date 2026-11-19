@@ -17,7 +17,7 @@ export interface CartItem {
 }
 
 // Single source of truth — the checkout API enforces these same limits.
-import { DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER } from '../../lib/order-rules'
+import { DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER, maxPerOrder } from '../../lib/order-rules'
 export { DEFAULT_TYRE_QTY, MAX_TYRES_PER_ORDER }
 
 // ── Context value ─────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let saved: CartItem[] = []
     try {
-      const raw = localStorage.getItem('nova-cart')
+      const raw = localStorage.getItem('gw-cart')
       if (raw) saved = JSON.parse(raw)
     } catch {}
 
@@ -106,7 +106,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Keep localStorage in sync so display details survive page refreshes.
   useEffect(() => {
-    try { localStorage.setItem('nova-cart', JSON.stringify(items)) } catch {}
+    try { localStorage.setItem('gw-cart', JSON.stringify(items)) } catch {}
   }, [items])
 
   // ── addToCart ───────────────────────────────────────────────────────────────
@@ -118,14 +118,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existing = prev.find(i => i.id === item.id)
       let want = Math.max(1, Math.floor(qty))
 
-      if (item.productType === 'tyre') {
-        const tyresElsewhere = prev
-          .filter(i => i.productType === 'tyre' && i.id !== item.id)
-          .reduce((s, i) => s + i.qty, 0)
-        const allowance = MAX_TYRES_PER_ORDER - tyresElsewhere - (existing?.qty ?? 0)
-        if (allowance <= 0) return prev          // already at the order limit
-        want = Math.min(want, allowance)
-      }
+      // Per-type order limit (8 tyres, 8 wheels): the API refuses more.
+      const sameTypeElsewhere = prev
+        .filter(i => i.productType === item.productType && i.id !== item.id)
+        .reduce((s, i) => s + i.qty, 0)
+      const allowance = maxPerOrder(item.productType) - sameTypeElsewhere - (existing?.qty ?? 0)
+      if (allowance <= 0) return prev            // already at the order limit
+      want = Math.min(want, allowance)
 
       const newQty = (existing?.qty ?? 0) + want
       dbAdd(item.id, item.productType, newQty)   // upsert to the exact quantity
@@ -136,19 +135,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ── updateQty ───────────────────────────────────────────────────────────────
-  // delta is ±1. Floor is 1 (remove button handles deletion); tyres are also
-  // capped so the order total can't exceed MAX_TYRES_PER_ORDER.
+  // delta is ±1. Floor is 1 (remove button handles deletion); each type is
+  // capped at its order limit (8 tyres, 8 wheels).
   const updateQty = useCallback((id: string, delta: number) => {
     setItems(prev => {
       const item = prev.find(i => i.id === id)
       if (!item) return prev
 
       let newQty = Math.max(1, item.qty + delta)
-      if (item.productType === 'tyre' && delta > 0) {
-        const tyresElsewhere = prev
-          .filter(i => i.productType === 'tyre' && i.id !== id)
+      if (delta > 0) {
+        const sameTypeElsewhere = prev
+          .filter(i => i.productType === item.productType && i.id !== id)
           .reduce((s, i) => s + i.qty, 0)
-        newQty = Math.max(1, Math.min(newQty, MAX_TYRES_PER_ORDER - tyresElsewhere))
+        newQty = Math.max(1, Math.min(newQty, maxPerOrder(item.productType) - sameTypeElsewhere))
       }
       if (newQty === item.qty) return prev       // at the cap — nothing to write
 

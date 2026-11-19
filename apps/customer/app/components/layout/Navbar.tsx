@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCart } from '../../context/CartContext'
 import { STORE_NETWORK_LABEL } from '../../../lib/stores'
 import { smoothScrollToSection } from '../../../lib/scrollToSection'
+import { money, DEFAULT_FITTING_PRICES } from '../../../lib/fitting'
 
 /* Contact details surface in three places (strip, mobile bar, WhatsApp),
    so they live here once rather than being retyped per component. */
-export const NOVA_PHONE      = '0402 338 805'
+export const NOVA_PHONE      = '+44 20 7946 0800'
 export const NOVA_PHONE_HREF = `tel:${NOVA_PHONE.replace(/\s/g, '')}`
-export const NOVA_WA_HREF    = 'https://wa.me/61402338805'
+export const NOVA_WA_HREF    = 'https://wa.me/442079460800'
 
 /* `scrollTo` links (just "Locations" for now) scroll in place when the user
    is already on that link's page — a plain Link navigation there would still
@@ -245,21 +246,21 @@ export default function Navbar() {
           .nv-logo-img { height: auto; width: clamp(108px, 38vw, 180px); }
         }
         /* Search overlay hover/focus states */
-        .nv-ov-close:hover     { color: #E8572A; }
-        .nv-ov-input:focus-within { border-color: #E8572A; box-shadow: 0 0 0 3px rgba(232,87,42,0.15); }
+        .nv-ov-close:hover     { color: #FF6A1A; }
+        .nv-ov-input:focus-within { border-color: #FF6A1A; box-shadow: 0 0 0 3px rgba(232,87,42,0.15); }
         .nv-result-row:hover   { background: #FAF9F5; }
       `}</style>
 
       {/* ── Announcement strip ── */}
       <div
         style={{
-          background: '#054d25', color: '#CFE5D8', fontSize: '13px',
+          background: '#054d25', color: '#D1D5DB', fontSize: '13px',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           gap: '8px', flexWrap: 'wrap', padding: '9px 16px', textAlign: 'center',
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        <span>Fitting, balancing &amp; new valves <strong style={{ color: '#FFFFFF', fontWeight: 700 }}>included</strong> at every store</span>
+        <span>Fitting from <strong style={{ color: '#FFFFFF', fontWeight: 700 }}>{money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}</strong> a tyre, balancing &amp; new valves included</span>
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
         <span>{STORE_NETWORK_LABEL}</span>
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
@@ -270,7 +271,7 @@ export default function Navbar() {
       <header
         style={{
           position: 'sticky', top: 0, zIndex: 60,
-          background: '#076330', boxShadow: '0 2px 12px rgba(13,26,18,0.25)',
+          background: '#2A2E36', boxShadow: '0 2px 12px rgba(13,26,18,0.25)',
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
@@ -281,11 +282,11 @@ export default function Navbar() {
             gap: '16px', height: '66px',
           }}
         >
-          <Link href="/" aria-label="Nova Tyres home"
+          <Link href="/" aria-label="Gripwell home"
             style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/nova-wordmark-light.png" alt="Nova Tyres"
-              className="nv-logo-img" style={{ display: 'block' }} />
+            <img src="/brand/logo-horizontal-reversed.svg" alt="Gripwell"
+              className="nv-logo-img" style={{ display: 'block', height: '28px', width: 'auto' }} />
           </Link>
 
           {/* ── Wide: full link row ── */}
@@ -333,7 +334,7 @@ export default function Navbar() {
                 border: '1.5px solid rgba(250,249,245,0.35)', borderRadius: '8px',
                 padding: '10px 15px', whiteSpace: 'nowrap', transition: 'border-color .2s',
               }}
-              onMouseOver={e => (e.currentTarget.style.borderColor = '#E8572A')}
+              onMouseOver={e => (e.currentTarget.style.borderColor = '#FF6A1A')}
               onMouseOut={e  => (e.currentTarget.style.borderColor = 'rgba(250,249,245,0.35)')}
             >
               <UserIcon />
@@ -342,14 +343,14 @@ export default function Navbar() {
             <Link href="/cart"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '9px',
-                background: '#E8572A', color: '#fff', textDecoration: 'none',
+                background: '#FF6A1A', color: '#fff', textDecoration: 'none',
                 borderRadius: '8px', padding: '11px 17px', fontSize: '12.5px',
                 fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
                 transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s',
               }}
-              onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#FF6817' }}
-              onMouseOut={e  => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = '#E8572A' }}
+              onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#FF6A1A' }}
+              onMouseOut={e  => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = '#FF6A1A' }}
             >
               <CartIcon />
               Cart
@@ -381,7 +382,7 @@ export default function Navbar() {
               style={{
                 position: 'relative', display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', width: '44px', height: '44px',
-                background: '#FF6817', borderRadius: '8px', color: '#fff', textDecoration: 'none',
+                background: '#FF6A1A', borderRadius: '8px', color: '#fff', textDecoration: 'none',
               }}
             >
               <CartIcon />
@@ -390,7 +391,7 @@ export default function Navbar() {
                   position: 'absolute', top: '-5px', right: '-5px',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   minWidth: '19px', height: '19px', padding: '0 5px', borderRadius: '999px',
-                  background: '#0D1A12', color: '#fff', fontSize: '11px', fontWeight: 700, lineHeight: 1,
+                  background: '#1A1D23', color: '#fff', fontSize: '11px', fontWeight: 700, lineHeight: 1,
                 }}>
                   {cartCount}
                 </span>
@@ -420,7 +421,7 @@ export default function Navbar() {
           <nav
             className="nv-nav-compact"
             style={{
-              background: '#076330', borderTop: '1px solid rgba(250,249,245,0.12)',
+              background: '#2A2E36', borderTop: '1px solid rgba(250,249,245,0.12)',
               padding: '10px clamp(16px,4vw,40px) 18px',
               flexDirection: 'column', gap: '2px', animation: 'novaIn .25s ease both',
             }}
@@ -471,12 +472,12 @@ export default function Navbar() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '11px', letterSpacing: '0.16em', color: '#6E7C74', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '11px', letterSpacing: '0.16em', color: '#6B7280', textTransform: 'uppercase' }}>
                 Search
               </span>
               <button
                 onClick={() => setSearchOpen(false)} aria-label="Close" className="nv-ov-close"
-                style={{ border: 'none', background: 'transparent', color: '#16211B', cursor: 'pointer', display: 'inline-flex', padding: '4px', transition: 'color .2s' }}
+                style={{ border: 'none', background: 'transparent', color: '#1A1D23', cursor: 'pointer', display: 'inline-flex', padding: '4px', transition: 'color .2s' }}
               >
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                   <path d="M6 6l12 12M18 6L6 18" />
@@ -487,13 +488,13 @@ export default function Navbar() {
             <form onSubmit={submitSearch} className="nv-ov-input"
               style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1.5px solid #E7E5DE', borderRadius: '10px', padding: '14px 16px', transition: 'border-color .2s, box-shadow .2s' }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8572A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A1A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
                 <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" />
               </svg>
               <input
                 ref={searchInputRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
                 placeholder="Search tyres, wheels, sizes, brands…"
-                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', color: '#16211B', background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', color: '#1A1D23', background: 'transparent' }}
               />
             </form>
 
@@ -513,14 +514,14 @@ export default function Navbar() {
                       background: r.image ? `url(${r.image}) center/contain no-repeat #F0EFE9`
                         : 'repeating-linear-gradient(45deg,#F0EFE9,#F0EFE9 5px,#E7E5DE 5px,#E7E5DE 10px)',
                     }} />
-                    <span style={{ flex: 1, fontSize: '14px', color: '#16211B', fontWeight: 500 }}>{r.name}</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9DB0A5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                    <span style={{ flex: 1, fontSize: '14px', color: '#1A1D23', fontWeight: 500 }}>{r.name}</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9EA3AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
                       <path d="M9 6l6 6-6 6" />
                     </svg>
                   </Link>
                 ))}
                 <Link href={sizeOrTextHref(query.trim())} onClick={() => setSearchOpen(false)}
-                  style={{ display: 'block', margin: '14px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '11px', color: '#076330', textDecoration: 'none', cursor: 'pointer' }}
+                  style={{ display: 'block', margin: '14px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '11px', color: '#2A2E36', textDecoration: 'none', cursor: 'pointer' }}
                 >
                   See all {resultCount} results →
                 </Link>
@@ -528,12 +529,12 @@ export default function Navbar() {
             )}
 
             {showNoMatches && (
-              <div style={{ marginTop: '20px', padding: '16px 4px 4px', textAlign: 'center', color: '#6E7C74', fontSize: '13px', animation: 'novaIn .22s ease both' }}>
+              <div style={{ marginTop: '20px', padding: '16px 4px 4px', textAlign: 'center', color: '#6B7280', fontSize: '13px', animation: 'novaIn .22s ease both' }}>
                 No matches for &quot;{query.trim()}&quot;
               </div>
             )}
 
-            <p style={{ margin: '18px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '10.5px', color: '#9DB0A5' }}>
+            <p style={{ margin: '18px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '10.5px', color: '#9EA3AD' }}>
               Press Esc to close
             </p>
           </div>

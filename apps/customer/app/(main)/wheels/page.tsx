@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'   // always reflect live PageSEO from adm
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata('wheels', {
-    title: 'Find Wheels — Nova Tyres',
+    title: 'Find Wheels — Gripwell',
     description: 'Search by brand, diameter and finish. Find the perfect alloy wheels for your vehicle from our huge range.',
   })
 }

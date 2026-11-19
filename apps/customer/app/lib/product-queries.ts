@@ -6,7 +6,7 @@ import { prisma, getCache, setCache, TTL } from '@nova/database'
    The product pages are React Server Components and must query the database
    *directly* — never by fetching their own `/api/...` HTTP route. On Cloudflare
    the Worker cannot reach `http://localhost:3000`, so a self-fetch silently
-   fell back to demo data (every tyre page rendered the UltraContact demo). The
+   fell back to demo data (every tyre page rendered the Citadel demo). The
    same functions back the `/api/tyres|wheels/[slug]` routes, so there is one
    source of truth.
    ──────────────────────────────────────────────────────────────────────────── */

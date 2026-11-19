@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · pages
+   Gripwell — Admin · pages
    Real: Overview, Stores, Staff (ported from pages-core.jsx)
    Placeholder: the remaining 10 tabs (ported progressively)
    ============================================================ */
@@ -40,12 +40,12 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
   return (
     <div className="page page-enter">
       {ctx.role === "manager" && (
-        <div className="role-banner"><Icon name="store" /><span>You're viewing <b>{ctx.store}</b> as Store Manager. Figures are scoped to your store.</span></div>
+        <div className="role-banner"><Icon name="store" /><span>You’re viewing <b>{ctx.store}</b> as Store Manager. Figures are scoped to your store.</span></div>
       )}
       <div className="pagehead">
         <div className="ph-txt">
-          <h2>Good morning, {ctx.firstName} 👋</h2>
-          <p>Here's what's happening {ctx.role === "manager" ? "at " + ctx.store : "across your stores"} today — {new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" })}.</p>
+          <h2>Good morning, {ctx.firstName} ðŸ'‹</h2>
+          <p>Here's what’s happening {ctx.role === "manager" ? "at " + ctx.store : "across your stores"} today — {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}.</p>
         </div>
         <div className="ph-actions"></div>
       </div>
@@ -65,7 +65,7 @@ export function OverviewPage({ ctx, nav }: { ctx: Ctx; nav: (p: string) => void 
 
             <div className="hero-card balance">
               <span className="hc-label">Total revenue</span>
-              <div className="hc-val sm">A${totalRevenue.toFixed(0)}</div>
+              <div className="hc-val sm">£{totalRevenue.toFixed(0)}</div>
               <div className="hc-spark">
                 <svg viewBox="0 0 120 40" preserveAspectRatio="none">
                   <polyline fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -178,7 +178,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [creating, setCreating] = useState<any>(null);
   const [savingNew, setSavingNew] = useState(false);
 
-  // ── Per-store fitting prices (loaded when the store drawer opens) ──────────
+  // —€—€ Per-store fitting prices (loaded when the store drawer opens) —€—€—€—€—€—€—€—€—€—€
   const [fitPrices, setFitPrices] = useState<Record<string, number> | null>(null);
   const [fitLoading, setFitLoading] = useState(false);
   const [fitSaving, setFitSaving] = useState(false);
@@ -207,7 +207,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
       });
       toast({ kind: "ok", title: "Fitting prices saved", body: `${active.name} fitting rates updated.` });
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't save prices", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t save prices", body: e?.message || "Please try again." });
     } finally { setFitSaving(false); }
   }
 
@@ -226,7 +226,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
       await ctx.refetch?.();
       setCreating(null);
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't add store", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t add store", body: e?.message || "Please try again." });
     } finally { setSavingNew(false); }
   }
 
@@ -239,7 +239,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setActive((a: any) => a ? { ...a, status: open ? "closed" : "open" } : a);   // rollback
-      toast({ kind: "err", title: "Couldn't update store", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t update store", body: e?.message || "Please try again." });
     }
   }
 
@@ -253,7 +253,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
       <div className="pagehead">
         <div className="ph-txt">
           <h2>Stores</h2>
-          <p>{ctx.role === "manager" ? "Your store overview and live status." : "Manage all Nova Tyres locations, hours, capacity and managers."}</p>
+          <p>{ctx.role === "manager" ? "Your store overview and live status." : "Manage all Gripwell locations, hours, capacity and managers."}</p>
         </div>
         {ctx.role !== "manager" && (
           <div className="ph-actions">
@@ -331,11 +331,11 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
           </div>
           <div className="vstack" style={{ gap: 2 }}>
             <div className="set-row"><Icon name="phone" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.phone}</b><span>Store phone</span></div></div>
-            <div className="set-row"><Icon name="clock" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.opens} – {active.closes}</b><span>Opening hours (Mon–Fri)</span></div></div>
+            <div className="set-row"><Icon name="clock" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.opens} — {active.closes}</b><span>Opening hours (Mon—Fri)</span></div></div>
             <div className="set-row"><Icon name="users" style={{ width: 18, color: "var(--ink-3)" }} /><div className="set-txt"><b>{active.staff} team members</b><span>{active.bays} bays operating</span></div></div>
           </div>
 
-          {/* ── Fitting service prices (per tyre/wheel, by vehicle type) ── */}
+          {/* —€—€ Fitting service prices (per tyre/wheel, by vehicle type) —€—€ */}
           <hr className="hr" />
           <div className="field">
             <label>Fitting service prices <span style={{ color: "var(--ink-3)", fontWeight: 400 }}>· per tyre/wheel, by vehicle</span></label>
@@ -355,7 +355,7 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
                           type="number" min="0" step="1"
                           value={fitPrices[v.id] ?? ""}
                           onChange={e => setFitPrices(p => ({ ...(p || {}), [v.id]: e.target.value === "" ? 0 : Number(e.target.value) }))}
-                          style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: "10px 0", fontSize: 15, fontWeight: 700, color: "var(--ink-1, #16211b)" }}
+                          style={{ width: "100%", border: "none", outline: "none", background: "transparent", padding: "10px 0", fontSize: 15, fontWeight: 700, color: "var(--ink-1, #1A1D23)" }}
                         />
                       </div>
                     </div>
@@ -374,25 +374,25 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
 
       {confirmClose && (
         <ConfirmModal danger title={"Close " + confirmClose.name + "?"}
-          body="Customers won't be able to book online and the store will show as Closed until reopened."
+          body="Customers won’t be able to book online and the store will show as Closed until reopened."
           confirmLabel="Close store" icon="lock"
           onConfirm={() => { setStoreOpen(confirmClose, false); setConfirmClose(null); }}
           onClose={() => setConfirmClose(null)} />
       )}
 
       {creating && (
-        <Drawer title="Add a store" sub="Create a new Nova Tyres location" onClose={() => setCreating(null)}
+        <Drawer title="Add a store" sub="Create a new Gripwell location" onClose={() => setCreating(null)}
           foot={<React.Fragment>
             <button className="btn ghost" style={{ flex: 1 }} onClick={() => setCreating(null)}>Cancel</button>
             <button className="btn" style={{ flex: 1 }} disabled={savingNew} onClick={createStore}><Icon name="check" />{savingNew ? "Adding…" : "Add store"}</button>
           </React.Fragment>}>
-          <div className="field"><label>Store name</label><input value={creating.name} onChange={(e) => setCreating({ ...creating, name: e.target.value })} placeholder="Nova Tyres Adelaide" /></div>
+          <div className="field"><label>Store name</label><input value={creating.name} onChange={(e) => setCreating({ ...creating, name: e.target.value })} placeholder="Gripwell Adelaide" /></div>
           <div className="field"><label>Street address</label><input value={creating.address} onChange={(e) => setCreating({ ...creating, address: e.target.value })} placeholder="123 Main St" /></div>
           <div className="form-grid">
             <div className="field"><label>Suburb</label><input value={creating.suburb} onChange={(e) => setCreating({ ...creating, suburb: e.target.value })} placeholder="Adelaide" /></div>
             <div className="field"><label>State</label>
               <select value={creating.state} onChange={(e) => setCreating({ ...creating, state: e.target.value })}>
-                {["SA", "VIC", "NSW", "QLD", "WA", "TAS", "NT", "ACT"].map((s) => <option key={s}>{s}</option>)}
+                {["London", "Greater London", "Surrey", "Kent", "Essex", "Hertfordshire", "Berkshire", "Middlesex"].map((s) => <option key={s}>{s}</option>)}
               </select>
             </div>
           </div>
@@ -400,12 +400,12 @@ export function StoresPage({ ctx }: { ctx: Ctx; nav?: any }) {
             <div className="field"><label>Postcode</label><input value={creating.postcode} onChange={(e) => setCreating({ ...creating, postcode: e.target.value })} placeholder="5000" /></div>
             <div className="field"><label>Phone</label><input value={creating.phone} onChange={(e) => setCreating({ ...creating, phone: e.target.value })} placeholder="08 8000 0000" /></div>
           </div>
-          <div className="field"><label>Email</label><input value={creating.email} onChange={(e) => setCreating({ ...creating, email: e.target.value })} placeholder="adelaide@novatyres.com.au" /></div>
+          <div className="field"><label>Email</label><input value={creating.email} onChange={(e) => setCreating({ ...creating, email: e.target.value })} placeholder="adelaide@gripwell.demo" /></div>
           <div className="form-grid">
             <div className="field"><label>Latitude</label><input value={creating.latitude} onChange={(e) => setCreating({ ...creating, latitude: e.target.value })} placeholder="-34.9285" /></div>
             <div className="field"><label>Longitude</label><input value={creating.longitude} onChange={(e) => setCreating({ ...creating, longitude: e.target.value })} placeholder="138.6007" /></div>
           </div>
-          <p className="muted" style={{ fontSize: 12, marginTop: 2 }}><Icon name="info" style={{ width: 13, height: 13, verticalAlign: "-2px" }} /> Copy coordinates from Google Maps (right-click the location → the lat/long is at the top). Opening hours are set from the store editor afterwards.</p>
+          <p className="muted" style={{ fontSize: 12, marginTop: 2 }}><Icon name="info" style={{ width: 13, height: 13, verticalAlign: "-2px" }} /> Copy coordinates from Google Maps (right-click the location â†' the lat/long is at the top). Opening hours are set from the store editor afterwards.</p>
         </Drawer>
       )}
     </div>
@@ -421,13 +421,13 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
   const [rows, setRows] = useState<any[]>(base);
   const [del, setDel] = useState<any>(null);
   const [add, setAdd] = useState(false);
-  const [form, setForm] = useState<any>({ name: "", email: "", role: "Mechanic", store: ctx.role === "manager" ? ctx.store : "Springvale", loginId: "", tempPass: "" });
+  const [form, setForm] = useState<any>({ name: "", email: "", role: "Mechanic", store: ctx.role === "manager" ? ctx.store : "Camden", loginId: "", tempPass: "" });
   const [creds, setCreds] = useState<any>(null);
 
   const slug = (s: string) => s.toLowerCase().replace(/[^a-z]+/g, "");
   const genId = (name: string, store: string) => { const st = (D.stores.find((x: any) => x.name === store) || {}).id || slug(store).slice(0, 6); const fn = slug((name || "").split(" ")[0]) || "user"; return "nova-" + st + "-" + fn; };
-  const genPass = () => ["Tyre", "Nova", "Brake", "Wheel", "Torque"][Math.floor(Math.random() * 5)] + "-" + Math.floor(1000 + Math.random() * 9000);
-  const openAdd = () => { setForm({ name: "", email: "", role: "Mechanic", store: ctx.role === "manager" ? ctx.store : "Springvale", loginId: "", tempPass: genPass() }); setAdd(true); };
+  const genPass = () => ["Tyre", "Gripwell", "Brake", "Wheel", "Torque"][Math.floor(Math.random() * 5)] + "-" + Math.floor(1000 + Math.random() * 9000);
+  const openAdd = () => { setForm({ name: "", email: "", role: "Mechanic", store: ctx.role === "manager" ? ctx.store : "Camden", loginId: "", tempPass: genPass() }); setAdd(true); };
   const copy = (t: string) => { try { navigator.clipboard.writeText(t); } catch (e) {} toast({ kind: "ok", title: "Copied", body: t }); };
 
   const roles = ["all", "Store Manager", "Senior Mechanic", "Mechanic", "Front Desk"];
@@ -453,7 +453,7 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
       toast({ kind: "ok", title: "Login issued", body: form.name + " can now sign in with their email." });
       ctx.refetch?.();
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't create staff", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t create staff", body: e?.message || "Please try again." });
     }
   }
   function resetLogin(s: any) { setCreds({ name: s.name, loginId: s.email || genId(s.name, s.store), tempPass: genPass(), isNew: false }); }
@@ -468,7 +468,7 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setRows(prevRows);
-      toast({ kind: "err", title: "Couldn't remove", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t remove", body: e?.message || "Please try again." });
     }
   }
 
@@ -524,7 +524,7 @@ export function StaffPage({ ctx }: { ctx: Ctx; nav?: any }) {
           </div>
           <div className="modal-body">
             <div className="field"><label>Full name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Alex Taylor" /></div>
-            <div className="field"><label>Contact email <span className="opt">(optional)</span></label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="alex@novatyres.au" /></div>
+            <div className="field"><label>Contact email <span className="opt">(optional)</span></label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="alex@gripwell.au" /></div>
             <div className="form-grid">
               <div className="field"><label>Role</label>
                 <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>

@@ -114,9 +114,9 @@ function AuthPage() {
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '11px', textDecoration: 'none' }}>
             <div style={{ width: '30px', height: '30px', background: '#fff', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '11px', height: '11px', border: '3px solid #E8572A', borderRadius: '50%' }} />
+              <div style={{ width: '11px', height: '11px', border: '3px solid #FF6A1A', borderRadius: '50%' }} />
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '0.16em', color: '#fff' }}>NOVA TYRES</span>
+            <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '0.16em', color: '#fff' }}>Gripwell</span>
           </Link>
           <Link href="/" style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -139,7 +139,7 @@ function AuthPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <span style={{ width: '26px', height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,0.28)' }} />
             <span style={{ width: '26px', height: '5px', borderRadius: '999px', background: 'rgba(255,255,255,0.28)' }} />
-            <span style={{ width: '40px', height: '5px', borderRadius: '999px', background: '#E8572A' }} />
+            <span style={{ width: '40px', height: '5px', borderRadius: '999px', background: '#FF6A1A' }} />
           </div>
         </div>
       </section>
@@ -149,7 +149,7 @@ function AuthPage() {
         <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '380px' }}>
 
           <h1 style={{ margin: '0 0 30px', textAlign: 'center', fontSize: '28px', fontWeight: 700, letterSpacing: '-0.01em', color: '#111' }}>
-            {isSignup ? 'Create an account' : 'Sign in to Nova Tyres'}
+            {isSignup ? 'Create an account' : 'Sign in to Gripwell'}
           </h1>
 
           {/* Error */}
@@ -222,7 +222,7 @@ function AuthPage() {
 
           {/* Submit */}
           <button type="submit" disabled={loading} style={{
-            width: '100%', height: '54px', background: '#E8572A', color: '#fff', border: 'none',
+            width: '100%', height: '54px', background: '#FF6A1A', color: '#fff', border: 'none',
             borderRadius: '12px', fontFamily: "'DM Sans', sans-serif", fontSize: '15.5px', fontWeight: 700,
             letterSpacing: '0.01em', cursor: loading ? 'wait' : 'pointer',
             boxShadow: '0 6px 18px rgba(232,87,42,0.3)', opacity: loading ? 0.7 : 1,
@@ -239,7 +239,7 @@ function AuthPage() {
           </div>
 
           {/* Social buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: isSignup ? '1fr 1fr' : '1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
             <button type="button" onClick={handleGoogleLogin} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', height: '50px',
               background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', cursor: 'pointer',
@@ -247,16 +247,7 @@ function AuthPage() {
               transition: 'background .16s ease, border-color .16s ease',
             }}>
               <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8a12 12 0 110-24c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 1024 44c11 0 20-8.9 20-20 0-1.3-.1-2.4-.4-3.5z" /><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12 12 0 0124 12c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 006.3 14.7z" /><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0124 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" /><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 01-4.1 5.6l6.2 5.2C39.6 36 44 30.7 44 24c0-1.3-.1-2.4-.4-3.5z" /></svg>
-              Google
-            </button>
-            <button type="button" style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', height: '50px',
-              background: '#fff', border: '1px solid #E2E8F0', borderRadius: '12px', cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif", fontSize: '14.5px', fontWeight: 600, color: '#111',
-              transition: 'background .16s ease, border-color .16s ease',
-            }}>
-              <svg width="16" height="18" viewBox="0 0 24 24" fill="#111"><path d="M17.05 12.04c-.02-2.13 1.74-3.15 1.82-3.2-.99-1.45-2.54-1.65-3.09-1.67-1.32-.13-2.57.77-3.24.77-.66 0-1.69-.75-2.78-.73-1.43.02-2.75.83-3.49 2.11-1.49 2.58-.38 6.4 1.07 8.49.71 1.02 1.56 2.17 2.66 2.13 1.07-.04 1.47-.69 2.77-.69 1.29 0 1.65.69 2.78.67 1.15-.02 1.88-1.04 2.58-2.07.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.41zM14.9 5.57c.59-.72.99-1.71.88-2.71-.85.03-1.88.57-2.49 1.28-.55.63-1.03 1.64-.9 2.61.95.07 1.92-.48 2.51-1.18z" /></svg>
-              Apple
+              Continue with Google
             </button>
           </div>
 
@@ -264,7 +255,7 @@ function AuthPage() {
           <p style={{ margin: '26px 0 0', textAlign: 'center', fontSize: '14px', color: '#64748B', fontWeight: 400 }}>
             {isSignup ? 'Already have an account?' : "Don't have an account?"}
             <button type="button" onClick={() => { setTab(isSignup ? 'signin' : 'signup'); setError(null); setPw('') }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, color: '#E8572A', padding: '0 0 0 4px' }}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 700, color: '#FF6A1A', padding: '0 0 0 4px' }}>
               {isSignup ? 'Log in' : 'Sign Up now'}
             </button>
           </p>

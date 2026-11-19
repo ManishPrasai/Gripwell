@@ -10,10 +10,9 @@ const WIDTHS   = ['165','175','185','195','205','215','225','235','245','255','2
 const PROFILES = ['30','35','40','45','50','55','60','65','70','75','80']
 const RIMS     = ['13','14','15','16','17','18','19','20','21','22']
 
-/* Brands actually carried in the tyre catalogue. The design also listed Nitto,
-   Atlander and Sonix; the first two aren't stocked and Sonix is a wheel brand,
-   so all three would have filtered to nothing. */
-const BRANDS = ['All brands', 'BF Goodrich', 'Continental', 'Hankook', 'Maxxis', 'Nova', 'Pirelli', 'Yokohama']
+/* Brands actually carried in the tyre catalogue (all fictional). Wheel
+   brands live on /wheels, so listing them here would filter to nothing. */
+const BRANDS = ['All brands', 'Brackley', 'Meridian', 'Kova', 'Terrain X', 'Corsaro', 'Zetland']
 
 /* Only the four types the catalogue can actually serve (TyreType enum). */
 const TYPES = [
@@ -24,7 +23,7 @@ const TYPES = [
   { label: 'Mud terrain', value: 'MUD_TERRAIN' },
 ]
 
-const RECENT_KEY = 'nova_recent_tyre_sizes'
+const RECENT_KEY = 'gw_recent_tyre_sizes'
 const RECENT_MAX = 4
 
 interface SizeCombo { width: number; profile: number; rimDiameter: number }

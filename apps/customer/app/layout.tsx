@@ -41,8 +41,18 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title:       "Nova Tyres — Australia's Best Tyre Deals",
-  description: 'Buy tyres online and get them fitted same day at one of our 7 stores across VIC and NSW.',
+  title:       'Gripwell — Tyres & Wheels, London',
+  description: 'Buy tyres and wheels online and get them fitted same day at one of our 7 stores across London.',
+  icons: {
+    icon: [
+      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/brand/apple-touch-icon.png',
+  },
+  manifest: '/brand/site.webmanifest',
+  openGraph: { images: [{ url: '/brand/og-image.png', width: 1200, height: 630 }] },
+  twitter:   { card: 'summary_large_image', images: ['/brand/og-image.png'] },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

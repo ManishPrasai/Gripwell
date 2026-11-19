@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin v2 · bottom-nav app shell (ported from app-v2.jsx)
+   Gripwell â" Admin v2 · bottom-nav app shell (ported from app-v2.jsx)
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -54,7 +54,7 @@ const PAGES_V2: Record<string, any> = {
 
 const ROLES_V2: Record<string, any> = {
   admin: { name: "Alex Morgan", initials: "AM", store: null, label: "Super Admin", sub: "All stores · full access" },
-  manager: { name: "Daniel Mercer", initials: "DM", store: "Springvale", label: "Store Manager", sub: "Springvale · VIC" },
+  manager: { name: "Daniel Mercer", initials: "DM", store: "Camden", label: "Store Manager", sub: "Camden · North London" },
 };
 
 const notifIco: Record<string, [string, string, string]> = {
@@ -135,7 +135,7 @@ function ForcePasswordChange({ onDone }: { onDone: () => void }) {
     setBusy(true); setErr("");
     try {
       await adminFetch("/api/auth/change-password", "POST", { newPassword: pw });
-      toast({ kind: "ok", title: "Password updated", body: "Welcome to Nova Tyres Admin." });
+      toast({ kind: "ok", title: "Password updated", body: "Welcome to Gripwell Admin." });
       onDone();
     } catch (e: any) {
       setErr(e?.message || "Couldn't update password."); setBusy(false);
@@ -186,7 +186,7 @@ export default function AppV2() {
 
   /* The heavy dataset (13 queries, ~42 KB) is no longer interval-polled. It
      loads once, revalidates on tab focus/reconnect, and `refetch()` (exposed on
-     ctx) pulls it again instantly after any write — so user actions never wait. */
+     ctx) pulls it again instantly after any write â" so user actions never wait. */
   const { data: liveData, error: dataError, mutate: refetch } = useSWR(
     sessionAdmin ? '/api/admin/data' : null,
     swrFetcher,
@@ -199,8 +199,8 @@ export default function AppV2() {
   );
 
   /* The cheap heartbeat. Polls /api/admin/pulse (a few COUNTs, ~0.2 KB) every
-     60s and, only when its signature changes — a new message, booking, order,
-     review or enquiry — triggers ONE full refetch of the heavy data above.
+     60s and, only when its signature changes â" a new message, booking, order,
+     review or enquiry â" triggers ONE full refetch of the heavy data above.
      This replaced a 60s poll of the full endpoint: ~90% less data and ~80%
      fewer queries per minute, while the dashboard stays just as live. SWR
      already pauses polling on a hidden tab, so a backgrounded dashboard is
@@ -218,7 +218,7 @@ export default function AppV2() {
     if (sig !== lastSig.current) { lastSig.current = sig; refetch(); }
   }, [pulse, refetch]);
 
-  /* 30-min inactivity logout — resets on any mouse/keyboard/touch event.
+  /* 30-min inactivity logout â" resets on any mouse/keyboard/touch event.
      Gated by IDLE_LOGOUT_ENABLED (currently off); flip that flag to re-enable. */
   useEffect(() => {
     if (!IDLE_LOGOUT_ENABLED) return;
@@ -278,7 +278,7 @@ export default function AppV2() {
 
   const R = { ...R_mock, name: realName, initials: realInitials, store: realStore };
 
-  /* Merge real data with NOVA mock fallback — pages do `const D = ctx.D || NOVA` */
+  /* Merge real data with NOVA mock fallback â" pages do `const D = ctx.D || NOVA` */
   const D = liveData
     ? { ...NOVA, ...liveData }
     : NOVA;
@@ -286,7 +286,7 @@ export default function AppV2() {
   const ctx = {
     role, name: R.name, firstName: R.name.split(" ")[0], initials: R.initials, store: R.store,
     theme, setTheme, mini: false, setMini: () => {}, go: setPage,
-    D,  /* real data — pages use ctx.D instead of importing NOVA directly */
+    D,  /* real data â" pages use ctx.D instead of importing NOVA directly */
     refetch,  /* call after any write to revalidate ctx.D from the server */
     scopeStores: (arr: any[]) => role === "manager" ? arr.filter((s) => s.name === R.store) : arr,
     scopeBy: (arr: any[], key: string) => role === "manager" ? arr.filter((x) => x[key] === R.store) : arr,
@@ -338,7 +338,7 @@ export default function AppV2() {
       {/* TOPBAR */}
       <header className="topbar">
         <div className="tb-left">
-          <span className="tb-breadcrumb">Nova Tyres › {section || title}</span>
+          <span className="tb-breadcrumb">Gripwell › {section || title}</span>
           <div className="tb-title"><h1>{title}</h1></div>
         </div>
 
@@ -374,7 +374,7 @@ export default function AppV2() {
         </div>
       </header>
 
-      {/* IDLE WARNING BANNER — appears at 25 min, dismissed on any activity */}
+      {/* IDLE WARNING BANNER â" appears at 25 min, dismissed on any activity */}
       {idleWarning && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 99999,

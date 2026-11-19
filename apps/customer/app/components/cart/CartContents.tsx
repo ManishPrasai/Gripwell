@@ -7,7 +7,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useCart } from '../../context/CartContext'
 import {
-  VEHICLE_TYPES, fittingRate, computeTotals,
+  VEHICLE_TYPES, fittingRate, quoteOrder, fittingPositions, money,
   type VehicleType, type FulfilMethod,
 } from '../../../lib/fitting'
 import { C, FONT } from '../shop/tokens'
@@ -22,9 +22,6 @@ const StoreMap = dynamic(() => import('../locations/StoreMap'), {
 const PAYMENT_LOGOS = [
   { name: 'VISA',       src: '/images/footer/payment-visa.png' },
   { name: 'Mastercard', src: '/images/footer/payment-mastercard.png' },
-  { name: 'Apple Pay',  src: '/images/footer/payment-applepay.png' },
-  { name: 'Afterpay',   src: '/images/footer/payment-afterpay.png' },
-  { name: 'Klarna',     src: '/images/footer/payment-klarna.png' },
   { name: 'Stripe',     src: '/images/footer/payment-stripe.png' },
 ]
 
@@ -36,7 +33,6 @@ interface StoreData {
   fittingPrices?: Partial<Record<VehicleType, number>>
 }
 
-const money = (n: number) => `A$${n.toFixed(2)}`
 
 /* ── icons ─────────────────────────────────────────────────────────────────── */
 const S = { fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round' } as const
@@ -79,7 +75,7 @@ const cardStyle: React.CSSProperties = {
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 export default function CartContents() {
-  const { items, updateQty, removeItem, cartCount, cartTotal } = useCart()
+  const { items, updateQty, removeItem, cartCount } = useCart()
 
   const [method,        setMethod]        = useState<FulfilMethod>('fit')
   const [vehicleType,   setVehicleType]   = useState<VehicleType>('passenger')
@@ -88,9 +84,13 @@ export default function CartContents() {
   const [storesLoading, setStoresLoading] = useState(true)
   const [fitCount,      setFitCount]      = useState<number | null>(null) // null = fit all
 
-  /* How many tyres/wheels to fit now; the rest go home. Clamped to the cart. */
-  const fitQty   = fitCount === null ? cartCount : Math.max(0, Math.min(fitCount, cartCount))
-  const takeHome = cartCount - fitQty
+  /* Fitting is per wheel position: 4 tyres + 4 wheels is 4 positions, not 8.
+     How many positions to fit now; the rest go home. Clamped to the basket. */
+  const lines     = items.map(i => ({ productType: i.productType, quantity: i.qty, unitPrice: i.price }))
+  const positions = fittingPositions(lines)
+  const fitQty    = fitCount === null ? positions : Math.max(0, Math.min(fitCount, positions))
+  const takeHome  = positions - fitQty
+  const perUnit   = items.some(i => i.productType === 'wheel') ? 'wheel' : 'tyre'
 
   useEffect(() => {
     fetch('/api/stores')
@@ -103,14 +103,15 @@ export default function CartContents() {
   /* Persist the fitting choice so /checkout can charge the right total server-side. */
   useEffect(() => {
     try {
-      localStorage.setItem('nova_fitting', JSON.stringify({ method, vehicleType, storeId: selectedStore, fitCount: fitQty }))
+      const sp = stores.find(s => s.id === selectedStore)?.fittingPrices ?? null
+      localStorage.setItem('gw_fitting', JSON.stringify({ method, vehicleType, storeId: selectedStore, fitCount: fitQty, rate: fittingRate(vehicleType, sp) }))
     } catch {}
-  }, [method, vehicleType, selectedStore, fitQty])
+  }, [method, vehicleType, selectedStore, fitQty, stores])
 
   function handleStoreSelect(store: StoreData) {
     setSelectedStore(store.id)
     try {
-      localStorage.setItem('nova_selected_store', JSON.stringify({
+      localStorage.setItem('gw_selected_store', JSON.stringify({
         id: store.id, name: store.name, address: store.address, suburb: store.suburb,
         state: store.state, postcode: store.postcode, phone: store.phone ?? '',
       }))
@@ -122,8 +123,9 @@ export default function CartContents() {
   const storePrices = active?.fittingPrices ?? null
   const rate = fittingRate(vehicleType, storePrices)
   const totals = useMemo(
-    () => computeTotals({ subtotal: cartTotal, itemCount: fitQty, fittingRate: rate, fit: method === 'fit' }),
-    [cartTotal, fitQty, rate, method],
+    () => quoteOrder({ lines, fittingRate: rate, fit: method === 'fit', fitCount: fitQty }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [items, fitQty, rate, method],
   )
 
   const isFit = method === 'fit'
@@ -256,7 +258,7 @@ export default function CartContents() {
                       Drive in, we do everything — fitting, balancing and new valves. About an hour.
                     </span>
                     <span style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', fontWeight: 800, color: C.green }}>
-                      + {money(rate)} per tyre
+                      + {money(rate)} per {perUnit}
                     </span>
                   </button>
 
@@ -301,7 +303,7 @@ export default function CartContents() {
                             <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '13.5px', fontWeight: 800, color: C.ink }}>{v.label}</span>
                               <span style={{ fontSize: '13px', fontWeight: 800, color: C.green }}>
-                                ${fittingRate(v.id, storePrices)}
+                                {money(fittingRate(v.id, storePrices), { whole: true })}
                               </span>
                             </span>
                             <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: C.muted2 }}>{v.desc}</span>
@@ -327,8 +329,8 @@ export default function CartContents() {
                           <button type="button" className="ct-qty-btn" aria-label="Fit fewer" onClick={() => setFitCount(Math.max(0, fitQty - 1))} disabled={fitQty <= 0}
                             style={{ width: '38px', height: '38px', background: '#fff', border: 'none', fontSize: '17px', fontWeight: 700, color: C.ink, cursor: fitQty <= 0 ? 'not-allowed' : 'pointer', opacity: fitQty <= 0 ? 0.4 : 1 }}>−</button>
                           <span style={{ width: '42px', textAlign: 'center', fontSize: '15px', fontWeight: 800, color: C.ink }}>{fitQty}</span>
-                          <button type="button" className="ct-qty-btn" aria-label="Fit more" onClick={() => setFitCount(Math.min(cartCount, fitQty + 1))} disabled={fitQty >= cartCount}
-                            style={{ width: '38px', height: '38px', background: '#fff', border: 'none', fontSize: '17px', fontWeight: 700, color: C.ink, cursor: fitQty >= cartCount ? 'not-allowed' : 'pointer', opacity: fitQty >= cartCount ? 0.4 : 1 }}>+</button>
+                          <button type="button" className="ct-qty-btn" aria-label="Fit more" onClick={() => setFitCount(Math.min(positions, fitQty + 1))} disabled={fitQty >= positions}
+                            style={{ width: '38px', height: '38px', background: '#fff', border: 'none', fontSize: '17px', fontWeight: 700, color: C.ink, cursor: fitQty >= positions ? 'not-allowed' : 'pointer', opacity: fitQty >= positions ? 0.4 : 1 }}>+</button>
                         </div>
                       </div>
                     )}
@@ -341,7 +343,7 @@ export default function CartContents() {
                 <StepHead
                   n={3}
                   title={isFit ? 'Where should we fit them?' : 'Where will you collect them?'}
-                  sub={isFit ? 'Pick the store that suits you — tap a pin or a name.' : 'Pick a store and we’ll let you know when your order is ready.'}
+                  sub={isFit ? 'Pick the store that suits you — tap a pin or a name.' : "Pick a store and we'll let you know when your order is ready."}
                 />
 
                 <div className="ct-store-layout">
@@ -428,11 +430,11 @@ export default function CartContents() {
                   <span style={{ fontSize: '15px', fontWeight: 800, color: C.ink }}>Total</span>
                   <span style={{ font: `800 30px ${FONT}`, color: C.green }}>{money(totals.total)}</span>
                 </div>
-                <div style={{ fontSize: '12.5px', color: C.muted2, marginTop: '4px', textAlign: 'right' }}>GST included</div>
+                <div style={{ fontSize: '12.5px', color: C.muted2, marginTop: '4px', textAlign: 'right' }}>Includes {money(totals.vat)} VAT</div>
 
                 <div style={{ background: C.wash, borderRadius: '8px', padding: '12px', marginTop: '12px', fontSize: '13px', color: C.ink3, lineHeight: 1.55 }}>
                   {active
-                    ? <><strong style={{ color: C.ink }}>{active.name}</strong> — {isFit ? `fitting ${fitQty} of ${cartCount}, about an hour.` : 'ready for collection once we confirm.'}</>
+                    ? <><strong style={{ color: C.ink }}>{active.name}</strong> — {isFit ? `fitting ${fitQty} of ${positions} ${perUnit}${positions === 1 ? '' : 's'}, about an hour.` : 'ready for collection once we confirm.'}</>
                     : <>Pick a store above to confirm {isFit ? 'fitting' : 'collection'}.</>}
                 </div>
 

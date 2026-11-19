@@ -2,29 +2,21 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { C, FONT, CONTAINER, KICKER } from '../shop/tokens'
 
-/* All twelve marks the design calls for — every one has real artwork in
-   public/images/brands, so no tile falls back to a placeholder.
-
-   `cat` routes each tile to the catalogue that actually stocks it: tyre brands
-   to /tyres/results, wheel brands to /wheels/results. Nitto and Atlander are
-   marks we serve but hold no stock for, so they open the unfiltered tyre grid
-   rather than an empty brand filter. */
-const BRANDS: { name: string; src: string; cat: 'tyres' | 'wheels' | 'none' }[] = [
-  { name: 'Continental', src: '/images/brands/continental.svg', cat: 'tyres' },
-  { name: 'Pirelli',     src: '/images/brands/pirelli.svg',     cat: 'tyres' },
-  { name: 'Nitto',       src: '/images/brands/nitto.svg',       cat: 'none' },
-  { name: 'Yokohama',    src: '/images/brands/yokohama.svg',    cat: 'tyres' },
-  { name: 'Maxxis',      src: '/images/brands/maxxis.svg',      cat: 'tyres' },
-  { name: 'Atlander',    src: '/images/brands/atlander.svg',    cat: 'none' },
-  { name: 'King Wheels', src: '/images/brands/king-wheels.svg', cat: 'wheels' },
-  { name: 'ROH',         src: '/images/brands/roh.svg',         cat: 'wheels' },
-  { name: 'Black Rhino', src: '/images/brands/Black Rino.svg',  cat: 'wheels' },
-  { name: 'Sonix',       src: '/images/brands/sonix.svg',       cat: 'wheels' },
-  { name: 'BF Goodrich', src: '/images/brands/bfgoodrich.svg',  cat: 'tyres' },
-  { name: 'Hankook',     src: '/images/brands/hankook.svg',     cat: 'tyres' },
+/* Every brand we stock, as a text wordmark (no manufacturer artwork).
+   `cat` routes each tile to the catalogue that stocks it. */
+const BRANDS: { name: string; cat: 'tyres' | 'wheels' | 'none' }[] = [
+  { name: 'Meridian', cat: 'tyres' },
+  { name: 'Corsaro', cat: 'tyres' },
+  { name: 'Kova', cat: 'tyres' },
+  { name: 'Zetland', cat: 'tyres' },
+  { name: 'Terrain X', cat: 'tyres' },
+  { name: 'Brackley', cat: 'tyres' },
+  { name: 'Halden', cat: 'wheels' },
+  { name: 'Ostra', cat: 'wheels' },
+  { name: 'Marlow', cat: 'wheels' },
+  { name: 'Vanta', cat: 'wheels' },
 ]
 
 function brandHref(b: (typeof BRANDS)[number]): string {
@@ -66,8 +58,7 @@ export default function BrandsWeServe() {
                 textDecoration: 'none', transition: 'border-color .18s ease',
               }}
             >
-              <Image src={b.src} alt={b.name} width={110} height={30}
-                style={{ objectFit: 'contain', maxWidth: '100%', height: 'auto', maxHeight: '34px', width: 'auto' }} />
+              <span style={{ fontSize: '16px', fontFamily: "'DM Sans', sans-serif", fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1A1D23' }}>{b.name}</span>
             </Link>
           ))}
         </div>
