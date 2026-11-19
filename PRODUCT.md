@@ -36,16 +36,16 @@ What a template shop cannot honestly claim: this is a real system, not a mock-up
 Confirmed in code *(inferred from the repo)*:
 - Catalogue of tyres, wheels and tyre+wheel packages, searchable by size and by vehicle, with vehicle fitment data.
 - Cart (server-persisted when logged in) and Stripe Payment Intents checkout. Tyres default to a quantity of 4 and are capped at 8 per order, enforced in both cart and checkout API (`lib/order-rules.ts`).
-- Fitting booking against per-store slots, including guest booking. Fitting is priced per tyre by vehicle type (passenger, SUV/4x4, commercial, truck) (`lib/fitting.ts`).
+- Fitting booking against per-store slots, including guest booking. Fitting is priced per wheel position by vehicle type (passenger, SUV/4x4, commercial, truck), so 4 tyres + 4 wheels = 4 fittings (`lib/fitting.ts`).
+- Money: GBP, every price shown including 20% VAT (VAT is extracted, not added on top). `lib/fitting.ts` `quoteOrder` is the one quote used by the cart, the checkout and the payment route.
 - Warranty and refund claim form with checked file uploads; newsletter with double opt-in; email/password and Google login; account area; store locator with map; live chat.
 - Stack: Next.js 15 App Router, React 19, Tailwind v4, Radix/shadcn, Prisma/PostgreSQL, Stripe, Resend, Turborepo.
 
+Resolved (2026-11-19): GBP with prices including 20% VAT; fictional tyre and wheel brands only; Gripwell and London throughout the user-facing app.
+
 Open decisions, to settle before the redesign ships:
-- **Currency and tax.** `lib/fitting.ts` still uses A$ and adds 10% GST on top of product prices. A London store needs pounds, and UK shoppers expect prices shown including 20% VAT.
-- **"Fitting included".** The brief says shoppers value fitting being included. The code charges fitting separately, per tyre, on top. Decide whether prices include fitting or show it as a clear separate line.
-- ~~**Tyre brands.**~~ **Decided 2026-11-19:** fictional brands only (see Brand Commitments).
-- **Leftover old names.** Store display names in `lib/stores.ts` still say "Torque & Tread"; the package is still `@nova/database`.
-- **Deploy target.** The repo has signs of Vercel (project CLAUDE.md), Cloudflare (`opennextjs-cloudflare` scripts) and a Vultr VPS (`lib/site.ts`). Not yet settled.
+- **"Fitting included".** The brief says shoppers value fitting being included. The code shows fitting as a separate line (from £25 per wheel position), and the PDP total still leaves it out. Confirm the separate line and show the fitted total before checkout, or switch to fitted prices.
+- **Deploy target and database.** The repo has signs of Vercel (project CLAUDE.md), Cloudflare (`opennextjs-cloudflare` scripts) and a Vultr VPS (`lib/site.ts`). The only database is a local Docker Postgres; the old Supabase project is retired. A public demo needs a new hosted database. Not yet settled.
 
 ## Brand Commitments
 
