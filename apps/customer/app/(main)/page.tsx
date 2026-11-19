@@ -1,4 +1,3 @@
-import HeroSection       from '../components/home/HeroSection'
 import BestDeals         from '../components/home/BestDeals'
 import BrowseByCategory  from '../components/home/BrowseByCategory'
 import InStoreServices   from '../components/home/InStoreServices'
@@ -13,6 +12,7 @@ import MobileHome        from '../components/home/mobile/MobileHome'
 import { pageMetadata }  from '../../lib/seo'
 import { STORES }        from '../../lib/stores'
 import { loadBoard, type Board } from '../../lib/fitting-board'
+import { loadCars, loadStockedSizes } from '../../lib/catalogue'
 import DeparturesHero    from '../components/home/departures/DeparturesHero'
 import type { Metadata } from 'next'
 
@@ -27,8 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   // A failed load shows the board's own "call us" state, never a broken page.
-  const board: Board | null = await loadBoard().catch(e => { console.error('[home] board', e); return null })
-  const hero = <DeparturesHero board={board} />
+  const [board, sizes, cars] = await Promise.all([
+    loadBoard().catch((e): Board | null => { console.error('[home] board', e); return null }),
+    loadStockedSizes().catch(e => { console.error('[home] sizes', e); return [] }),
+    loadCars().catch(e => { console.error('[home] cars', e); return [] }),
+  ])
+  const hero = <DeparturesHero board={board} sizes={sizes} cars={cars} />
 
   return (
     <>
@@ -47,7 +51,6 @@ export default async function HomePage() {
       <div data-vw="desktop">
         <main style={{ background: '#FAF9F5', color: '#1A1D23' }}>
           {hero}
-          <HeroSection />
           <BestDeals />
           <BrowseByCategory />
           <InStoreServices />

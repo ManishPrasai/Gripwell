@@ -50,12 +50,39 @@ const TYRE_SIZES = [
   { width: 275, profile: 55, rimDiameter: 20, loadIndex: 117, speedRating: 'H', construction: 'R' },
 ]
 
+// Common UK cars and the factory size for the named trim. Car makes and
+// models are factual fitment data, not tyre brands or endorsements.
+const UK_CARS: { make: string; model: string; variant: string; from: number; to: number; size: string; body: string }[] = [
+  { make: 'Ford',          model: 'Focus',     variant: 'Zetec',       from: 2018, to: 2025, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Volkswagen',    model: 'Golf',      variant: 'Life',        from: 2020, to: 2025, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Volkswagen',    model: 'Golf GTI',  variant: 'GTI',         from: 2020, to: 2025, size: '225/40R18', body: 'Hatchback' },
+  { make: 'Vauxhall',      model: 'Astra',     variant: 'SE',          from: 2016, to: 2021, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Toyota',        model: 'Corolla',   variant: 'Icon',        from: 2019, to: 2025, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Skoda',         model: 'Octavia',   variant: 'SE',          from: 2020, to: 2025, size: '205/55R16', body: 'Estate' },
+  { make: 'Hyundai',       model: 'i30',       variant: 'SE Connect',  from: 2017, to: 2024, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Kia',           model: 'Ceed',      variant: '2',           from: 2018, to: 2025, size: '205/55R16', body: 'Hatchback' },
+  { make: 'SEAT',          model: 'Leon',      variant: 'SE',          from: 2020, to: 2025, size: '205/55R16', body: 'Hatchback' },
+  { make: 'Audi',          model: 'A3',        variant: 'S line',      from: 2020, to: 2025, size: '225/40R18', body: 'Hatchback' },
+  { make: 'Nissan',        model: 'Qashqai',   variant: 'Visia',       from: 2014, to: 2021, size: '215/65R16', body: 'SUV' },
+  { make: 'Volkswagen',    model: 'Tiguan',    variant: 'S',           from: 2016, to: 2023, size: '215/65R16', body: 'SUV' },
+  { make: 'Dacia',         model: 'Duster',    variant: 'Essential',   from: 2018, to: 2023, size: '215/65R16', body: 'SUV' },
+  { make: 'BMW',           model: '3 Series',  variant: 'SE',          from: 2019, to: 2025, size: '225/50R17', body: 'Saloon' },
+  { make: 'Audi',          model: 'A4',        variant: 'Sport',       from: 2016, to: 2024, size: '225/50R17', body: 'Saloon' },
+  { make: 'Mercedes-Benz', model: 'C-Class',   variant: 'SE',          from: 2014, to: 2021, size: '225/50R17', body: 'Saloon' },
+  { make: 'BMW',           model: '5 Series',  variant: 'SE',          from: 2017, to: 2023, size: '245/45R18', body: 'Saloon' },
+  { make: 'Mercedes-Benz', model: 'E-Class',   variant: 'AMG Line',    from: 2016, to: 2023, size: '245/45R18', body: 'Saloon' },
+  { make: 'Audi',          model: 'A6',        variant: 'S line',      from: 2018, to: 2025, size: '245/45R18', body: 'Saloon' },
+  { make: 'Mitsubishi',    model: 'L200',      variant: '4Life',       from: 2015, to: 2019, size: '245/70R16', body: 'Pickup' },
+  { make: 'Isuzu',         model: 'D-Max',     variant: 'Utility',     from: 2017, to: 2020, size: '245/70R16', body: 'Pickup' },
+  { make: 'Toyota',        model: 'Land Cruiser', variant: 'LC3',      from: 2003, to: 2009, size: '265/70R16', body: 'SUV' },
+]
+
 // Image mapped by tyre type
 const TYRE_TYPE_IMAGE: Record<string, string> = {
   PASSENGER:   '/images/tyres/tyre-passenger.png',
-  SUV:         '/images/tyres/tyre-suv.png',
-  MUD_TERRAIN: '/images/tyres/tyre-mud.png',
-  COMMERCIAL:  '/images/tyres/tyre-4x4.png',
+  SUV:         '/images/tyres/tyre-neutral.png',
+  MUD_TERRAIN: '/images/tyres/tyre-neutral.png',
+  COMMERCIAL:  '/images/tyres/tyre-neutral.png',
 }
 
 const TYRES = [
@@ -262,6 +289,30 @@ async function main() {
   }
   console.log(`✅ ${TYRE_SIZES.length} tyre sizes seeded`)
 
+  // ── Vehicles + fitments (common UK cars, mapped to the stocked sizes) ──────
+  // Factory sizes for the named trim. The storefront still tells drivers to
+  // check the size on their sidewall before buying.
+  let vehicleRows = 0
+  for (const v of UK_CARS) {
+    const [w, p, r] = v.size.split(/[/R]/).map(Number)
+    const size = await prisma.tyreSize.findUnique({ where: { width_profile_rimDiameter: { width: w, profile: p, rimDiameter: r } } })
+    if (!size) throw new Error(`Vehicle size ${v.size} is not in TYRE_SIZES`)
+    for (let year = v.from; year <= v.to; year++) {
+      const vehicle = await prisma.vehicle.upsert({
+        where:  { make_model_year_variant: { make: v.make, model: v.model, year, variant: v.variant } },
+        update: { bodyType: v.body },
+        create: { make: v.make, model: v.model, year, variant: v.variant, bodyType: v.body },
+      })
+      await prisma.vehicleFitment.upsert({
+        where:  { vehicleId_tyreSizeId_axlePosition: { vehicleId: vehicle.id, tyreSizeId: size.id, axlePosition: 'all' } },
+        update: {},
+        create: { vehicleId: vehicle.id, tyreSizeId: size.id, axlePosition: 'all', isFactorySpec: true },
+      })
+      vehicleRows++
+    }
+  }
+  console.log(`✅ ${UK_CARS.length} cars, ${vehicleRows} vehicle-years with fitments seeded`)
+
   // ── Tyres ───────────────────────────────────────────────────────────────────
   const tyreIdBySlug: Record<string, string> = {}
   for (const t of TYRES) {
@@ -306,7 +357,7 @@ async function main() {
     const imageCount = await prisma.wheelImage.count({ where: { wheelId: wheel.id } })
     if (imageCount === 0) {
       await prisma.wheelImage.create({
-        data: { wheelId: wheel.id, url: '/images/wheel/Wheel 1.png', altText: `${w.brand} ${w.model}`, sortOrder: 0 },
+        data: { wheelId: wheel.id, url: '/images/wheels/wheel-neutral.png', altText: `${w.brand} ${w.model}`, sortOrder: 0 },
       })
     }
     console.log(`  → ${w.brand} ${w.model}`)

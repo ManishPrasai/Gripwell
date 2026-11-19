@@ -1,13 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import MobileHeader from './MobileHeader'
-import MobileFindTyre from './MobileFindTyre'
 import MobileDealsRail from './MobileDealsRail'
 import MobileServicesList from './MobileServicesList'
 import MobileStoreMap from './MobileStoreMap'
 import MobileTabBar from '../../layout/mobile/MobileTabBar'
 import MobileFooter from '../../layout/mobile/MobileFooter'
-import { STORES, STORE_NETWORK_LABEL, telHref } from '../../../../lib/stores'
+import { STORES, telHref } from '../../../../lib/stores'
 import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
 /*
@@ -29,9 +28,9 @@ import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
 const CATEGORIES = [
   { name: 'Passenger',   href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png' },
-  { name: '4x4 / SUV',   href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png' },
-  { name: 'Mud-Terrain', href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png' },
-  { name: 'Wheels',      href: '/wheels',                          img: '/images/tyres/tyre-all-terrain.png' },
+  { name: '4x4 / SUV',   href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-neutral.png' },
+  { name: 'Mud-Terrain', href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-neutral.png' },
+  { name: 'Wheels',      href: '/wheels',                          img: '/images/tyres/tyre-neutral.png' },
 ]
 
 /* Same nine as the desktop BrandsStrip marquee. */
@@ -64,17 +63,6 @@ export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
       <div className="nv-mob-shell" style={{ background: '#FAF9F5', fontFamily: "'DM Sans', sans-serif", maxWidth: '480px', margin: '0 auto' }}>
         <MobileHeader />
         {hero}
-
-        {/* ── Hero ────────────────────────────────────────────── */}
-        <section style={{ background: '#1A1D23', padding: '52px 24px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '20px' }}>
-          <h1 style={{ margin: 0, color: '#FAF9F5', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontStyle: 'italic', fontSize: '36px', lineHeight: 0.95, letterSpacing: '0.02em' }}>
-            Quality tyres,<br /><span style={{ color: '#FF6A1A' }}>fitted the same day.</span>
-          </h1>
-          <p style={{ margin: 0, color: '#9EA3AD', fontSize: '14px', maxWidth: '30ch', lineHeight: 1.5 }}>
-            Warehouse-direct pricing, {STORE_NETWORK_LABEL}.
-          </p>
-          <MobileFindTyre />
-        </section>
 
         {/* ── Best deals (admin-featured feed) ────────────────── */}
         <MobileDealsRail />

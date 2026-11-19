@@ -16,10 +16,10 @@ import Image from 'next/image'
 */
 const CATEGORIES = [
   { key: 'passenger',  name: 'Passenger',   blurb: 'Quiet & economical', href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png',   alt: 'Passenger car tyre',  w: 1664, h: 2432 },
-  { key: 'suv',        name: '4x4 / SUV',   blurb: 'Built for load',     href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png',         alt: '4x4 and SUV tyre',    w: 1664, h: 2432 },
-  { key: 'commercial', name: 'Commercial',  blurb: 'Vans & pickups',        href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-all-terrain.png', alt: 'Commercial van tyre', w: 1664, h: 2432 },
-  { key: 'mud',        name: 'Mud-Terrain', blurb: 'Maximum bite',       href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png',         alt: 'Mud-terrain tyre',    w: 1584, h: 2336 },
-  { key: 'wheels',     name: 'Wheels',      blurb: 'Alloy & packages',   href: '/wheels',                         img: '/images/wheels/king-kt5.png',        alt: 'Alloy wheel',         w: 447,  h: 559 },
+  { key: 'suv',        name: '4x4 / SUV',   blurb: 'Built for load',     href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-neutral.png',         alt: '4x4 and SUV tyre',    w: 1664, h: 2432 },
+  { key: 'commercial', name: 'Commercial',  blurb: 'Vans & pickups',        href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-neutral.png', alt: 'Commercial van tyre', w: 1664, h: 2432 },
+  { key: 'mud',        name: 'Mud-Terrain', blurb: 'Maximum bite',       href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-neutral.png',         alt: 'Mud-terrain tyre',    w: 1584, h: 2336 },
+  { key: 'wheels',     name: 'Wheels',      blurb: 'Alloy & packages',   href: '/wheels',                         img: '/images/wheels/wheel-neutral.png',        alt: 'Alloy wheel',         w: 447,  h: 559 },
 ]
 
 export default function BrowseByCategory() {

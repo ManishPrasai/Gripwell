@@ -85,7 +85,7 @@ function mapWheel(w: WheelItem): Deal {
     price:     parseFloat(String(w.price)),
     was:       wasPrice(w.price, w.compareAtPrice),
     slug:      `/wheels/${w.slug}`,
-    image:     w.images[0]?.url ?? '/images/wheels/king-kt5.png',
+    image:     w.images[0]?.url ?? '/images/wheels/wheel-neutral.png',
   }
 }
 

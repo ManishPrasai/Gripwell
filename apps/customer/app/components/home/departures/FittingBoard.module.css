@@ -148,3 +148,13 @@
   .cPrice { width: 120px; }
   .cBays { width: 90px; }
 }
+
+/* Signature: the price column re-sets in place when the size changes. */
+.fresh { display: block; animation: gwFresh 240ms var(--gw-ease) both; }
+@keyframes gwFresh {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fresh { animation: none; }
+}

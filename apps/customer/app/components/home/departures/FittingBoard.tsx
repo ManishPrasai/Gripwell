@@ -29,10 +29,12 @@ function ranker(rows: BoardRow[]) {
 export default function FittingBoard({
   board,
   unitPrice = null,
-  hrefFor = id => `/tyres?store=${id}`,
+  freshKey,
+  hrefFor = id => `/tyres/results?store=${id}`,
 }: {
   board:      Board | null
   unitPrice?: number | null
+  freshKey?:  string                 // changes when the size changes, replaying the price fade
   hrefFor?:   (storeId: string) => string
 }) {
   if (!board) {
@@ -64,7 +66,7 @@ export default function FittingBoard({
           <tr>
             <th scope="col" className={s.cTime}>Time</th>
             <th scope="col" className={s.cBranch}>Branch</th>
-            <th scope="col" className={s.cPrice}>{priced ? `${SET} fitted` : 'Fitting'}</th>
+            <th scope="col" className={s.cPrice}>{priced ? `${SET} fitted, from` : 'Fitting'}</th>
             <th scope="col" className={s.cBays}>Bays</th>
           </tr>
         </thead>
@@ -80,9 +82,11 @@ export default function FittingBoard({
                 <span className={s.area}>{r.area.split(' ').slice(-2).join(' ')}</span>
               </th>
               <td className={s.price}>
-                {priced
-                  ? <>{money(fittedTotal(unitPrice, r.fittingRate))}<span className={s.unit}>incl. VAT</span></>
-                  : <>{money(r.fittingRate, { whole: true })}<span className={s.unit}>per wheel</span></>}
+                <span key={freshKey ?? 'rate'} className={freshKey ? s.fresh : undefined}>
+                  {priced
+                    ? <>{money(fittedTotal(unitPrice, r.fittingRate))}<span className={s.unit}>incl. VAT</span></>
+                    : <>{money(r.fittingRate, { whole: true })}<span className={s.unit}>per wheel</span></>}
+                </span>
               </td>
               <td className={s.bays}>
                 {r.time ? `${r.free} free` : 'Full this week'}

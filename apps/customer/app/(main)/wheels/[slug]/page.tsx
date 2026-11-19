@@ -16,7 +16,7 @@ const DEMO_WHEEL = {
   diameter: 17, width: '8.5', pcd: '6×139.7', offset: -18,
   bore: '112.1', material: 'Alloy', finish: 'Matte Black',
   price: '230.00', compareAtPrice: null, stockQuantity: 12,
-  images: [{ url: '/images/wheel/Wheel 1.png', altText: 'Halden Outrider', sortOrder: 0 }],
+  images: [{ url: '/images/wheels/wheel-neutral.png', altText: 'Halden Outrider', sortOrder: 0 }],
   packages: [],
 }
 

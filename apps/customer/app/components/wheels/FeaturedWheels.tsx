@@ -23,7 +23,7 @@ function mapWheel(w: WheelItem): Featured {
     brand: w.brand,
     model: w.model,
     href:  `/wheels/${w.slug}`,
-    image: w.images[0]?.url ?? '/images/wheels/king-kt5.png',
+    image: w.images[0]?.url ?? '/images/wheels/wheel-neutral.png',
     size:  `${w.diameter}" × ${parseFloat(String(w.width)).toFixed(1)}`,
   }
 }

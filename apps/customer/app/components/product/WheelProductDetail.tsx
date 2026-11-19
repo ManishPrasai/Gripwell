@@ -16,10 +16,10 @@ import { money } from '../../../lib/fitting'
 const BRAND_LOGOS: Record<string, string> = {}
 
 const SIMILAR_WHEELS: SimilarItem[] = [
-  { brand: 'Halden',      sub: 'Bastion 18×9',  price: 265, slug: 'halden-bastion-18x9', image: '/images/wheel/Wheel 1.png' },
-  { brand: 'Ostra',       sub: 'Ranger 16×8',   price: 195, slug: 'ostra-ranger-16x8',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'Ostra',       sub: 'Summit 20×9',   price: 295, slug: 'ostra-summit-20x9',         image: '/images/wheel/Wheel 1.png' },
-  { brand: 'Marlow',      sub: 'Stride 17×8',   price: 185, slug: 'marlow-stride-17x8',          image: '/images/wheel/Wheel 1.png' },
+  { brand: 'Halden',      sub: 'Bastion 18×9',  price: 265, slug: 'halden-bastion-18x9', image: '/images/wheels/wheel-neutral.png' },
+  { brand: 'Ostra',       sub: 'Ranger 16×8',   price: 195, slug: 'ostra-ranger-16x8',         image: '/images/wheels/wheel-neutral.png' },
+  { brand: 'Ostra',       sub: 'Summit 20×9',   price: 295, slug: 'ostra-summit-20x9',         image: '/images/wheels/wheel-neutral.png' },
+  { brand: 'Marlow',      sub: 'Stride 17×8',   price: 185, slug: 'marlow-stride-17x8',          image: '/images/wheels/wheel-neutral.png' },
 ]
 
 interface WheelProduct {
@@ -37,7 +37,7 @@ export default function WheelProductDetail({ wheel, similar }: { wheel: WheelPro
   const [added,     setAdded]     = useState(false)
   const { addToCart } = useCart()
 
-  const images    = wheel.images.length > 0 ? wheel.images : [{ url: '/images/wheel/Wheel 1.png', altText: wheel.model, sortOrder: 0 }]
+  const images    = wheel.images.length > 0 ? wheel.images : [{ url: '/images/wheels/wheel-neutral.png', altText: wheel.model, sortOrder: 0 }]
   const price     = parseFloat(wheel.price)
   const inStock   = wheel.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[wheel.brand]

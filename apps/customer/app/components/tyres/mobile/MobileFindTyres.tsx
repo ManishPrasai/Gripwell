@@ -19,9 +19,9 @@ import MobileStoreRail from '../../layout/mobile/MobileStoreRail'
 /* Same four real TyreTypes as the desktop ShopByTyreType. */
 const TYPES = [
   { name: 'Passenger',   href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png',   alt: 'Passenger tyre' },
-  { name: '4x4 / SUV',   href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png',         alt: '4x4 and SUV tyre' },
-  { name: 'Commercial',  href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-all-terrain.png', alt: 'Commercial tyre' },
-  { name: 'Mud Terrain', href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png',         alt: 'Mud-terrain tyre' },
+  { name: '4x4 / SUV',   href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-neutral.png',         alt: '4x4 and SUV tyre' },
+  { name: 'Commercial',  href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-neutral.png', alt: 'Commercial tyre' },
+  { name: 'Mud Terrain', href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-neutral.png',         alt: 'Mud-terrain tyre' },
 ]
 
 const BRAND_LOGOS = [

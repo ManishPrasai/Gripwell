@@ -16,10 +16,10 @@ import { money } from '../../../lib/fitting'
 const BRAND_LOGOS: Record<string, string> = {}
 
 const SIMILAR_TYRES: SimilarItem[] = [
-  { brand: 'Veltex', sub: 'Velocity 4',     price: 185, slug: 'veltex-velocity-4', image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Kova',  sub: 'Apex S1',        price: 165, slug: 'kova-apex-s1',      image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Corsaro',  sub: 'Strada',         price: 210, slug: 'corsaro-strada',         image: '/images/tyres/Tyre 1.png' },
-  { brand: 'Terrain X',   sub: 'Velo Sport',     price: 155, slug: 'terrain-x-velo-sport',    image: '/images/tyres/Tyre 1.png' },
+  { brand: 'Veltex', sub: 'Velocity 4',     price: 185, slug: 'veltex-velocity-4', image: '/images/tyres/tyre-neutral.png' },
+  { brand: 'Kova',  sub: 'Apex S1',        price: 165, slug: 'kova-apex-s1',      image: '/images/tyres/tyre-neutral.png' },
+  { brand: 'Corsaro',  sub: 'Strada',         price: 210, slug: 'corsaro-strada',         image: '/images/tyres/tyre-neutral.png' },
+  { brand: 'Terrain X',   sub: 'Velo Sport',     price: 155, slug: 'terrain-x-velo-sport',    image: '/images/tyres/tyre-neutral.png' },
 ]
 
 interface TyreProduct {
@@ -42,7 +42,7 @@ export default function TyreProductDetail({ product, similar }: { product: TyreP
   const { addToCart, tyreCount }  = useCart()
 
   const ts        = product.tyreSize
-  const images    = product.images.length > 0 ? product.images : [{ url: '/images/tyres/Tyre 1.png', altText: product.model, sortOrder: 0 }]
+  const images    = product.images.length > 0 ? product.images : [{ url: '/images/tyres/tyre-neutral.png', altText: product.model, sortOrder: 0 }]
   const price     = parseFloat(product.price)
   const inStock   = product.stockQuantity > 0
   const brandLogo = BRAND_LOGOS[product.brand]

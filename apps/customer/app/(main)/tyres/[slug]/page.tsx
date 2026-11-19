@@ -19,7 +19,7 @@ const DEMO_PRODUCTS: Record<string, object> = {
     isBestSeller: false, isFeatured: true,
     fuelEfficiencyRating: 'B', wetGripRating: 'A', noiseLevelDb: 69,
     tyreSize: { width: 245, profile: 70, rimDiameter: 16, loadIndex: 118, speedRating: 'S', construction: 'R' },
-    images: [{ url: '/images/tyres/Tyre 1.png', altText: 'Meridian Citadel UX7', sortOrder: 0 }],
+    images: [{ url: '/images/tyres/tyre-neutral.png', altText: 'Meridian Citadel UX7', sortOrder: 0 }],
     reviews: [],
   },
 }

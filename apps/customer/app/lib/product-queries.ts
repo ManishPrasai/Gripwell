@@ -205,7 +205,7 @@ export async function getSimilarWheels(slug: string): Promise<SimilarItem[]> {
       sub: `${w.model} · ${w.diameter}×${Number(w.width)} · ${w.pcd}`,
       price: Number(w.price),
       slug: w.slug,
-      image: w.images[0]?.url ?? '/images/wheel/Wheel 1.png',
+      image: w.images[0]?.url ?? '/images/wheels/wheel-neutral.png',
     }))
     await setCache(cacheKey, items, TTL.WHEELS_LIST)
     return items

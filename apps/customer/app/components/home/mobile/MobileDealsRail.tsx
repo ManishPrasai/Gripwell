@@ -56,7 +56,7 @@ export default function MobileDealsRail() {
         id: `w-${x.slug}`, brand: x.brand, model: x.model,
         size: `${x.diameter}" × ${parseFloat(String(x.width)).toFixed(1)}`,
         price: parseFloat(String(x.price)), was: was(x.price, x.compareAtPrice),
-        href: `/wheels/${x.slug}`, image: x.images[0]?.url ?? '/images/wheels/king-kt5.png',
+        href: `/wheels/${x.slug}`, image: x.images[0]?.url ?? '/images/wheels/wheel-neutral.png',
       })) : []
       setDeals([...tyres, ...wheels].slice(0, 8))
     })

@@ -95,7 +95,16 @@ export default function CartContents() {
   useEffect(() => {
     fetch('/api/stores')
       .then(r => r.json())
-      .then(d => setStores(d.stores ?? []))
+      .then(d => {
+        const list: StoreData[] = d.stores ?? []
+        setStores(list)
+        // Preselect the branch chosen on the board or results page, if it still exists.
+        try {
+          const saved = JSON.parse(localStorage.getItem('gw_selected_store') || 'null') as { id?: string } | null
+          const match = saved?.id ? list.find(s => s.id === saved.id) : undefined
+          if (match) setSelectedStore(current => current ?? match.id)
+        } catch {}
+      })
       .catch(() => {})
       .finally(() => setStoresLoading(false))
   }, [])
