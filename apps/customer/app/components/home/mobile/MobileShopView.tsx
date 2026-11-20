@@ -28,7 +28,7 @@ export default function MobileShopView({ onNavigate }: { onNavigate?: () => void
   return (
     <section style={{ background: '#FAF9F5', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '18px', animation: 'nvMobFade .25s ease' }}>
       <div>
-        <span style={{ ...heading, color: '#E8572A' }}>Shop</span>
+        <span style={{ ...heading, color: '#FF6A1A' }}>Shop</span>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {DEST.map(d => (
             <Link
@@ -38,26 +38,26 @@ export default function MobileShopView({ onNavigate }: { onNavigate?: () => void
               style={{ textDecoration: 'none', background: '#FFFFFF', border: '1px solid #E7E5DE', borderRadius: '14px', padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
             >
               <span style={{ width: '46px', height: '46px', borderRadius: '50%', background: '#F0EFE9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#076330" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d.icon}</svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2E36" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d.icon}</svg>
               </span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#16211B' }}>{d.label}</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#1A1D23' }}>{d.label}</span>
             </Link>
           ))}
         </div>
       </div>
 
       <div>
-        <span style={{ ...heading, color: '#6E7C74' }}>More</span>
+        <span style={{ ...heading, color: '#6B7280' }}>More</span>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {MORE.map((m, i) => (
             <Link
               key={m.label}
               href={m.href}
               onClick={onNavigate}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 4px', borderBottom: i === MORE.length - 1 ? 'none' : '1px solid #E7E5DE', textDecoration: 'none', color: '#16211B', fontSize: '14px', fontWeight: 600 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 4px', borderBottom: i === MORE.length - 1 ? 'none' : '1px solid #E7E5DE', textDecoration: 'none', color: '#1A1D23', fontSize: '14px', fontWeight: 600 }}
             >
               {m.label}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9DB0A5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9EA3AD" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
             </Link>
           ))}
         </div>

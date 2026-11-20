@@ -10,13 +10,13 @@ export const dynamic = 'force-dynamic'
 
 const DEMO_WHEEL = {
   id: 'demo-w1',
-  brand: 'Black Rhino', model: 'AWOL',
-  description: "The Black Rhino AWOL is a premium off-road alloy wheel engineered for serious 4WD performance. Deep-dish design, high-strength alloy construction and aggressive styling make it a top choice for truck and SUV builds.",
-  slug: 'black-rhino-awol-17x85',
+  brand: 'Halden', model: 'Outrider',
+  description: "The Halden Outrider is a premium off-road alloy wheel engineered for serious 4x4 performance. Deep-dish design, high-strength alloy construction and aggressive styling make it a top choice for truck and SUV builds.",
+  slug: 'halden-outrider-17x85',
   diameter: 17, width: '8.5', pcd: '6×139.7', offset: -18,
   bore: '112.1', material: 'Alloy', finish: 'Matte Black',
   price: '230.00', compareAtPrice: null, stockQuantity: 12,
-  images: [{ url: '/images/wheel/Wheel 1.png', altText: 'Black Rhino AWOL', sortOrder: 0 }],
+  images: [{ url: '/images/wheels/wheel-neutral.png', altText: 'Halden Outrider', sortOrder: 0 }],
   packages: [],
 }
 
@@ -39,8 +39,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const wheel = await getWheel(slug) as { brand?: string; model?: string } | null
   if (!wheel) return {}
   return {
-    title: `${wheel.brand} ${wheel.model} — Nova Tyres`,
-    description: `Buy the ${wheel.brand} ${wheel.model} from Nova Tyres. Expert fitting across ${STORES.length} Australian stores.`,
+    title: `${wheel.brand} ${wheel.model} — Gripwell`,
+    description: `Buy the ${wheel.brand} ${wheel.model} from Gripwell. Expert fitting across ${STORES.length} London stores.`,
   }
 }
 

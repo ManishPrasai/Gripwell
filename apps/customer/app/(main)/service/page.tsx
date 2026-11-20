@@ -2,7 +2,7 @@
 
 /*
   Servicing page — 1:1 port of the reference design
-  (Desktop reference: "Nova Tyres Servicing.html" + styles.css + app.js)
+  (Desktop reference: "Gripwell Servicing.html" + styles.css + app.js)
 
   - Design tokens, grids, spacing and animation curves are lifted verbatim
     from styles.css (light theme), scoped under .svcp so they can't leak
@@ -22,6 +22,7 @@ import { useState, useEffect, useRef, ReactNode } from 'react'
 import Image from 'next/image'
 import { smoothScrollToSection } from '../../../lib/scrollToSection'
 import MobileServicePage from '../../components/service/mobile/MobileServicePage'
+import { STORES as BRANCHES, NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF } from '../../../lib/stores'
 
 /* ════════════════════════════════════════════════════════════════════
    ICONS — exact SVG paths from the reference
@@ -53,32 +54,14 @@ const IconPin = () => (
 const IconSearch = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
 )
-const IconPencil = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-)
-const IconExternal = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-)
-const IconLock = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-)
 const IconShieldCheck = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
 )
 const IconZap = () => (
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5l-7 9h3v4l7-9h-3z" /></svg>
 )
-const IconX = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></svg>
-)
 const IconStar = () => (
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.7L12 17.8 6 20.6l1.4-6.7L2.3 9l6.9-.7z" /></svg>
-)
-const GoogleG = () => (
-  <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.5 5.5 0 0 1-2.4 3.62v3h3.86c2.26-2.09 3.57-5.17 3.57-8.86z" /><path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.94-2.91l-3.86-3c-1.08.72-2.45 1.16-4.08 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A12 12 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" /></svg>
-)
-const VerifiedMini = () => (
-  <svg className="verified-mini" viewBox="0 0 24 24" fill="#4285F4"><path d="M12 1l2.6 1.9 3.2-.2 1 3 2.6 1.8-1 3 1 3-2.6 1.8-1 3-3.2-.2L12 23l-2.6-1.9-3.2.2-1-3L2.6 16.5l1-3-1-3 2.6-1.8 1-3 3.2.2z" /><path d="M9.5 12.5l1.8 1.8 3.7-3.8" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
 )
 
 /* ════════════════════════════════════════════════════════════════════
@@ -93,20 +76,20 @@ interface Tier {
 
 const TIERS: Tier[] = [
   {
-    id: 'logbook', num: '01', name: 'Log Book Service', km: 'Manufacturer schedule',
-    eyebrow: 'Warranty-safe servicing', big: 'LOG', lab: 'Per maker schedule',
-    desc: <>For newer vehicles still following their manufacturer log book schedule. Carried out by fully qualified mechanics — <b>without affecting your new-car warranty.</b></>,
+    id: 'logbook', num: '01', name: 'Manufacturer Service', km: 'Manufacturer schedule',
+    eyebrow: 'Warranty-safe servicing', big: 'OEM', lab: 'Per maker schedule',
+    desc: <>For newer vehicles still following their manufacturer service schedule. Carried out by fully qualified mechanics — <b>without affecting your new-car warranty.</b></>,
     inc: [
       { h: 'Quality Parts & Oils', p: 'Only genuine-grade parts and oils are used.' },
-      { h: 'Log Book Stamp', p: 'We stamp your log book as an official service record.' },
-      { h: 'Safety Inspection', p: 'Comprehensive check so you’re safe on the road.' },
+      { h: 'Service Book Stamp', p: 'We stamp your service book as an official service record.' },
+      { h: 'Safety Inspection', p: "Comprehensive check so you’re safe on the road." },
       { h: 'Fully Qualified', p: 'Performed without affecting your warranty.' },
     ],
   },
   {
-    id: 'yearly', num: '02', name: 'Yearly Service', km: 'Every 15,000 km',
-    eyebrow: 'Essential maintenance', big: '15K', lab: 'km · every 1 year',
-    desc: <>Usually done every 15,000 km. Prevents unnecessary wear and tear and keeps your car running in optimal condition.</>,
+    id: 'yearly', num: '02', name: 'Yearly Service', km: 'Every 10,000 miles',
+    eyebrow: 'Essential maintenance', big: '15K', lab: 'km \u00b7 every 1 year',
+    desc: <>Usually done every 10,000 miles. Prevents unnecessary wear and tear and keeps your car running in optimal condition.</>,
     inc: [
       { h: 'Engine Oil Change', p: 'Fresh engine oil for smooth running.' },
       { h: 'Oil Filter', p: 'New oil filter fitted.' },
@@ -115,28 +98,28 @@ const TIERS: Tier[] = [
     ],
   },
   {
-    id: '3year', num: '03', name: '3 Year Service', km: 'Every 45,000 km',
-    eyebrow: 'Yearly + filters & fluids', big: '45K', lab: 'km · every 3 years',
-    desc: <>Usually done every 45,000 km. <b>Includes everything in a Yearly Service, plus</b> air filter and brake fluid change.</>,
+    id: '3year', num: '03', name: '3 Year Service', km: 'Every 30,000 miles',
+    eyebrow: 'Yearly + filters & fluids', big: '45K', lab: 'km \u00b7 every 3 years',
+    desc: <>Usually done every 30,000 miles. <b>Includes everything in a Yearly Service, plus</b> air filter and brake fluid change.</>,
     inc: [
       { h: 'Engine Oil Change', p: 'Fresh engine oil for smooth running.' },
       { h: 'Oil Filter', p: 'New oil filter fitted.' },
       { h: 'Safety Inspection', p: 'Comprehensive safety inspection.' },
       { h: 'Under-Bonnet Check', p: 'Cooling & charging systems checked.' },
-      { h: 'Air Filter Replacement', p: 'Replacement of your vehicle’s air filter.', n: true },
+      { h: 'Air Filter Replacement', p: "Replacement of your vehicle’s air filter.", n: true },
       { h: 'Brake Fluid Change', p: 'Brake fluid change + pad & rotor wear analysis.', n: true },
     ],
   },
   {
-    id: '6year', num: '04', name: '6 Year Service', km: 'Every 100,000 km',
-    eyebrow: '3 Year + ignition & cooling', big: '100K', lab: 'km · every 6 years',
-    desc: <>Usually done every 100,000 km. <b>Includes everything in a 3 Year Service, plus</b> coolant, spark plugs and fuel filter change.</>,
+    id: '6year', num: '04', name: '6 Year Service', km: 'Every 60,000 miles',
+    eyebrow: '3 Year + ignition & cooling', big: '100K', lab: 'km \u00b7 every 6 years',
+    desc: <>Usually done every 60,000 miles. <b>Includes everything in a 3 Year Service, plus</b> coolant, spark plugs and fuel filter change.</>,
     inc: [
       { h: 'Engine Oil Change', p: 'Fresh engine oil for smooth running.' },
       { h: 'Oil Filter', p: 'New oil filter fitted.' },
       { h: 'Safety Inspection', p: 'Comprehensive safety inspection.' },
       { h: 'Under-Bonnet Check', p: 'Cooling & charging systems checked.' },
-      { h: 'Air Filter Replacement', p: 'Replacement of your vehicle’s air filter.' },
+      { h: 'Air Filter Replacement', p: "Replacement of your vehicle's air filter." },
       { h: 'Brake Fluid Change', p: 'Brake fluid change + pad & rotor wear analysis.' },
       { h: 'Engine Coolant', p: 'Coolant replaced for optimum performance.', n: true },
       { h: 'Spark Plugs', p: 'Replaced to cut fuel use and clear carbon.', n: true },
@@ -152,7 +135,7 @@ const TIERS: Tier[] = [
       { h: 'Oil Filter', p: 'New oil filter fitted.' },
       { h: 'Safety Inspection', p: 'Comprehensive safety inspection.' },
       { h: 'Under-Bonnet Check', p: 'Cooling & charging systems checked.' },
-      { h: 'Air Filter Replacement', p: 'Replacement of your vehicle’s air filter.' },
+      { h: 'Air Filter Replacement', p: "Replacement of your vehicle's air filter." },
       { h: 'Brake Fluid Change', p: 'Brake fluid change + pad & rotor wear analysis.' },
       { h: 'Engine Coolant', p: 'Coolant replaced for optimum performance.' },
       { h: 'Spark Plugs', p: 'Replaced to cut fuel use and clear carbon.' },
@@ -163,33 +146,29 @@ const TIERS: Tier[] = [
   },
 ]
 
-const SERVICE_OPTIONS = ['Free Pre-RWC Check', 'Log Book Service', 'Yearly Service', '3 Year Service', '6 Year Service', 'Ultimate Service', 'Not sure — please advise']
-
-const STORE_OPTIONS = ['Nova Tyres Springvale', 'Nova Tyres Dandenong', 'Nova Tyres Bayswater', 'Nova Tyres Melbourne (Alphington)', 'Nova Tyres Sunshine', 'Nova Tyres Sefton (Sydney)']
-
 const FEATURED = [
-  { av: 'JM', c: '#FF5A1F', name: 'Jessica M.', meta: '2 days ago · Springvale', q: '“Top-notch service — honest, fast and the team genuinely cares. Couldn’t be happier!”' },
-  { av: 'AP', c: '#2D6BFF', name: 'Andrew P.', meta: '5 days ago · Bayswater', q: '“Best workshop I’ve used. Clear quotes, quality parts, and they stand by their work.”' },
-  { av: 'ML', c: '#19D26A', name: 'Mei L.', meta: '1 week ago · Sefton', q: '“Booked online, sorted same day. Sydney finally has a Nova Tyres — so happy!”' },
+  { av: 'JM', c: '#FF5A1F', name: 'Jessica M.', meta: '2 days ago \u00b7 Camden',      q: '"Top-notch service — honest, fast and the team genuinely cares. Couldn’t be happier!”' },
+  { av: 'AP', c: '#2D6BFF', name: 'Andrew P.',  meta: '5 days ago \u00b7 Shoreditch',  q: '"Best workshop I’ve used. Clear quotes, quality parts, and they stand by their work.”' },
+  { av: 'ML', c: '#19D26A', name: 'Mei L.',     meta: '1 week ago \u00b7 City Centre', q: '"Booked online, sorted same day. Brilliant service right in the heart of London!”' },
 ]
 
 const REVIEW_TABS = [
   { id: 'all', label: 'All locations' },
-  { id: 'springvale', label: 'Springvale' },
-  { id: 'dandenong', label: 'Dandenong' },
-  { id: 'bayswater', label: 'Bayswater' },
-  { id: 'alphington', label: 'Alphington' },
-  { id: 'sunshine', label: 'Sunshine' },
-  { id: 'sefton', label: 'Sefton' },
+  { id: 'camden', label: 'Camden' },
+  { id: 'shoreditch', label: 'Shoreditch' },
+  { id: 'brixton', label: 'Brixton' },
+  { id: 'hammersmith', label: 'Hammersmith' },
+  { id: 'islington', label: 'Islington' },
+  { id: 'citycentre', label: 'City' },
 ]
 
 const REVIEW_CARDS = [
-  { id: 'springvale', store: 'Nova Tyres Springvale', loc: 'Springvale, VIC', rating: 4.9, count: 842, c: '#FF5A1F', av: 'DM', reviewer: 'Daniel M.', when: '2 weeks ago', quote: 'Same-day log book service, warranty stamp and all — no upsell.', search: 'springvale log book warranty same-day daniel' },
-  { id: 'dandenong', store: 'Nova Tyres Dandenong', loc: 'Dandenong, VIC', rating: 4.8, count: 511, c: '#2D6BFF', av: 'SK', reviewer: 'Sophie K.', when: '1 week ago', quote: 'Free pre-RWC check saved me a fortune. Genuinely helpful crew.', search: 'dandenong south pre-rwc check sophie' },
-  { id: 'bayswater', store: 'Nova Tyres Bayswater', loc: 'Bayswater, VIC', rating: 4.9, count: 388, c: '#19D26A', av: 'RT', reviewer: 'Raj T.', when: '3 days ago', quote: 'Ultimate Service and it drives like new. Call-back within the hour.', search: 'bayswater north ultimate service raj' },
-  { id: 'alphington', store: 'Nova Tyres Melbourne', loc: 'Alphington, VIC', rating: 4.7, count: 276, c: '#FFB300', av: 'LN', reviewer: 'Lauren N.', when: '5 days ago', quote: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.', search: 'alphington melbourne fast lauren' },
-  { id: 'sunshine', store: 'Nova Tyres Sunshine', loc: 'Sunshine, VIC', rating: 4.8, count: 203, c: '#FF3B6B', av: 'MV', reviewer: 'Marco V.', when: '1 week ago', quote: 'Sorted my brakes same day and were clear about costs upfront.', search: 'sunshine north brakes marco' },
-  { id: 'sefton', store: 'Nova Tyres Sefton', loc: 'Sefton, NSW', rating: 4.9, count: 164, c: '#8B5CF6', av: 'PS', reviewer: 'Priya S.', when: '4 days ago', quote: 'So glad they’re in Sydney now. Quick, honest and tidy work.', search: 'sefton sydney nsw priya' },
+  { id: 'camden',      store: 'Gripwell Camden',      loc: 'Camden, North London',     rating: 4.9, count: 842, c: '#FF5A1F', av: 'DM', reviewer: 'Daniel M.',  when: '2 weeks ago', quote: 'Same-day log book service, warranty stamp and all — no upsell.',               search: 'camden log book warranty same-day daniel' },
+  { id: 'shoreditch',  store: 'Gripwell Shoreditch',  loc: 'Shoreditch, East London',  rating: 4.8, count: 511, c: '#2D6BFF', av: 'SK', reviewer: 'Sophie K.',  when: '1 week ago',  quote: 'Free safety inspection saved me a fortune. Genuinely helpful crew.',          search: 'shoreditch safety inspection sophie' },
+  { id: 'brixton',     store: 'Gripwell Brixton',     loc: 'Brixton, South London',    rating: 4.9, count: 388, c: '#19D26A', av: 'RT', reviewer: 'Raj T.',     when: '3 days ago',  quote: 'Ultimate Service and it drives like new. Call-back within the hour.',        search: 'brixton ultimate service raj' },
+  { id: 'hammersmith', store: 'Gripwell Hammersmith', loc: 'Hammersmith, West London', rating: 4.7, count: 276, c: '#FFB300', av: 'LN', reviewer: 'Lauren N.', when: '5 days ago',  quote: 'Friendly, fast, fair priced. Dropped before work, ready by lunch.',          search: 'hammersmith fast lauren' },
+  { id: 'islington',   store: 'Gripwell Islington',   loc: 'Islington, North London',  rating: 4.8, count: 203, c: '#FF3B6B', av: 'MV', reviewer: 'Marco V.',  when: '1 week ago',  quote: 'Sorted my brakes same day and were clear about costs upfront.',              search: 'islington brakes marco' },
+  { id: 'citycentre',  store: 'Gripwell City', loc: 'City of London, Central',  rating: 4.9, count: 164, c: '#8B5CF6', av: 'PS', reviewer: 'Priya S.',  when: '4 days ago',  quote: 'Right in the City and brilliant service. Quick, honest and tidy work.',      search: 'city centre london priya' },
 ]
 
 const RATING_BARS = [
@@ -201,37 +180,34 @@ const RATING_BARS = [
 ]
 
 const STORES = [
-  { name: 'Springvale', state: 'VIC', note: '4/134 Springvale Rd · Service & mechanical', address: '4/134 Springvale Rd, Springvale VIC 3171', phone: '03 9562 4269', wa: 'https://wa.me/61401531756', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Springvale', soon: false },
-  { name: 'Dandenong', state: 'VIC', note: '308 S Gippsland Hwy · Dandenong South', address: '308 S Gippsland Hwy, Dandenong South VIC 3175', phone: '03 8787 5846', wa: 'https://wa.me/61413792400', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Dandenong', soon: false },
-  { name: 'Bayswater', state: 'VIC', note: '194 Canterbury Rd · Bayswater North', address: '194 Canterbury Rd, Bayswater North VIC 3153', phone: '03 9720 9354', wa: 'https://wa.me/61411879425', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Bayswater', soon: false },
-  { name: 'Alphington', state: 'VIC', note: '200 Grange Rd · Melbourne', address: '200 Grange Rd, Alphington VIC 3078', phone: '0403 884 151', wa: 'https://wa.me/61403884151', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Alphington', soon: false },
-  { name: 'Sunshine', state: 'VIC', note: '1B Berkshire Rd · Sunshine North', address: '1B Berkshire Rd, Sunshine North VIC 3020', phone: '0401 199 224', wa: 'https://wa.me/61401199224', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sunshine+North', soon: false },
-  { name: 'Sefton', state: 'NSW · Sydney', note: '107 Carlingford St · Sydney', address: '107 Carlingford St, Sefton NSW 2162', phone: '0403 388 774', wa: 'https://wa.me/61403388774', maps: 'https://www.google.com/maps/search/?api=1&query=Nova+Tyres+Sefton', soon: false },
-  { name: 'Brisbane', state: 'QLD', note: 'Serviced now from our Melbourne workshops', address: '', phone: null, wa: null, maps: null, soon: true },
-  { name: 'Adelaide', state: 'SA', note: 'Serviced now from our Melbourne workshops', address: '', phone: null, wa: null, maps: null, soon: true },
+  { name: 'Camden',      state: 'North',   note: '14 Kentish Town Rd \u00b7 Camden',      address: '14 Kentish Town Rd, Camden NW1 9NX',          phone: '+44 20 7946 0101', wa: 'https://wa.me/442079460101', maps: 'https://www.google.com/maps/search/?api=1&query=Camden+NW1+9NX', soon: false },
+  { name: 'Shoreditch',  state: 'East',    note: '82 Brick Lane \u00b7 Shoreditch',       address: '82 Brick Lane, Shoreditch E1 6RL',            phone: '+44 20 7946 0202', wa: 'https://wa.me/442079460202', maps: 'https://www.google.com/maps/search/?api=1&query=Brick+Lane+E1+6RL', soon: false },
+  { name: 'Brixton',     state: 'South',   note: '31 Atlantic Rd \u00b7 Brixton',         address: '31 Atlantic Rd, Brixton SW9 8HX',             phone: '+44 20 7946 0303', wa: 'https://wa.me/442079460303', maps: 'https://www.google.com/maps/search/?api=1&query=Atlantic+Rd+SW9+8HX', soon: false },
+  { name: 'Hammersmith', state: 'West',    note: '5 King St \u00b7 Hammersmith',          address: '5 King St, Hammersmith W6 9HR',               phone: '+44 20 7946 0404', wa: 'https://wa.me/442079460404', maps: 'https://www.google.com/maps/search/?api=1&query=King+St+W6+9HR', soon: false },
+  { name: 'Islington',   state: 'North',   note: '118 Upper St \u00b7 Islington',         address: '118 Upper St, Islington N1 1QP',              phone: '+44 20 7946 0505', wa: 'https://wa.me/442079460505', maps: 'https://www.google.com/maps/search/?api=1&query=Upper+St+N1+1QP', soon: false },
+  { name: 'City Centre', state: 'Central', note: '9 Cheapside \u00b7 City of London',     address: '9 Cheapside, City of London EC2V 6AA',        phone: '+44 20 7946 0707', wa: 'https://wa.me/442079460707', maps: 'https://www.google.com/maps/search/?api=1&query=Cheapside+EC2V+6AA', soon: false },
+  { name: 'Manchester',  state: 'North West', note: 'Opening early 2027',            address: '', phone: null, wa: null, maps: null, soon: true },
+  { name: 'Birmingham',  state: 'Midlands',   note: 'Opening mid 2027',              address: '', phone: null, wa: null, maps: null, soon: true },
 ]
 
-/* Stores with a real photo on disk (public/images/stores). Others get a clean
-   placeholder rather than a broken image. */
-const STORE_PHOTOS = new Set(['springvale', 'dandenong', 'bayswater', 'alphington', 'sefton'])
+/* Stores with a real photo on disk (public/images/stores). */
+const STORE_PHOTOS = new Set(['camden', 'shoreditch', 'brixton', 'hammersmith', 'citycentre'])
 const photoFor = (name: string) => {
-  const slug = name.toLowerCase()
+  const slug = name.toLowerCase().replace(/\s+/g, '')
   return STORE_PHOTOS.has(slug) ? `/images/stores/${slug}.jpg` : null
 }
 
-const MARQUEE_ITEMS = ['Fully Qualified Mechanics', 'Warranty-Safe Log Books', 'Quality Parts & Oils', 'Free Safety Inspection', 'Pre-RWC Checks']
+const MARQUEE_ITEMS = ['Fully Qualified Mechanics', 'Warranty-Safe Servicing', 'Quality Parts & Oils', 'Free Safety Inspection', 'Pre-MOT checks']
 
 const BRAND_CARDS = [
-  { name: 'Continental', src: '/images/brands/continental.svg' },
-  { name: 'Pirelli', src: '/images/brands/pirelli.svg' },
-  { name: 'Bridgestone', src: '/images/brands/bridgestone.svg' },
-  { name: 'Michelin', src: '/images/brands/michelin.svg' },
-  { name: 'Yokohama', src: '/images/brands/yokohama.svg' },
-  { name: 'Hankook', src: '/images/brands/hankook.svg' },
-  { name: 'BFGoodrich', src: '/images/brands/bfgoodrich.svg' },
+  { name: 'Veltex' },
+  { name: 'Ironpath' },
+  { name: 'Meridian' },
+  { name: 'Corsaro' },
+  { name: 'Allway' },
+  { name: 'Strata' },
+  { name: 'Kova' },
 ]
-const STAR_LABELS = ['Tap to rate', 'Poor', 'Fair', 'Good', 'Great', 'Excellent']
-
 /* ════════════════════════════════════════════════════════════════════
    HOOKS — eased count-up + in-view trigger (port of app.js countUp)
 ═══════════════════════════════════════════════════════════════════ */
@@ -327,15 +303,12 @@ function ServicePageDesktop() {
   const rvStats = useInViewOnce<HTMLDivElement>(0.2)
   const bars = useInViewOnce<HTMLDivElement>(0.15)
 
-  const locCount = useCountUp(10, heroStats.on)
+  const locCount = useCountUp(BRANCHES.length, heroStats.on)
   const warCount = useCountUp(100, heroStats.on)
   const rvRating = useCountUp(4.8, rvStats.on, 1400, 1)
   const rvTotal = useCountUp(2384, rvStats.on)
   const rvLocs = useCountUp(6, rvStats.on)
   const rvRec = useCountUp(98, rvStats.on)
-
-  /* booking form */
-  const [bookSent, setBookSent] = useState(false)
 
   /* shops accordion — single open */
   const [openShop, setOpenShop] = useState<number | null>(null)
@@ -351,53 +324,6 @@ function ServicePageDesktop() {
     return () => clearTimeout(t)
   }, [])
 
-  /* write-a-review modal */
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalStore, setModalStore] = useState('')
-  const [rating, setRating] = useState(0)
-  const [hoverRating, setHoverRating] = useState(0)
-  const [ratingError, setRatingError] = useState(false)
-  const [reviewSent, setReviewSent] = useState(false)
-
-  function openModal(presetLoc?: string) {
-    setModalOpen(true)
-    setReviewSent(false)
-    setRatingError(false)
-    if (presetLoc) {
-      const match = STORE_OPTIONS.find(o => o.toLowerCase().includes(presetLoc))
-      if (match) setModalStore(match)
-    }
-  }
-  function closeModal() {
-    setModalOpen(false)
-    setRating(0)
-    setHoverRating(0)
-    setRatingError(false)
-    setReviewSent(false)
-    setModalStore('')
-  }
-  function submitReview(e: React.FormEvent) {
-    e.preventDefault()
-    if (rating === 0) { setRatingError(true); return }
-    setReviewSent(true)
-  }
-
-  /* Escape close + body scroll lock (reference modal behavior) */
-  useEffect(() => {
-    if (!modalOpen) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal() }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [modalOpen])
-
-  const paintedStars = hoverRating || rating
-  const starLabel = ratingError ? 'Please pick a rating' : STAR_LABELS[paintedStars] || STAR_LABELS[0]
-
   return (
     <main className="svcp">
       <style>{CSS}</style>
@@ -406,7 +332,7 @@ function ServicePageDesktop() {
       <section className="hero" id="top">
         <Image
           src="/images/service/workshop-hero.jpg"
-          alt="Nova Tyres workshop"
+          alt="Gripwell workshop"
           fill
           priority
           className="hero-bg"
@@ -415,17 +341,17 @@ function ServicePageDesktop() {
         <div className="hero-bg-overlay" />
         <div className="wrap hero-inner">
           <div className="hero-copy">
-            <span className="kicker" data-reveal>Auto service &amp; mechanical · Melbourne-wide</span>
+            <span className="kicker" data-reveal>Auto service &amp; mechanical · across London</span>
             <h1 data-reveal className="nv-d1">Servicing<br /><span className="stroke">done</span><br /><em>right.</em></h1>
-            <p className="hero-sub nv-d2" data-reveal>From a free Pre-RWC check to the Ultimate overhaul — fully qualified mechanics, quality parts, and a log-book stamp that keeps your warranty intact.</p>
+            <p className="hero-sub nv-d2" data-reveal>From a Free MOT check to the Ultimate overhaul — fully qualified mechanics, quality parts, and a service-book stamp that keeps your warranty intact.</p>
             <div className="hero-actions nv-d3" data-reveal>
               <a className="btn" href="#tiers" onClick={e => { e.preventDefault(); scrollToId('tiers') }}>Explore services <IconArrow /></a>
-              <a className="btn ghost" href="#book" onClick={e => { e.preventDefault(); scrollToId('book') }}>Get a call-back</a>
+              <a className="btn ghost" href="#book" onClick={e => { e.preventDefault(); scrollToId('book') }}>How to book</a>
             </div>
             <div className="hero-stats nv-d4" data-reveal ref={heroStats.ref}>
               <div className="stat">
-                <div className="n"><span>{locCount}</span><small>+</small></div>
-                <div className="l">Locations AUS-wide</div>
+                <div className="n"><span>{locCount}</span></div>
+                <div className="l">London branches</div>
               </div>
               <div className="stat">
                 <div className="n"><span>{warCount}</span><small>%</small></div>
@@ -468,8 +394,8 @@ function ServicePageDesktop() {
               <span className="ico">
                 <svg viewBox="0 0 24 24" fill="none" stroke="rgb(7,99,48)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
               </span>
-              <h3>Pre-RWC Check</h3>
-              <p>Going for a Road Worthy Certificate? We inspect your vehicle and tell you exactly what it needs to pass — before you spend a cent on the test.</p>
+              <h3>Pre-MOT check</h3>
+              <p>MOT coming up? We inspect your vehicle and tell you exactly what it needs to pass — before you spend a penny on the test.</p>
               <a className="link" href="#book" onClick={e => { e.preventDefault(); scrollToId('book') }}>Book a free check <IconArrow /></a>
             </article>
 
@@ -494,7 +420,7 @@ function ServicePageDesktop() {
           <div className="section-head" data-reveal>
             <span className="kicker">Service menu</span>
             <h2>Pick your level<br />of service.</h2>
-            <p>Each service builds on the last — select one to see exactly what&rsquo;s included. From routine log-book care to the complete Ultimate overhaul.</p>
+            <p>Each service builds on the last — select one to see exactly what&rsquo;s included. From routine manufacturer-schedule care to the complete Ultimate overhaul.</p>
           </div>
           <div className="tiers-layout">
             <div className="tier-list" data-reveal>
@@ -549,7 +475,7 @@ function ServicePageDesktop() {
       <section className="why section-pad nv-cv" id="why">
         <div className="wrap">
           <div className="section-head" data-reveal>
-            <span className="kicker">Why Nova</span>
+            <span className="kicker">Why Gripwell</span>
             <h2>Servicing you<br />can trust.</h2>
           </div>
           <div className="why-grid">
@@ -562,7 +488,7 @@ function ServicePageDesktop() {
             <div className="why-cell nv-d2" data-reveal>
               <span className="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg></span>
               <h3>Warranty-Safe</h3>
-              <p>We stamp your log book as an official record — keeping your new-car warranty fully intact.</p>
+              <p>We stamp your service book as an official record — keeping your new-car warranty fully intact.</p>
               <span className="idx">02</span>
             </div>
             <div className="why-cell nv-d3" data-reveal>
@@ -600,20 +526,16 @@ function ServicePageDesktop() {
                 className="brand-card"
                 aria-hidden={i >= BRAND_CARDS.length || undefined}
               >
-                <img src={b.src} alt={i < BRAND_CARDS.length ? b.name : ''} loading="lazy" />
+                <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--text-dim)' }}>
+                  {i < BRAND_CARDS.length ? b.name : ''}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="brands-trust" data-reveal>
-          <span className="brands-avatars">
-            {[['DM', '#FF5A1F'], ['SK', '#2D6BFF'], ['RT', '#19D26A']].map(([t, c]) => (
-              <span key={t} className="brand-av" style={{ background: c }}>{t}</span>
-            ))}
-            <span className="brand-av more">+250</span>
-          </span>
-          <span className="brands-trust-txt">Trusted by 250+ drivers &amp; fleets across Australia</span>
+          <span className="brands-trust-txt">Fitting and servicing at {STORES.length} London branches</span>
         </div>
 
         <div className="brands-stats" data-reveal>
@@ -643,23 +565,18 @@ function ServicePageDesktop() {
           {/* header + featured */}
           <div className="rv-top">
             <div className="rv-intro" data-reveal>
-              <div className="rv-rate">
-                <span className="g-logo" aria-hidden="true"><GoogleG /></span>
-                <TextStars sm />
-                <span className="rv-rate-txt"><strong>4.8</strong> average rating</span>
-              </div>
-              <h2>Google reviews<br />across our stores.</h2>
-              <p>Real feedback from real customers — see why drivers across Melbourne &amp; Sydney trust Nova Tyres.</p>
+              <div className="rv-rate"><span style={{ display: 'inline-block', background: '#2A2E36', color: '#fff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', padding: '3px 8px', borderRadius: '4px' }}>SAMPLE DATA</span></div>
+              <h2>Example reviews<br />across our stores.</h2>
+              <p>Gripwell is a fictional shop, so these reviews, ratings and counts are made up to show the layout.</p>
             </div>
 
             <figure className="rv-featured nv-d1" data-reveal>
-              <span className="rv-featured-g" aria-hidden="true"><GoogleG /></span>
               <div className="rv-featured-tag"><IconZap />Featured review</div>
               <div className="rv-featured-body">
                 <div className="rv-featured-rev">
                   <span className="avatar" style={{ background: feat.c }}>{feat.av}</span>
                   <div>
-                    <span className="reviewer-name">{feat.name} <VerifiedMini /></span>
+                    <span className="reviewer-name">{feat.name}</span>
                     <span className="reviewer-time">{feat.meta}</span>
                   </div>
                 </div>
@@ -710,10 +627,6 @@ function ServicePageDesktop() {
                 <IconSearch />
                 <input type="search" placeholder="Search stores or reviews…" aria-label="Search stores or reviews" value={query} onChange={e => setQuery(e.target.value)} />
               </label>
-              <button className="rv-write-btn" type="button" onClick={() => openModal()}>
-                <IconPencil />
-                Write a review
-              </button>
             </div>
           </div>
 
@@ -724,8 +637,7 @@ function ServicePageDesktop() {
                 <article key={r.id} className="rv-card" data-reveal>
                   <div className="rv-card-photo">
                     <span className="rv-chip"><IconPin />{r.loc}</span>
-                    <div className="rv-photo" />
-                    <span className="rv-card-g" aria-hidden="true"><GoogleG /></span>
+                    <div className="rv-photo" style={STORE_PHOTOS.has(r.id) ? { backgroundImage: `url(/images/stores/${r.id}.jpg)`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined} />
                   </div>
                   <div className="rv-card-body">
                     <h3>{r.store}</h3>
@@ -733,10 +645,6 @@ function ServicePageDesktop() {
                     <div className="rv-mini">
                       <span className="avatar sm" style={{ background: r.c }}>{r.av}</span>
                       <p><b>{r.reviewer}</b> · {r.when}<br />{r.quote}</p>
-                    </div>
-                    <div className="rv-card-acts">
-                      <button type="button" className="rv-btn ghost" onClick={() => openModal(r.id)}>View reviews</button>
-                      <a className="rv-btn g" href={`https://www.google.com/search?q=Nova+Tyres+${r.id.charAt(0).toUpperCase() + r.id.slice(1)}+reviews`} target="_blank" rel="noopener noreferrer">Open on Google <IconExternal /></a>
                     </div>
                   </div>
                 </article>
@@ -757,17 +665,12 @@ function ServicePageDesktop() {
                   </div>
                 ))}
               </div>
-              <a className="rv-aside-link" href="https://www.google.com/search?q=Nova+Tyres+reviews" target="_blank" rel="noopener noreferrer">View all reviews on Google →</a>
-              <button className="rv-write-cta" type="button" onClick={() => openModal()}>
-                <IconPencil />
-                Leave us a review
-              </button>
             </aside>
           </div>
 
           <p className="rv-foot" data-reveal>
             <IconShieldCheck />
-            Reviews are verified and collected from Google.
+            Sample reviews for this portfolio demo, not real customer feedback.
           </p>
         </div>
       </section>
@@ -778,59 +681,16 @@ function ServicePageDesktop() {
           <div className="book-split">
             <div className="section-head" data-reveal>
               <span className="kicker">Book a service</span>
-              <h2>Tell us about<br />your car.</h2>
-              <p>Enter your details and we&rsquo;ll call you back — usually within the hour during opening times.</p>
+              <h2>Call us<br />to book.</h2>
+              <p>Online booking is on its way. Until then, our team books every service by phone or in store.</p>
             </div>
 
             <div className="book-form nv-d1" data-reveal>
-              {bookSent ? (
-                <div className="form-success show">
-                  <div className="tick"><IconCheck /></div>
-                  <h3>Request sent!</h3>
-                  <p>Thanks — one of our team will call you back shortly to lock in your service.</p>
-                </div>
-              ) : (
-                <form onSubmit={e => { e.preventDefault(); setBookSent(true) }} noValidate>
-                  <div className="form-row">
-                    <div className="field">
-                      <label htmlFor="f-name">Your name</label>
-                      <input id="f-name" name="name" type="text" placeholder="Jane Smith" required />
-                    </div>
-                    <div className="field">
-                      <label htmlFor="f-phone">Phone</label>
-                      <input id="f-phone" name="phone" type="tel" placeholder="0400 000 000" required />
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="field">
-                      <label htmlFor="f-vehicle">Vehicle</label>
-                      <input id="f-vehicle" name="vehicle" type="text" placeholder="Make & model" />
-                    </div>
-                    <div className="field">
-                      <label htmlFor="f-service">Service</label>
-                      <select id="f-service" name="service" defaultValue={SERVICE_OPTIONS[0]}>
-                        {SERVICE_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="f-loc">Preferred location</label>
-                    <select id="f-loc" name="location" defaultValue={STORE_OPTIONS[0]}>
-                      {STORE_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                      <option>Not sure — please advise</option>
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="f-msg">Anything else?</label>
-                    <textarea id="f-msg" name="message" placeholder="Preferred day/time, warning lights, noises…" />
-                  </div>
-                  <button className="btn form-submit" type="submit">Request my call-back <IconArrow /></button>
-                  <div className="form-foot">
-                    <IconLock />
-                    No obligation — we&rsquo;ll never share your details.
-                  </div>
-                </form>
-              )}
+              <p>
+                Call <a href={NOVA_SWITCHBOARD_HREF}><b>{NOVA_SWITCHBOARD}</b></a>, Mon–Fri 8am–5:30pm and Sat 8am–4pm,
+                or drop in to any of our {BRANCHES.length} London branches. We&rsquo;ll book your service at the branch and time that suit you.
+              </p>
+              <a className="btn form-submit" href={NOVA_SWITCHBOARD_HREF}>Call {NOVA_SWITCHBOARD} <IconArrow /></a>
             </div>
           </div>
         </div>
@@ -898,80 +758,9 @@ function ServicePageDesktop() {
           ))}
         </div>
 
-        <p className="shops-foot" data-reveal>Six workshops open across Melbourne &amp; Sydney — more locations opening soon right across Australia.</p>
+        <p className="shops-foot" data-reveal>Six workshops open across London — more locations opening soon across the UK.</p>
       </section>
 
-      {/* ══ WRITE-A-REVIEW MODAL ══════════════════════════════════════ */}
-      {modalOpen && (
-        <div className="rv-modal">
-          <div className="rv-modal-bg" onClick={closeModal} />
-          <div className="rv-modal-card" role="dialog" aria-modal="true" aria-labelledby="rvModalTitle">
-            <button className="rv-modal-close" type="button" aria-label="Close" onClick={closeModal}><IconX /></button>
-
-            {reviewSent ? (
-              <div className="rv-modal-success show">
-                <div className="tick"><IconCheck /></div>
-                <h3>Thanks for your review!</h3>
-                <p>Your {rating}-star review for {modalStore || 'your store'} has been submitted — thank you!</p>
-                <button className="btn ghost" type="button" onClick={closeModal}>Done</button>
-              </div>
-            ) : (
-              <form className="rv-modal-form" onSubmit={submitReview} noValidate>
-                <div className="rv-modal-head">
-                  <span className="g-logo" aria-hidden="true"><GoogleG /></span>
-                  <h3 id="rvModalTitle">Leave a review</h3>
-                  <p>Tell us how we did — pick your store and rate your visit.</p>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="rv-store">Which store?</label>
-                  <select id="rv-store" required value={modalStore} onChange={e => setModalStore(e.target.value)}>
-                    <option value="" disabled>Select a location…</option>
-                    {STORE_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                  </select>
-                </div>
-
-                <div className="field">
-                  <label>Your rating</label>
-                  <div className="rv-stars-input" role="radiogroup" aria-label="Star rating" onMouseLeave={() => setHoverRating(0)}>
-                    {[1, 2, 3, 4, 5].map(v => (
-                      <button
-                        key={v}
-                        type="button"
-                        className={`rv-star${v <= paintedStars ? ' on' : ''}`}
-                        aria-label={`${v} star${v > 1 ? 's' : ''}`}
-                        onMouseEnter={() => setHoverRating(v)}
-                        onClick={() => { setRating(v); setRatingError(false) }}
-                      >
-                        <IconStar />
-                      </button>
-                    ))}
-                    <span className="rv-stars-label" style={ratingError ? { color: 'var(--accent)' } : undefined}>{starLabel}</span>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="field">
-                    <label htmlFor="rv-rname">Your name</label>
-                    <input id="rv-rname" type="text" placeholder="Jane S." required />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="rv-remail">Email <span className="rv-opt">(optional)</span></label>
-                    <input id="rv-remail" type="email" placeholder="jane@email.com" />
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="rv-rtext">Your review</label>
-                  <textarea id="rv-rtext" placeholder="What stood out about your visit?" required />
-                </div>
-
-                <button className="btn rv-modal-submit" type="submit">Submit review <IconArrow /></button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </main>
   )
 }
@@ -984,12 +773,12 @@ function ServicePageDesktop() {
 ═══════════════════════════════════════════════════════════════════ */
 const CSS = `
 .svcp {
-  --accent: #FF6817;
-  --green: #076330;
+  --accent: #FF6A1A;
+  --green: #2A2E36;
   --green-2: #0A7D3D;
   --accent-ink: #0B0B0E;
-  --accent-soft: color-mix(in oklab, #FF6817 16%, transparent);
-  --green-soft: color-mix(in oklab, #076330 14%, transparent);
+  --accent-soft: color-mix(in oklab, #FF6A1A 16%, transparent);
+  --green-soft: color-mix(in oklab, #2A2E36 14%, transparent);
 
   --maxw: 1240px;
   --gutter: clamp(20px, 5vw, 64px);
@@ -1502,7 +1291,7 @@ const CSS = `
 .svcp .rv-card { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: border-color .3s, transform .35s var(--ease), box-shadow .3s; }
 .svcp .rv-card:hover { border-color: var(--line-strong); transform: translateY(-4px); box-shadow: var(--shadow); }
 .svcp .rv-card-photo { position: relative; height: 150px; }
-.svcp .rv-photo { position: absolute; inset: 0; background: linear-gradient(135deg, #1C3A2B 0%, #0C0D0F 100%); }
+.svcp .rv-photo { position: absolute; inset: 0; background: linear-gradient(135deg, #2A2E36 0%, #0C0D0F 100%); }
 .svcp .rv-chip { position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #fff; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); border-radius: 999px; padding: 6px 11px; }
 .svcp .rv-chip svg { width: 12px; height: 12px; }
 .svcp .rv-card-g { position: absolute; right: 12px; bottom: -16px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 4px 12px rgba(0,0,0,.3); }

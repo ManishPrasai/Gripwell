@@ -9,13 +9,13 @@
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
 
-  --primary: #1C3A2B;
+  --primary: #2A2E36;
   --primary-foreground: #FFFFFF;
 
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
 
-  --accent:#E8572A;
+  --accent: #FF6A1A;
   --accent-foreground: #FFFFFF;
 
   --muted: oklch(0.97 0 0);
@@ -23,16 +23,44 @@
 
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: #1C3A2B;
+  --ring: #2A2E36;
 
   --radius: 0.625rem;
 
-  /* Nova Tyres Brand */
-  --nova-green: #1C3A2B;
-  --nova-green-mid: #2D5C42;
-  --nova-green-light: #E8F5EE;
-  --nova-coral: #E8572A;
-  --nova-coral-light: #FAECE7;
+  /* ── Gripwell redesign tokens (Fitting Departures) ─────────────────────
+     Contrast measured, WCAG 2.x: ink/paper 14.8, ink-2/paper 7.4,
+     ink-3/paper 5.5, dark text on orange 5.6, amber/board 10.2,
+     amber-2/board 8.3, amber-3/board 6.5, board-text 16.6,
+     board-muted 8.5. Orange is never a text colour on paper (2.6). */
+  --gw-paper:       #F4F5F6;
+  --gw-surface:     #FFFFFF;
+  --gw-ink:         #1E2128;
+  --gw-ink-2:       #4A505B;
+  --gw-ink-3:       #5C6370;
+  --gw-line:        #D9DCE1;
+  --gw-graphite:    #2A2E36;
+  --gw-orange:      #FF6A1A;
+  --gw-orange-ink:  #1E2128;
+  --gw-orange-down: #E85A0E;
+  --gw-board:       #111317;
+  --gw-board-line:  #2B2F37;
+  --gw-board-row:   #191C21;
+  --gw-board-text:  #F1F2F4;
+  --gw-board-text-2:#D4D8DE;
+  --gw-board-muted: #A9B0BA;
+  --gw-amber:       #FFB000;
+  --gw-amber-2:     #E0A21E;
+  --gw-amber-3:     #C68F1F;
+  --gw-font:        var(--font-manrope), system-ui, sans-serif;
+  --gw-font-dots:   var(--font-doto), var(--font-manrope), monospace;
+  --gw-ease:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Gripwell Brand */
+  --nova-green: #2A2E36;
+  --nova-green-mid: #3D4350;
+  --nova-green-light: #EDEEF0;
+  --nova-coral: #FF6A1A;
+  --nova-coral-light: #FFF0E8;
   --nova-cream: #FAF9F5;
   --nova-star: #F5A623;
   --background: #FAF9F5;
@@ -57,7 +85,7 @@
 
 @theme inline {
 
-  --font-heading: 'Bebas Neue', sans-serif;
+  --font-heading: var(--font-manrope), sans-serif;
 
   --font-sans: var(--font-sans);
 
@@ -152,7 +180,7 @@
 
   --popover-foreground: oklch(0.985 0 0);
 
-  --primary: #2D5C42;
+  --primary: #3D4350;
   --primary-foreground: #FFFFFF;
 
   --secondary: oklch(0.269 0 0);
@@ -163,7 +191,7 @@
 
   --muted-foreground: oklch(0.708 0 0);
 
-   --accent: #E8572A;
+   --accent: #FF6A1A;
   --accent-foreground: #FFFFFF;
 
   --destructive: oklch(0.704 0.191 22.216);
@@ -172,7 +200,7 @@
 
   --input: oklch(1 0 0 / 15%);
 
-  --ring: #1C3A2B;
+  --ring: #2A2E36;
 
   --chart-1: oklch(0.87 0 0);
 
@@ -200,7 +228,7 @@
 
   --sidebar-ring: oklch(0.556 0 0);
 
-    --font-heading: 'Bebas Neue', sans-serif;
+    --font-heading: var(--font-manrope), sans-serif;
   --font-body: 'Inter', sans-serif;
 }
 
@@ -356,21 +384,21 @@ textarea:focus-visible {
 :root {
   --nv-green-900: #002A13;  /* footer ground        */
   --nv-green-850: #04331B;  /* announcement strip   */
-  --nv-green-800: #0D1A12;  /* hero / category ink  */
+  --nv-green-800: #1A1D23;  /* hero / category ink  */
   --nv-green-700: #0F2A1C;  /* "Why Nova" ground    */
-  --nv-green-600: #1C3A2B;  /* cards on cream       */
-  --nv-green-500: #076330;  /* header bar, links    */
+  --nv-green-600: #2A2E36;  /* cards on cream       */
+  --nv-green-500: #2A2E36;  /* header bar, links    */
   --nv-green-400: #0A7D3D;  /* link hover           */
-  --nv-coral-600: #E8572A;  /* primary accent       */
-  --nv-coral-500: #FF6817;  /* accent hover         */
+  --nv-coral-600: #FF6A1A;  /* primary accent       */
+  --nv-coral-500: #FF6A1A;  /* accent hover         */
   --nv-coral-300: #FF8A5C;  /* accent on dark       */
   --nv-cream:     #FAF9F5;  /* page ground          */
   --nv-cream-200: #F0EFE9;  /* alt band             */
   --nv-line:      #E7E5DE;  /* hairline on light    */
   --nv-line-2:    #DEDCD4;  /* stronger hairline    */
-  --nv-ink:       #16211B;  /* body text            */
-  --nv-ink-mute:  #6E7C74;  /* secondary text       */
-  --nv-ink-dim:   #9DB0A5;  /* text on dark         */
+  --nv-ink:       #1A1D23;  /* body text            */
+  --nv-ink-mute:  #6B7280;  /* secondary text       */
+  --nv-ink-dim:   #9EA3AD;  /* text on dark         */
 }
 
 /* Section entrance + brand marquee — mirrors the design's novaIn/novaMarquee.

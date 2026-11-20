@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import './account.css'
+import { money } from '../../../lib/fitting'
 
 /* ── Icons ── */
 const IUser   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -49,16 +50,15 @@ const EMPTY_OVERVIEW: Overview = {
   stats: { servicesDone: 0, vehicles: 0, orders: 0, avgRating: null, reviewCount: 0 },
 }
 
-const money = (n: number) => `$${n.toFixed(2)}`
 const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })
+  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 const stampDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
+  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()
 
 const ICON_STYLES = {
-  green:  { background: 'color-mix(in oklab, #076330 12%, transparent)', color: '#076330' },
+  green:  { background: 'color-mix(in oklab, #2A2E36 12%, transparent)', color: '#2A2E36' },
   blue:   { background: 'color-mix(in oklab, #4285F4 12%, transparent)', color: '#4285F4' },
-  accent: { background: 'color-mix(in oklab, #FF6817 12%, transparent)', color: '#FF6817' },
+  accent: { background: 'color-mix(in oklab, #FF6A1A 12%, transparent)', color: '#FF6A1A' },
 }
 
 function nowTime() { const d = new Date(), h = d.getHours(), m = d.getMinutes(); return `${h % 12 || 12}:${m < 10 ? '0' : ''}${m} ${h < 12 ? 'AM' : 'PM'}` }
@@ -78,7 +78,7 @@ function Modal({ type, onClose, onSuccess, email }: { type: string; onClose: () 
           <h3>{isDetails ? 'Request changes' : 'Reset password'}</h3>
           <p>{isDetails ? 'Tell us what to update — our team will verify and apply it within 1 business day.' : `We'll send a secure link to ${email}. Expires in 30 minutes.`}</p>
           {isDetails && (<>
-            <div className="acc-mfield"><label>What would you like to change?</label><select defaultValue=""><option value="" disabled>Select a field…</option><option>Full name</option><option>Email address</option><option>Phone number</option><option>Suburb / postcode</option><option>Other</option></select></div>
+            <div className="acc-mfield"><label>What would you like to change?</label><select defaultValue=""><option value="" disabled>Select a field…</option><option>Full name</option><option>Email address</option><option>Phone number</option><option>Town / postcode</option><option>Other</option></select></div>
             <div className="acc-mfield"><label>New value</label><input type="text" placeholder="Enter the updated information" /></div>
             <div className="acc-mfield"><label>Reason <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--text-dim)', fontWeight: 400 }}>(optional)</span></label><textarea placeholder="e.g. I've moved house / changed my number…" /></div>
           </>)}
@@ -107,7 +107,7 @@ function ProfileTab({ user, data, loading, onRequest }: {
   user: UserData; data: Overview; loading: boolean; onRequest: () => void
 }) {
   const initials = `${user.firstName[0] || ''}${user.lastName[0] || ''}`.toUpperCase()
-  const memberSince = new Date(user.createdAt).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+  const memberSince = new Date(user.createdAt).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
   const memberYear  = new Date(user.createdAt).getFullYear()
 
   const fields = [
@@ -152,7 +152,7 @@ function ProfileTab({ user, data, loading, onRequest }: {
               </svg>
             )}
           </div>
-          <div className="prof-handle">Nova member since {memberYear}</div>
+          <div className="prof-handle">Gripwell member since {memberYear}</div>
           <div className="prof-meta">
             <span><IEmail />{user.email}</span>
             {user.phone && <span><IPhone />{user.phone}</span>}
@@ -189,7 +189,7 @@ function ProfileTab({ user, data, loading, onRequest }: {
           <div className="prof-empty">
             <p>
               No vehicles saved yet. Add one when you book a service and we&apos;ll keep its
-              fitment, rego and history here.<br />
+              fitment, number plate and history here.<br />
               <a href="/service">Book a service →</a>
             </p>
           </div>
@@ -285,7 +285,7 @@ function OrderItem({ order }: { order: OrderRecord }) {
           <div className="order-meta">#{order.id.slice(0, 8).toUpperCase()} · {shortDate(order.createdAt)} · {order.store}</div>
         </div>
         <span className={`order-status ${order.status === 'FITTED' ? 'completed' : order.status.toLowerCase()}`}>{statusLabel}</span>
-        <div className="order-amount">{money(order.total)}<small>incl. GST</small></div>
+        <div className="order-amount">{money(order.total)}<small>incl. VAT</small></div>
       </button>
       <div className="order-body"><div className="order-body-inner"><div className="order-body-pad">
         <div className="order-lines">
@@ -348,7 +348,7 @@ function MessagesTab({ initials, token }: { initials: string; token: string | nu
       // existing thread. Stores they've already messaged sort first.
       const merged = (sRes.stores ?? []).map((s: any) => {
         const c = convos.find(x => x.storeId === s.id)
-        return { id: s.id, slug: s.slug, name: s.name.replace(/^Nova Tyres\s+/i, ''), unread: c?.unread ?? 0, messages: c?.messages ?? [] }
+        return { id: s.id, slug: s.slug, name: s.name.replace(/^Gripwell\s+/i, ''), unread: c?.unread ?? 0, messages: c?.messages ?? [] }
       }).sort((a: any, b: any) => (b.messages.length ? 1 : 0) - (a.messages.length ? 1 : 0))
       setStores(merged)
       setActiveId(prev => prev ?? merged.find((s: any) => s.messages.length)?.id ?? merged[0]?.id ?? null)
@@ -407,7 +407,7 @@ function MessagesTab({ initials, token }: { initials: string; token: string | nu
     <div>
       <div className="acc-section-head"><h2>Messages</h2>{totalUnread > 0 && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11.5px', color: 'var(--text-dim)' }}>{totalUnread} unread</span>}</div>
       <div className="chat-wrap">
-        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Nova Tyres — {active.name}</div><div className="chat-agent-status">Typically replies Mon–Fri, 8 AM–6 PM</div></div></div>
+        <div className="chat-header"><div className="chat-agent-av">NT</div><div><div className="chat-agent-name">Gripwell — {active.name}</div><div className="chat-agent-status">Typically replies Mon–Fri, 8 AM–6 PM</div></div></div>
         <div className="chat-stores">{stores.map(store => (<button key={store.id} className={`chat-store-btn${activeId === store.id ? ' active' : ''}`} onClick={() => selectStore(store.id)}><span className="chat-store-dot" />{store.name}{store.unread > 0 && <span className="chat-store-unread">{store.unread}</span>}</button>))}</div>
         <div className="chat-messages" ref={msgsRef}>{msgNodes.length === 0 ? (<div className="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages with {active.name} yet — send one below.</p></div>) : msgNodes}</div>
         {error && <div style={{ padding: '8px 14px', background: '#FFF4F0', color: '#C0431B', fontSize: '12.5px', fontFamily: "'DM Sans', sans-serif" }}>{error}</div>}

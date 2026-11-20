@@ -24,7 +24,7 @@ export default function CollectionHero() {
         </div>
 
         <h1 style={{
-          color: '#E8572A',
+          color: '#FF6A1A',
           fontFamily: "'DM Sans', sans-serif",
           fontWeight: 900,
           fontSize: 'clamp(32px, 5vw, 56px)',

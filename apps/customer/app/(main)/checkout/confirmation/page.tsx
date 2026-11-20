@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { money } from '../../../../lib/fitting'
 
 // ── Order progress steps ──────────────────────────────────────────────────────
 const STEPS = [
@@ -15,16 +16,16 @@ const STEPS = [
 // ── Main confirmation content (uses useSearchParams — requires Suspense) ──────
 function ConfirmationContent() {
   const params      = useSearchParams()
-  const orderNumber = params.get('order') ?? 'NVT-UNKNOWN'
+  const orderNumber = params.get('order') ?? '—'
   const totalStr    = params.get('total')
   const total       = totalStr ? parseFloat(totalStr) : null
-  const orderDate   = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+  const orderDate   = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
-  const [store, setStore] = useState({ name: 'Nova Tyres Sefton', address: '107 Carlingford St, Sefton NSW 2162', phone: '0403 388 774' })
+  const [store, setStore] = useState({ name: 'Gripwell Camden', address: '14 Kentish Town Rd, Camden NW1 9NX', phone: '+44 20 7946 0101' })
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('nova_selected_store')
+      const raw = localStorage.getItem('gw_selected_store')
       if (raw) {
         const s = JSON.parse(raw)
         setStore({
@@ -37,7 +38,7 @@ function ConfirmationContent() {
   }, [])
 
   return (
-    <main style={{ background: '#0D1A12', minHeight: '100vh', paddingTop: '40px', paddingBottom: '80px', color: '#FAF9F5' }}>
+    <main style={{ background: '#1A1D23', minHeight: '100vh', paddingTop: '40px', paddingBottom: '80px', color: '#FAF9F5' }}>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', padding: '40px 24px 56px' }}>
@@ -57,7 +58,7 @@ function ConfirmationContent() {
         </div>
 
         <p style={{
-          fontFamily: "'DM Sans', sans-serif", fontSize: '12px',
+          fontFamily: 'var(--gw-font)', fontSize: '12px',
           fontWeight: 700, letterSpacing: '0.22em', color: '#19D26A',
           textTransform: 'uppercase', marginBottom: '12px',
         }}>
@@ -65,16 +66,16 @@ function ConfirmationContent() {
         </p>
 
         <h1 style={{
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: 'clamp(42px, 7vw, 74px)',
-          letterSpacing: '0.03em', lineHeight: 1,
+          fontFamily: 'var(--gw-font)',
+          fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800,
+          letterSpacing: '-0.02em', lineHeight: 1.05,
           color: '#FAF9F5', margin: '0 0 16px',
         }}>
           Thank You For Your Order!
         </h1>
 
         <p style={{
-          fontFamily: "'DM Sans', sans-serif", fontSize: '16px',
+          fontFamily: 'var(--gw-font)', fontSize: '16px',
           color: '#7BA88A', maxWidth: '480px', margin: '0 auto 32px', lineHeight: 1.8,
         }}>
           Your tyres are on their way to the fitting station.
@@ -92,11 +93,11 @@ function ConfirmationContent() {
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
           </svg>
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#7BA88A', fontWeight: 500 }}>
+          <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#7BA88A', fontWeight: 500 }}>
             Order Reference
           </span>
           <span style={{
-            fontFamily: "'DM Sans', sans-serif", fontSize: '14px',
+            fontFamily: 'var(--gw-font)', fontSize: '14px',
             color: '#FAF9F5', fontWeight: 800, letterSpacing: '0.08em',
           }}>
             {orderNumber}
@@ -123,7 +124,7 @@ function ConfirmationContent() {
             }}>
               <i className="ti ti-receipt" style={{ fontSize: '18px', color: '#19D26A' }} aria-hidden="true" />
             </div>
-            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#FAF9F5', margin: 0 }}>
+            <h2 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#FAF9F5', margin: 0 }}>
               Order Summary
             </h2>
           </div>
@@ -131,10 +132,9 @@ function ConfirmationContent() {
           {([
             { label: 'Order Number', value: orderNumber,    mono: true  },
             { label: 'Date',         value: orderDate                   },
-            { label: 'Payment',      value: 'Stripe — AUD'             },
-            { label: 'Fitting Fee',  value: 'A$25.00 (included)'       },
+            { label: 'Payment',      value: 'Card via Stripe (GBP)'    },
             total !== null
-              ? { label: 'Total Charged', value: `A$${total.toFixed(2)}`, highlight: true }
+              ? { label: 'Total Charged', value: `${money(total)} incl. VAT`, highlight: true }
               : null,
           ] as ({ label: string; value: string; mono?: boolean; highlight?: boolean } | null)[])
             .filter((r): r is { label: string; value: string; mono?: boolean; highlight?: boolean } => r !== null)
@@ -147,11 +147,11 @@ function ConfirmationContent() {
                   borderBottom: '1px solid rgba(255,255,255,0.05)',
                 }}
               >
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#5A8066', fontWeight: 500 }}>
+                <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#5A8066', fontWeight: 500 }}>
                   {row.label}
                 </span>
                 <span style={{
-                  fontFamily: row.mono ? "'DM Mono', monospace" : "'DM Sans', sans-serif",
+                  fontFamily: row.mono ? 'var(--gw-font)' : 'var(--gw-font)',
                   fontSize:   row.highlight ? '20px' : '13px',
                   color:      row.highlight ? '#FF5A1F' : '#D4E8DA',
                   fontWeight: row.highlight ? 900 : 600,
@@ -177,21 +177,21 @@ function ConfirmationContent() {
             }}>
               <i className="ti ti-map-pin" style={{ fontSize: '18px', color: '#FF5A1F' }} aria-hidden="true" />
             </div>
-            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#FAF9F5', margin: 0 }}>
+            <h2 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#FAF9F5', margin: 0 }}>
               Fitting Station
             </h2>
           </div>
 
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '18px', color: '#FAF9F5', marginBottom: '6px' }}>
+          <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '18px', color: '#FAF9F5', marginBottom: '6px' }}>
             {store.name}
           </p>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#5A8066', lineHeight: 1.7, marginBottom: '16px' }}>
+          <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#5A8066', lineHeight: 1.7, marginBottom: '16px' }}>
             {store.address}
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <i className="ti ti-phone" style={{ fontSize: '14px', color: '#5A8066' }} aria-hidden="true" />
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#7BA88A' }}>{store.phone}</span>
+            <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#7BA88A' }}>{store.phone}</span>
           </div>
 
           {/* Delivery info badge */}
@@ -202,11 +202,11 @@ function ConfirmationContent() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <i className="ti ti-truck" style={{ fontSize: '15px', color: '#19D26A' }} aria-hidden="true" />
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#19D26A' }}>
+              <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '13px', color: '#19D26A' }}>
                 Free delivery to store
               </span>
             </div>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#5A8066', margin: 0, lineHeight: 1.65 }}>
+            <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#5A8066', margin: 0, lineHeight: 1.65 }}>
               Tyres typically arrive within{' '}
               <strong style={{ color: '#7BA88A' }}>2–3 business days</strong>.
               We&apos;ll call you to confirm your fitting appointment.
@@ -222,7 +222,7 @@ function ConfirmationContent() {
           border: '1px solid rgba(25,210,106,0.1)', padding: '28px 32px',
         }}>
           <h2 style={{
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
+            fontFamily: 'var(--gw-font)', fontWeight: 800,
             fontSize: '15px', color: '#FAF9F5', marginBottom: '30px',
           }}>
             Order Progress
@@ -252,7 +252,7 @@ function ConfirmationContent() {
                 }}>
                   {step.done
                     ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D1A12" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A1D23" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )
@@ -261,7 +261,7 @@ function ConfirmationContent() {
                 </div>
 
                 <p style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: 'var(--gw-font)',
                   fontSize: '11px',
                   fontWeight: step.done ? 700 : 500,
                   color: step.done ? '#19D26A' : '#3D5C48',
@@ -283,7 +283,7 @@ function ConfirmationContent() {
           border: '1px solid rgba(25,210,106,0.1)', padding: '28px 32px',
         }}>
           <h2 style={{
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
+            fontFamily: 'var(--gw-font)', fontWeight: 800,
             fontSize: '15px', color: '#FAF9F5', marginBottom: '20px',
           }}>
             What Happens Next
@@ -301,7 +301,7 @@ function ConfirmationContent() {
                 icon: 'ti-truck',
                 color: '#FF5A1F',
                 title: 'Tyres dispatched to store',
-                body: 'Your tyres are shipped directly to Nova Tyres Sefton. Estimated arrival: 2–3 business days.',
+                body: 'Your tyres are shipped directly to your chosen Gripwell store. Estimated arrival: 2–3 business days.',
               },
               {
                 icon: 'ti-phone',
@@ -319,10 +319,10 @@ function ConfirmationContent() {
                   <i className={`ti ${item.icon}`} style={{ fontSize: '17px', color: item.color }} aria-hidden="true" />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#D4E8DA', marginBottom: '4px' }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#D4E8DA', marginBottom: '4px' }}>
                     {item.title}
                   </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#5A8066', margin: 0, lineHeight: 1.65 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#5A8066', margin: 0, lineHeight: 1.65 }}>
                     {item.body}
                   </p>
                 </div>
@@ -344,7 +344,7 @@ function ConfirmationContent() {
             background: '#FF5A1F', color: '#fff',
             padding: '13px 30px', borderRadius: '999px',
             textDecoration: 'none',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px',
+            fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px',
             letterSpacing: '0.01em',
           }}
         >
@@ -363,7 +363,7 @@ function ConfirmationContent() {
             color: '#3D5C48',
             padding: '13px 30px', borderRadius: '999px',
             border: '1px solid rgba(255,255,255,0.07)',
-            fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px',
+            fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px',
             cursor: 'not-allowed',
           }}
         >
@@ -381,10 +381,10 @@ function ConfirmationContent() {
 function ConfirmationSkeleton() {
   return (
     <main style={{
-      background: '#0D1A12', minHeight: '100vh',
+      background: '#1A1D23', minHeight: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#3D5C48' }}>
+      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#3D5C48' }}>
         Loading your confirmation…
       </p>
     </main>

@@ -1,14 +1,14 @@
 /* ============================================================
-   NOVA TYRES — Cart page (ported from the redesigned reference).
+   Gripwell — Cart page (ported from the redesigned reference).
    Scoped under .nova-cart so tokens never leak into the rest of
    the app. White/cream theme; the app's own navbar + footer stay.
    ============================================================ */
 
 .nova-cart {
-  --accent:        #E8572A;
+  --accent:        #FF6A1A;
   --accent-ink:    #FFFFFF;
-  --accent-soft:   #FAECE7;
-  --green:         #076330;
+  --accent-soft:   #FFF0E8;
+  --green:         #2A2E36;
   --green-2:       #0A7D3D;
   --green-soft:    #E9F5EE;
 
@@ -20,8 +20,8 @@
   --line:          #EBEBEB;
   --line-strong:   #D8D8D6;
 
-  --text:          #16211B;
-  --text-mid:      #47554D;
+  --text:          #1A1D23;
+  --text-mid:      #4B5563;
   --text-dim:      #85908A;
 
   --radius:        18px;

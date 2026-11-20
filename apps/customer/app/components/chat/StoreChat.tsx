@@ -63,7 +63,7 @@ export default function StoreChat({
     setSending(true); setError(null)
 
     // Optimistic — show it immediately, reconcile from the server response.
-    const temp: Msg = { id: 'tmp-' + Date.now(), side: 'outbound', text, time: new Date().toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) }
+    const temp: Msg = { id: 'tmp-' + Date.now(), side: 'outbound', text, time: new Date().toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }) }
     setMsgs(m => [...m, temp])
     setInput('')
     try {
@@ -103,7 +103,7 @@ export default function StoreChat({
         style={{ width: '100%', maxWidth: 420, height: 'min(560px, 82vh)', background: '#fff', borderRadius: '16px 16px 12px 12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 12px 48px rgba(0,0,0,0.28)' }}
       >
         {/* Header */}
-        <div style={{ background: '#076330', color: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div style={{ background: '#2A2E36', color: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F, fontWeight: 800, fontSize: 12, flexShrink: 0 }}>NT</div>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontFamily: F, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{storeName}</div>
@@ -128,7 +128,7 @@ export default function StoreChat({
           ) : msgs.map(m => (
             <div key={m.id} style={{ display: 'flex', justifyContent: m.side === 'outbound' ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
               <div style={{ maxWidth: '78%' }}>
-                <div style={{ background: m.side === 'outbound' ? '#076330' : '#fff', color: m.side === 'outbound' ? '#fff' : '#1A1A1A', padding: '9px 13px', borderRadius: m.side === 'outbound' ? '12px 12px 3px 12px' : '12px 12px 12px 3px', fontFamily: F, fontSize: 13.5, lineHeight: 1.45, border: m.side === 'outbound' ? 'none' : '1px solid #E5E5E5', wordBreak: 'break-word' }}>
+                <div style={{ background: m.side === 'outbound' ? '#2A2E36' : '#fff', color: m.side === 'outbound' ? '#fff' : '#1A1A1A', padding: '9px 13px', borderRadius: m.side === 'outbound' ? '12px 12px 3px 12px' : '12px 12px 12px 3px', fontFamily: F, fontSize: 13.5, lineHeight: 1.45, border: m.side === 'outbound' ? 'none' : '1px solid #E5E5E5', wordBreak: 'break-word' }}>
                   {m.text}
                 </div>
                 <div style={{ fontFamily: F, fontSize: 10.5, color: '#9A9A9A', marginTop: 3, textAlign: m.side === 'outbound' ? 'right' : 'left' }}>{m.time}</div>
@@ -155,7 +155,7 @@ export default function StoreChat({
             onClick={send}
             disabled={sending || !input.trim()}
             aria-label="Send message"
-            style={{ background: input.trim() && !sending ? '#E8572A' : '#E0E0E0', color: '#fff', border: 'none', borderRadius: 8, width: 42, cursor: input.trim() && !sending ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .2s' }}
+            style={{ background: input.trim() && !sending ? '#FF6A1A' : '#E0E0E0', color: '#fff', border: 'none', borderRadius: 8, width: 42, cursor: input.trim() && !sending ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .2s' }}
           >
             <i className="ti ti-send" style={{ fontSize: 16 }} aria-hidden="true" />
           </button>

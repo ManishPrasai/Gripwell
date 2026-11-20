@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: 'How long will my tyres last?',
-    a: 'Typically 40,000–80,000 km depending on the tyre and your driving. Free tread checks at any store, any time.',
+    a: 'Typically 25,000–50,000 miles depending on the tyre and your driving. Free tread checks at any store, any time.',
   },
   {
     q: 'Do you offer mobile fitting?',

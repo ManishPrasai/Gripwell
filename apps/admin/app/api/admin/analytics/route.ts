@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       if (byDayMap.has(k)) byDayMap.set(k, (byDayMap.get(k) || 0) + Number(o.total))
     }
     const revenueByDay = Array.from(byDayMap.entries()).map(([day, rev]) => ({
-      day: new Date(day).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+      day: new Date(day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       revenue: Math.round(rev),
     }))
 

@@ -1,7 +1,7 @@
 import CartContents from '../../components/cart/CartContents'
 
 export const metadata = {
-  title: 'Your Cart — Nova Tyres',
+  title: 'Your Cart — Gripwell',
   description: 'Review your cart, select your vehicle type and choose a fitting station.',
 }
 

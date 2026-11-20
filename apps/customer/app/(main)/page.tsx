@@ -1,29 +1,38 @@
-import HeroSection       from '../components/home/HeroSection'
 import BestDeals         from '../components/home/BestDeals'
 import BrowseByCategory  from '../components/home/BrowseByCategory'
 import InStoreServices   from '../components/home/InStoreServices'
-import WhyNovaTyres      from '../components/home/WhyNovaTyres'
+import Whygripwell      from '../components/home/Whygripwell'
 import BrandsStrip       from '../components/home/BrandsStrip'
 import CustomerReviews   from '../components/home/CustomerReviews'
 import StoreLocator      from '@/app/components/locations/StoreLocator'
 import NewsletterSection from '../components/home/NewsletterSection'
-import SocialGrid        from '../components/home/SocialGrid'
 import MobileStickyBar   from '../components/layout/MobileStickyBar'
 import MobileHome        from '../components/home/mobile/MobileHome'
 import { pageMetadata }  from '../../lib/seo'
 import { STORES }        from '../../lib/stores'
+import { loadBoard, type Board } from '../../lib/fitting-board'
+import { loadCars, loadStockedSizes } from '../../lib/catalogue'
+import DeparturesHero    from '../components/home/departures/DeparturesHero'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'   // always reflect live PageSEO from admin
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata('home', {
-    title: 'Nova Tyres — Warehouse Direct Tyres & Wheels',
-    description: `Warehouse-direct pricing on tyres and wheels with professional fitting across ${STORES.length} Australian stores.`,
+    title: 'Gripwell — Warehouse Direct Tyres & Wheels',
+    description: `Warehouse-direct pricing on tyres and wheels with professional fitting across ${STORES.length} London stores.`,
   })
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  // A failed load shows the board's own "call us" state, never a broken page.
+  const [board, sizes, cars] = await Promise.all([
+    loadBoard().catch((e): Board | null => { console.error('[home] board', e); return null }),
+    loadStockedSizes().catch(e => { console.error('[home] sizes', e); return [] }),
+    loadCars().catch(e => { console.error('[home] cars', e); return [] }),
+  ])
+  const hero = <DeparturesHero board={board} sizes={sizes} cars={cars} />
+
   return (
     <>
       {/*
@@ -39,23 +48,22 @@ export default function HomePage() {
       <style>{`@media (max-width:1023.98px){.nv-shared-chrome{display:none!important}}`}</style>
 
       <div data-vw="desktop">
-        <main style={{ background: '#FAF9F5', color: '#16211B' }}>
-          <HeroSection />
+        <main style={{ background: '#FAF9F5', color: '#1A1D23' }}>
+          {hero}
           <BestDeals />
           <BrowseByCategory />
           <InStoreServices />
-          <WhyNovaTyres />
+          <Whygripwell />
           <BrandsStrip />
           <CustomerReviews />
           <StoreLocator />
           <NewsletterSection />
-          <SocialGrid />
           <MobileStickyBar />
         </main>
       </div>
 
       <div data-vw="mobile">
-        <MobileHome />
+        <MobileHome hero={hero} />
       </div>
     </>
   )

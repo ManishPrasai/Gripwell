@@ -1,0 +1,106 @@
+.grid {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+}
+.left { min-width: 0; }
+.right { min-width: 0; }
+
+.srOnly {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.form { margin-top: 20px; }
+
+/* Size | Car segmented choice (real radios) */
+.modes {
+  display: inline-flex;
+  margin: 0 0 14px;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--gw-surface);
+  box-shadow: inset 0 0 0 1.5px var(--gw-ink-3);
+}
+.mode {
+  position: relative;
+  min-height: 40px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gw-ink-2);
+  cursor: pointer;
+}
+.mode input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.mode[data-on='true'] { background: var(--gw-ink); color: var(--gw-paper); }
+.mode:has(input:focus-visible) { outline: 3px solid var(--gw-ink); outline-offset: 2px; }
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 700; color: var(--gw-ink-2); }
+.field select {
+  appearance: none;
+  width: 100%;
+  height: 52px;
+  padding: 0 34px 0 12px;
+  border: 1.5px solid var(--gw-ink-3);
+  border-radius: 10px;
+  background: var(--gw-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%231E2128' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  font: 700 18px/1 var(--gw-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--gw-ink);
+  text-overflow: ellipsis;
+}
+.field select:focus-visible { outline: 3px solid var(--gw-ink); outline-offset: 1px; }
+.field select:disabled { background-color: var(--gw-paper); border-color: var(--gw-line); color: var(--gw-ink-3); opacity: .55; cursor: not-allowed; }
+.field select[aria-invalid='true'] { border-color: #B42318; border-width: 2px; }
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--gw-ink-2);
+  min-height: 2.9em;              /* the line changes; the button below doesn't jump */
+}
+.hint strong { color: var(--gw-ink); font-weight: 800; }
+.error { margin: 12px 0 0; font-size: 14px; font-weight: 700; color: #B42318; }
+
+.go {
+  margin-top: 12px;
+  width: 100%;
+  min-height: 54px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--gw-orange);
+  color: var(--gw-orange-ink);
+  font: 800 17px/1 var(--gw-font);
+  cursor: pointer;
+  transition: transform 120ms var(--gw-ease);
+}
+.go:hover { background: var(--gw-orange-down); }
+.go:active { transform: scale(0.98); }
+.go:focus-visible { outline: 3px solid var(--gw-ink); outline-offset: 2px; }
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 56px;
+    align-items: start;
+  }
+  .left { padding-top: 24px; max-width: 540px; }
+  .form { margin-top: 28px; }
+  .go { width: auto; padding: 0 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .go { transition: none; }
+}

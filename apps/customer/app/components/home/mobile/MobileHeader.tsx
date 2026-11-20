@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useCart } from '../../../context/CartContext'
 
 /*
-  The slim green top bar for the mobile design — NOVA wordmark + cart with a
+  The slim dark top bar for the mobile design — Gripwell wordmark + cart with a
   live count badge. Client component only for the badge; the rest is a link.
 */
 export default function MobileHeader() {
@@ -13,19 +13,20 @@ export default function MobileHeader() {
   return (
     <header
       style={{
-        background: '#076330', padding: '12px 16px', display: 'flex', alignItems: 'center',
+        background: '#2A2E36', padding: '12px 16px', display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 60,
       }}
     >
-      <Link href="/" style={{ color: '#FAF9F5', fontFamily: "'Bebas Neue', sans-serif", fontSize: '20px', letterSpacing: '0.04em', textDecoration: 'none' }}>
-        NOVA TYRES
+      <Link href="/" aria-label="Gripwell home" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/logo-horizontal-reversed.svg" alt="Gripwell" style={{ height: '22px', width: 'auto', display: 'block' }} />
       </Link>
       <Link
         href="/cart"
         aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
         style={{
           position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: '36px', height: '36px', background: '#FF6817', borderRadius: '8px', color: '#fff', textDecoration: 'none',
+          width: '36px', height: '36px', background: '#FF6A1A', borderRadius: '8px', color: '#fff', textDecoration: 'none',
         }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -35,7 +36,7 @@ export default function MobileHeader() {
           <span style={{
             position: 'absolute', top: '-4px', right: '-4px', display: 'inline-flex', alignItems: 'center',
             justifyContent: 'center', minWidth: '16px', height: '16px', padding: '0 3px', borderRadius: '999px',
-            background: '#0D1A12', color: '#fff', fontSize: '9px', fontWeight: 700,
+            background: '#1A1D23', color: '#fff', fontSize: '9px', fontWeight: 700,
           }}>
             {cartCount}
           </span>

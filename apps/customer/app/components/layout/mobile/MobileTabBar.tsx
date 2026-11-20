@@ -13,7 +13,7 @@ import MobileSearchView from '../../home/mobile/MobileSearchView'
 
   Home / Shop / Search are in-page views, exactly as the artboard models them
   (goShop → view:'shop', etc.) — Shop and Search open a full-height overlay
-  above the home content, keeping the green header and this bar in place.
+  above the home content, keeping the graphite header and this bar in place.
   Cart / Account are real routes. The Cart tab carries a live count badge.
 */
 
@@ -30,7 +30,7 @@ const ICONS = {
 const tabStyle = (active: boolean): React.CSSProperties => ({
   position: 'relative', border: 'none', background: 'none', cursor: 'pointer',
   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', padding: '9px 2px',
-  textDecoration: 'none', color: active ? '#F1EFE7' : '#7C9084', fontFamily: "'DM Sans', sans-serif",
+  textDecoration: 'none', color: active ? '#F1EFE7' : '#A9B0BA', fontFamily: 'var(--gw-font)',
 })
 
 function TabInner({ icon, label, badge }: { icon: React.ReactNode; label: string; badge?: number }) {
@@ -43,7 +43,7 @@ function TabInner({ icon, label, badge }: { icon: React.ReactNode; label: string
         {badge != null && badge > 0 && (
           <span style={{
             position: 'absolute', top: '-6px', right: '-9px', minWidth: '15px', height: '15px',
-            padding: '0 3px', borderRadius: '999px', background: '#E8572A', color: '#fff',
+            padding: '0 3px', borderRadius: '999px', background: '#FF6A1A', color: '#fff',
             fontSize: '9px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             {badge}
@@ -92,7 +92,7 @@ export default function MobileTabBar({ active = 'home' }: { active?: 'home' | 's
       <nav
         aria-label="Primary"
         style={{
-          display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', background: '#12241A',
+          display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', background: 'var(--gw-graphite)',
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 80,
           maxWidth: '480px', margin: '0 auto',
           boxShadow: '0 -6px 16px rgba(0,0,0,.25)', paddingBottom: 'env(safe-area-inset-bottom)',

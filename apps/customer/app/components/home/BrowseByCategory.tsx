@@ -16,22 +16,22 @@ import Image from 'next/image'
 */
 const CATEGORIES = [
   { key: 'passenger',  name: 'Passenger',   blurb: 'Quiet & economical', href: '/tyres/results?type=PASSENGER',   img: '/images/tyres/tyre-passenger.png',   alt: 'Passenger car tyre',  w: 1664, h: 2432 },
-  { key: 'suv',        name: '4x4 / SUV',   blurb: 'Built for load',     href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-suv.png',         alt: '4x4 and SUV tyre',    w: 1664, h: 2432 },
-  { key: 'commercial', name: 'Commercial',  blurb: 'Vans & utes',        href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-all-terrain.png', alt: 'Commercial van tyre', w: 1664, h: 2432 },
-  { key: 'mud',        name: 'Mud-Terrain', blurb: 'Maximum bite',       href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-mud.png',         alt: 'Mud-terrain tyre',    w: 1584, h: 2336 },
-  { key: 'wheels',     name: 'Wheels',      blurb: 'Alloy & packages',   href: '/wheels',                         img: '/images/wheels/king-kt5.png',        alt: 'Alloy wheel',         w: 447,  h: 559 },
+  { key: 'suv',        name: '4x4 / SUV',   blurb: 'Built for load',     href: '/tyres/results?type=SUV',         img: '/images/tyres/tyre-neutral.png',         alt: '4x4 and SUV tyre',    w: 1664, h: 2432 },
+  { key: 'commercial', name: 'Commercial',  blurb: 'Vans & pickups',        href: '/tyres/results?type=COMMERCIAL',  img: '/images/tyres/tyre-neutral.png', alt: 'Commercial van tyre', w: 1664, h: 2432 },
+  { key: 'mud',        name: 'Mud-Terrain', blurb: 'Maximum bite',       href: '/tyres/results?type=MUD_TERRAIN', img: '/images/tyres/tyre-neutral.png',         alt: 'Mud-terrain tyre',    w: 1584, h: 2336 },
+  { key: 'wheels',     name: 'Wheels',      blurb: 'Alloy & packages',   href: '/wheels',                         img: '/images/wheels/wheel-neutral.png',        alt: 'Alloy wheel',         w: 447,  h: 559 },
 ]
 
 export default function BrowseByCategory() {
   return (
-    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: 'clamp(52px,6vw,80px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: 'clamp(52px,6vw,80px) 0', fontFamily: 'var(--gw-font)' }}>
       <style>{`
         .nv-cat-grid { display: grid; gap: 20px; grid-template-columns: repeat(5,minmax(0,1fr)); }
         @media (max-width: 1100px) { .nv-cat-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
         @media (max-width: 780px)  { .nv-cat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
         @media (max-width: 520px)  { .nv-cat-grid { grid-template-columns: 1fr; } }
 
-        .nv-cat-card { position: relative; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E7E5DE; border-radius: 18px; padding: 24px; text-decoration: none; color: #16211B; transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s; }
+        .nv-cat-card { position: relative; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E7E5DE; border-radius: 18px; padding: 24px; text-decoration: none; color: #1A1D23; transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s, border-color .22s; }
         .nv-cat-card:hover { border-color: #C9C7BE; transform: translateY(-5px); box-shadow: 0 6px 10px rgba(20,25,22,0.08), 0 26px 50px -22px rgba(20,25,22,0.34); }
 
         /* One fixed stage for every product shot: identical height on every
@@ -62,10 +62,10 @@ export default function BrowseByCategory() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8572A', marginBottom: '10px' }}>
+            <span style={{ display: 'block', fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#FF6A1A', marginBottom: '10px' }}>
               Shop by category
             </span>
-            <h2 style={{ margin: 0, fontSize: 'clamp(32px,3.8vw,44px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#16211B' }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(32px,3.8vw,44px)', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.05, color: '#1A1D23' }}>
               Find the right tyre for your drive
             </h2>
           </div>
@@ -73,7 +73,7 @@ export default function BrowseByCategory() {
             href="/tyres"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '13px', fontWeight: 700,
-              letterSpacing: '0.06em', textTransform: 'uppercase', color: '#076330', textDecoration: 'none',
+              letterSpacing: '0.06em', textTransform: 'uppercase', color: '#2A2E36', textDecoration: 'none',
               whiteSpace: 'nowrap', paddingBottom: '4px',
             }}
           >
@@ -90,10 +90,10 @@ export default function BrowseByCategory() {
               <span className="nv-cat-figure">
                 <Image src={c.img} alt={c.alt} width={c.w} height={c.h} className="nv-cat-img" />
               </span>
-              <span style={{ display: 'block', fontSize: '19px', fontWeight: 700, color: '#16211B', marginBottom: '6px' }}>
+              <span style={{ display: 'block', fontSize: '19px', fontWeight: 700, color: '#1A1D23', marginBottom: '6px' }}>
                 {c.name}
               </span>
-              <span style={{ display: 'block', fontSize: '13.5px', color: '#6E7C74' }}>
+              <span style={{ display: 'block', fontSize: '13.5px', color: '#6B7280' }}>
                 {c.blurb}
               </span>
             </Link>

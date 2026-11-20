@@ -2,20 +2,20 @@
  * TOTP helpers for admin MFA.
  *
  * Secret encryption: AES-256-GCM with TOTP_ENCRYPTION_KEY (32 hex bytes).
- * The plaintext TOTP secret never touches the DB — only the IV+ciphertext blob.
+ * The plaintext TOTP secret never touches the DB â" only the IV+ciphertext blob.
  *
  * Recovery codes: 8 × 8-char alphanumeric codes, stored as SHA-256 hashes.
  * Plaintext is shown once at enrolment and never retrievable again.
  *
  * Temp token: short-lived JWT (2 min) issued after password verification but
- * before TOTP — lets the frontend show the 6-digit prompt without issuing a
+ * before TOTP â" lets the frontend show the 6-digit prompt without issuing a
  * full session.
  */
 import * as OTPAuth from 'otpauth'
 import * as crypto  from 'crypto'
 import * as jwt     from 'jsonwebtoken'
 
-/* ── Encryption ──────────────────────────────────────────────────────────── */
+/* â"€â"€ Encryption â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 
 function getEncKey(): Buffer {
   const hex = process.env.TOTP_ENCRYPTION_KEY
@@ -31,7 +31,7 @@ export function encryptSecret(plaintext: string): string {
   const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
   const enc  = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
   const tag  = cipher.getAuthTag()
-  // format: iv(12) + tag(16) + ciphertext  → base64
+  // format: iv(12) + tag(16) + ciphertext  â†' base64
   return Buffer.concat([iv, tag, enc]).toString('base64')
 }
 
@@ -46,9 +46,9 @@ export function decryptSecret(blob: string): string {
   return decipher.update(enc) + decipher.final('utf8')
 }
 
-/* ── TOTP generation & verification ──────────────────────────────────────── */
+/* â"€â"€ TOTP generation & verification â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 
-const ISSUER = 'Nova Tyres Admin'
+const ISSUER = 'Gripwell Admin'
 
 export function generateTotpSecret(): { secret: string; uri: string } {
   const totp = new OTPAuth.TOTP({
@@ -72,7 +72,7 @@ export function verifyTotpCode(encryptedSecret: string, code: string): boolean {
       algorithm: 'SHA1',
       digits:    6,
       period:    30,
-      secret:    OTPAuth.Secret.fromBase32(plainSecret),   // fromBase32 exists ✓
+      secret:    OTPAuth.Secret.fromBase32(plainSecret),   // fromBase32 exists âœ"
     })
     // window: 1 = allow ±30 sec clock drift
     const delta = totp.validate({ token: code.replace(/\s/g, ''), window: 1 })
@@ -82,7 +82,7 @@ export function verifyTotpCode(encryptedSecret: string, code: string): boolean {
   }
 }
 
-/* ── Recovery codes ──────────────────────────────────────────────────────── */
+/* â"€â"€ Recovery codes â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'   // no 0/O/I/1 confusion
 
@@ -104,7 +104,7 @@ export function generateRecoveryCodes(): { plaintext: string[]; hashes: string[]
   return { plaintext, hashes }
 }
 
-/* ── Temp "TOTP pending" token ───────────────────────────────────────────── */
+/* â"€â"€ Temp "TOTP pending" token â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
 
 export interface TotpPendingPayload {
   type:    'totp_pending'

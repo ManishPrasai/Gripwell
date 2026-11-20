@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     // normal, fully-typed Prisma path below.
     if (q) {
       // word_similarity (not similarity) — model names are multi-word
-      // ("P Zero Sport"), and plain similarity() compares the WHOLE string,
+      // ("Strada Sport"), and plain similarity() compares the WHOLE string,
       // so a typo in one word gets diluted against the rest and scores too
       // low. word_similarity finds the best match against any single word
       // within the longer string instead.

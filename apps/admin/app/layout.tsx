@@ -21,8 +21,16 @@ if (typeof process !== 'undefined') {
 }
 
 export const metadata: Metadata = {
-  title: "Nova Tyres — Admin",
-  description: "Nova Tyres store operations & content console.",
+  title: 'Gripwell — Admin',
+  description: 'Gripwell store operations & content console.',
+  icons: {
+    icon: [
+      { url: '/brand/favicon.svg', type: 'image/svg+xml' },
+      { url: '/brand/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/brand/apple-touch-icon.png',
+  },
+  manifest: '/brand/site.webmanifest',
 };
 
 export default function RootLayout({

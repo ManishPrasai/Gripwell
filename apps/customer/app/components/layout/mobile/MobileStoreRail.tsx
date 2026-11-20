@@ -10,7 +10,7 @@ import { STORES, telHref } from '../../../../lib/stores'
 export default function MobileStoreRail() {
   return (
     <section style={{ background: '#FAF9F5', padding: '20px 0 20px 16px', borderTop: '1px solid #E7E5DE' }}>
-      <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6E7C74', marginBottom: '12px', paddingRight: '16px' }}>
+      <span style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#6B7280', marginBottom: '12px', paddingRight: '16px' }}>
         Find a store
       </span>
       <div className="nv-mob-rail" style={{ paddingRight: '16px' }}>
@@ -20,22 +20,22 @@ export default function MobileStoreRail() {
               {s.image ? (
                 <Image src={s.image} alt={s.name} fill sizes="210px" style={{ objectFit: 'cover' }} />
               ) : (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#E8F5EE', color: '#076330', fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EDEEF0', color: '#2A2E36', fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {s.short}
                 </div>
               )}
             </div>
             <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 800, color: '#16211B', textTransform: 'uppercase' }}>{s.short}</span>
-              <span style={{ fontSize: '11.5px', color: '#6E7C74' }}>{s.address}, {s.suburb}</span>
-              <a href={telHref(s.tel)} style={{ textAlign: 'center', border: '1.4px solid #076330', color: '#076330', borderRadius: '6px', padding: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', marginTop: '4px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 800, color: '#1A1D23', textTransform: 'uppercase' }}>{s.short}</span>
+              <span style={{ fontSize: '11.5px', color: '#6B7280' }}>{s.address}, {s.suburb}</span>
+              <a href={telHref(s.tel)} style={{ textAlign: 'center', border: '1.4px solid #2A2E36', color: '#2A2E36', borderRadius: '6px', padding: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', marginTop: '4px' }}>
                 {s.tel}
               </a>
             </div>
           </div>
         ))}
       </div>
-      <Link href="/service?goto=shops" style={{ display: 'inline-block', marginTop: '12px', fontSize: '12.5px', fontWeight: 700, color: '#076330', textDecoration: 'none' }}>
+      <Link href="/service?goto=shops" style={{ display: 'inline-block', marginTop: '12px', fontSize: '12.5px', fontWeight: 700, color: '#2A2E36', textDecoration: 'none' }}>
         View all locations →
       </Link>
     </section>

@@ -1,0 +1,160 @@
+/* Fitting departures board. Colours from the --gw-* tokens in globals.css. */
+
+.board {
+  background: var(--gw-board);
+  color: var(--gw-board-text);
+  border-radius: 14px;
+  padding: 4px 10px 6px;
+  font-family: var(--gw-font);
+  box-shadow: 0 18px 40px -24px rgba(17, 19, 23, 0.55);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  caption-side: top;
+  text-align: left;
+}
+.capRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  column-gap: 12px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--gw-board-line);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--gw-board-text);
+  margin: 0;
+}
+
+.meta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gw-board-muted);
+  white-space: nowrap;
+}
+
+.table thead th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gw-board-muted);
+  text-align: left;
+  padding: 10px 4px 6px;
+}
+.table thead .cPrice, .table thead .cBays { text-align: right; }
+.cTime   { width: 70px; }
+.cPrice  { width: 76px; }
+.cBays   { width: 52px; }
+
+.table tbody tr {
+  position: relative;               /* anchors the row-wide link */
+  border-top: 1px solid var(--gw-board-line);
+}
+.table tbody tr:hover { background: var(--gw-board-row); }   /* instant: motion is transform/opacity only */
+
+.table tbody td, .table tbody th {
+  padding: 10px 4px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.time { white-space: nowrap; }
+.dots {
+  display: block;
+  font-family: var(--gw-font-dots);
+  font-weight: 900;
+  font-size: 23px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.day {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gw-board-muted);
+}
+.none { font-size: 14px; font-weight: 700; color: var(--gw-board-muted); }
+
+.branch { font-weight: 700; }
+.link {
+  font-size: 15px;
+  color: inherit;
+  text-decoration: none;
+}
+.link::after {                      /* the whole row is the tap target */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
+.link:focus-visible { outline: none; }
+.link:focus-visible::after { outline: 2px solid var(--gw-amber); outline-offset: -2px; }
+.area {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-board-muted);
+}
+
+.price, .bays { text-align: right !important; white-space: nowrap; }
+.price { font-size: 15px; font-weight: 800; }
+.unit {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gw-board-muted);
+}
+.bays { font-size: 13px; font-weight: 700; }
+
+/* Urgency: soonest strongest. Every step stays above 4.5:1 on the board. */
+.r1 .dots { color: var(--gw-amber); }
+.r1 .link, .r1 .price, .r1 .bays { color: var(--gw-board-text); }
+.r2 .dots { color: var(--gw-amber-2); }
+.r2 .link, .r2 .price, .r2 .bays { color: var(--gw-board-text-2); }
+.r3 .dots { color: var(--gw-amber-3); font-weight: 700; }
+.r3 .link, .r3 .price, .r3 .bays { color: var(--gw-board-muted); font-weight: 600; }
+
+.fail {
+  margin: 0;
+  padding: 18px 2px 14px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--gw-board-text);
+}
+.fail a { color: var(--gw-amber); font-weight: 800; text-underline-offset: 3px; }
+.board > .title { padding: 12px 2px; border-bottom: 1px solid var(--gw-board-line); }
+
+@media (min-width: 1024px) {
+  .board { padding: 8px 22px 12px; border-radius: 18px; }
+  .title { font-size: 17px; }
+  .dots  { font-size: 32px; }
+  .link  { font-size: 18px; }
+  .price { font-size: 18px; }
+  .table tbody td, .table tbody th { padding: 13px 8px; }
+  .cTime { width: 110px; }
+  .cPrice { width: 120px; }
+  .cBays { width: 90px; }
+}
+
+/* Signature: the price column re-sets in place when the size changes. */
+.fresh { display: block; animation: gwFresh 240ms var(--gw-ease) both; }
+@keyframes gwFresh {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fresh { animation: none; }
+}

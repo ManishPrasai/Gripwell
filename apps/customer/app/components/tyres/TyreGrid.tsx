@@ -4,22 +4,11 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '../../context/CartContext'
+import { money } from '../../../lib/fitting'
 
 /* ── Brand logo map ───────────────────────────────────────────────────────── */
-const BRAND_LOGOS: Record<string, string> = {
-  'continental':  '/images/brands/continental.svg',
-  'hankook':      '/images/brands/hankook.svg',
-  'pirelli':      '/images/brands/pirelli.svg',
-  'maxxis':       '/images/brands/maxxis.svg',
-  'yokohama':     '/images/brands/yokohama.svg',
-  'bf goodrich':  '/images/brands/bfgoodrich.svg',
-  'bfgoodrich':   '/images/brands/bfgoodrich.svg',
-  'nitto':        '/images/brands/nitto.svg',
-  'atlander':     '/images/brands/atlander.svg',
-  'bridgestone':  '/images/brands/bridgestone.svg',
-  'michelin':     '/images/brands/michelin.svg',
-  'toyo':         '/images/brands/toyo.svg',
-}
+/* No manufacturer artwork: every brand renders as a text wordmark. */
+const BRAND_LOGOS: Record<string, string> = {}
 
 /* ── Types ────────────────────────────────────────────────────────────────── */
 interface TyreProduct {
@@ -60,7 +49,7 @@ function mapTyre(t: ApiTyre): TyreProduct {
     id:        t.id,
     slug:      t.slug,
     brand:     t.brand,
-    brandLogo: BRAND_LOGOS[t.brand.toLowerCase()] ?? '/images/brands/continental.svg',
+    brandLogo: BRAND_LOGOS[t.brand.toLowerCase()] ?? '',
     model:     t.model,
     size:      `${width}/${profile}R${rimDiameter}`,
     spec:      loadIndex && speedRating ? `${loadIndex}${speedRating}` : speedRating ?? '',
@@ -76,7 +65,7 @@ const SORT_OPTIONS = ['Default', 'Price: Low to High', 'Price: High to Low', 'Na
 /* ── Brand logo with text fallback (bare — no border chip) ────────────────── */
 function BrandLogoImg({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
-  if (err) return (
+  if (!src || err) return (
     <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#0A0F0C' }}>{brand}</span>
   )
   return (
@@ -138,7 +127,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
               letterSpacing: '0.1em',
               fontSize:      '11.5px',
               color:         '#fff',
-              background:    '#FF6817',
+              background:    '#FF6A1A',
               padding:       '6px 13px',
               borderRadius:  '4px',
             }}>
@@ -160,8 +149,8 @@ function TyreCard({ product }: { product: TyreProduct }) {
               borderRadius:  '50%',
               display:       'grid',
               placeItems:    'center',
-              color:         justAdded ? '#fff' : '#FF6817',
-              background:    justAdded ? '#076330' : '#fff',
+              color:         justAdded ? '#fff' : '#FF6A1A',
+              background:    justAdded ? '#2A2E36' : '#fff',
               border:        '1px solid rgba(7,99,48,0.16)',
               boxShadow:     '0 2px 6px rgba(17,24,20,0.12)',
               cursor:        'pointer',
@@ -225,7 +214,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
           {/* Price + View more */}
           <div style={{ width: '100%', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', paddingTop: '9px', flexWrap: 'wrap' }}>
             <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '24px', letterSpacing: '-0.01em', color: '#E23B2E' }}>
-              A${product.price.toFixed(2)}
+              {money(product.price)}
             </span>
             <span style={{
               display:      'inline-flex',
@@ -233,7 +222,7 @@ function TyreCard({ product }: { product: TyreProduct }) {
               gap:          '6px',
               padding:      '9px 15px',
               borderRadius: '8px',
-              background:   '#076330',
+              background:   '#2A2E36',
               color:        '#fff',
               fontFamily:   "'DM Sans', sans-serif",
               fontWeight:    800,
@@ -407,8 +396,8 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
                 fontFamily:   "'DM Sans', sans-serif",
                 fontSize:     '14px',
                 fontWeight:    700,
-                border:       onSaleOnly ? '1px solid #FF6817' : '1px solid #D5D5D5',
-                background:   onSaleOnly ? '#FF6817' : '#fff',
+                border:       onSaleOnly ? '1px solid #FF6A1A' : '1px solid #D5D5D5',
+                background:   onSaleOnly ? '#FF6A1A' : '#fff',
                 color:        onSaleOnly ? '#fff' : '#1A1A1A',
                 transition:   'background 0.18s ease, color 0.18s ease, border-color 0.18s ease',
               }}
@@ -455,7 +444,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
               </span>
             )}
             {onSaleOnly && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FF6817', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FF6A1A', color: '#fff', borderRadius: '999px', padding: '5px 14px', fontSize: '13px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
                 <i className="ti ti-discount-2" style={{ fontSize: '13px' }} aria-hidden="true" />
                 On sale
                 <button onClick={() => setOnSaleOnly(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.75)', padding: 0, lineHeight: 1, marginLeft: '2px' }}>×</button>
@@ -473,7 +462,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
         {/* ── No exact size match notice ── */}
         {sizeQuery && !exactSizeMatch && !loading && (
           <div style={{ background: '#FFF8F5', border: '1px solid #FDDCCC', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <i className="ti ti-info-circle" style={{ fontSize: '18px', color: '#E8572A', flexShrink: 0 }} aria-hidden="true" />
+            <i className="ti ti-info-circle" style={{ fontSize: '18px', color: '#FF6A1A', flexShrink: 0 }} aria-hidden="true" />
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#555', fontWeight: 400 }}>
               No exact match found for <strong style={{ color: '#1A1A1A' }}>{sizeQuery}</strong>. Showing all available tyres — contact us to order your specific size.
             </p>
@@ -487,7 +476,7 @@ export default function TyreGrid({ initialWidth, initialProfile, initialRim, ini
           </div>
         ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#888', fontFamily: "'DM Sans', sans-serif", fontSize: '16px' }}>
-            {onSaleOnly ? 'No tyres on sale right now. Try clearing the “On sale” filter.' : 'No tyres found. Try a different filter.'}
+            {onSaleOnly ? 'No tyres on sale right now. Try clearing the "On sale" filter.' : 'No tyres found. Try a different filter.'}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

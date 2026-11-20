@@ -12,19 +12,15 @@ export const dynamic = 'force-dynamic'
 const DEMO_PRODUCTS: Record<string, object> = {
   default: {
     id: 'demo-1',
-    brand: 'Continental', model: 'UltraContact UX7',
-    description: "The UltraContact UX7 is Continental's latest touring tyre, delivering exceptional wet braking, responsive handling and low rolling resistance. Built for modern passenger vehicles that demand all-weather confidence.",
-    type: 'PASSENGER', slug: 'continental-ultracontact-ux7-215-65r16',
-    price: '100.00', compareAtPrice: '120.00', stockQuantity: 8,
+    brand: 'Meridian', model: 'Citadel UX7',
+    description: "The Citadel UX7 is Meridian's latest touring tyre, delivering exceptional wet braking, responsive handling and low rolling resistance. Built for modern passenger vehicles that demand all-weather confidence.",
+    type: 'PASSENGER', slug: 'meridian-citadel-ux7-215-65r16',
+    price: '100.00', compareAtPrice: null, stockQuantity: 8,
     isBestSeller: false, isFeatured: true,
     fuelEfficiencyRating: 'B', wetGripRating: 'A', noiseLevelDb: 69,
     tyreSize: { width: 245, profile: 70, rimDiameter: 16, loadIndex: 118, speedRating: 'S', construction: 'R' },
-    images: [{ url: '/images/tyres/Tyre 1.png', altText: 'Continental UltraContact UX7', sortOrder: 0 }],
-    reviews: [
-      { id: 'r1', rating: 5, title: 'Excellent wet grip', body: 'Best prices in Melbourne, hands down. Professional and way cheaper than anywhere else I quoted.', createdAt: new Date().toISOString(), customer: { firstName: 'Sarah', lastName: 'M.' } },
-      { id: 'r2', rating: 5, title: 'Great value',        body: 'Best prices in Melbourne, hands down. Got 4 Maxxis AT tyres fitted at Springvale — quick, professional.',   createdAt: new Date().toISOString(), customer: { firstName: 'Sarah', lastName: 'M.' } },
-      { id: 'r3', rating: 5, title: 'Highly recommend',  body: 'Best prices in Melbourne, hands down. Got 4 Maxxis AT tyres fitted at Springvale — quick, professional.',   createdAt: new Date().toISOString(), customer: { firstName: 'Sarah', lastName: 'M.' } },
-    ],
+    images: [{ url: '/images/tyres/tyre-neutral.png', altText: 'Meridian Citadel UX7', sortOrder: 0 }],
+    reviews: [],
   },
 }
 
@@ -48,8 +44,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product = await getProduct(slug) as { brand?: string; model?: string } | null
   if (!product) return {}
   return {
-    title: `${product.brand} ${product.model} — Nova Tyres`,
-    description: `Buy the ${product.brand} ${product.model} from Nova Tyres. Expert fitting available at ${STORES.length} stores across VIC and NSW.`,
+    title: `${product.brand} ${product.model} — Gripwell`,
+    description: `Buy the ${product.brand} ${product.model} from Gripwell. Expert fitting available at ${STORES.length} stores across London.`,
   }
 }
 
@@ -64,8 +60,8 @@ export default async function TyreProductPage({ params }: { params: Promise<{ sl
     images: { url: string }[]
     reviews: { rating: number }[]
   }
-  const avg = p.reviews.length > 0 ? p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length : 4.8
-  const reviewCount = p.reviews.length > 0 ? p.reviews.length : 126
+  const reviewCount = p.reviews.length
+  const avg = reviewCount > 0 ? p.reviews.reduce((s, r) => s + r.rating, 0) / reviewCount : 0
   const schema = buildProductSchema({
     path: `/tyres/${p.slug}`,
     brand: p.brand,
@@ -75,7 +71,7 @@ export default async function TyreProductPage({ params }: { params: Promise<{ sl
     sku: p.id,
     price: parseFloat(p.price),
     inStock: p.stockQuantity > 0,
-    rating: { value: avg, count: reviewCount },
+    rating: reviewCount > 0 ? { value: avg, count: reviewCount } : undefined,
   })
 
   return (

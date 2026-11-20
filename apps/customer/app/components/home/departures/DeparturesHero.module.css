@@ -1,0 +1,30 @@
+.hero {
+  background: var(--gw-paper);
+  color: var(--gw-ink);
+  font-family: var(--gw-font);
+  padding: 20px 16px 32px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(30px, 8.4vw, 64px);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  max-width: 14ch;
+}
+
+.lede {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--gw-ink-2);
+  max-width: 44ch;
+  text-wrap: pretty;
+}
+
+@media (min-width: 1024px) {
+  .hero { padding: 56px 32px 80px; }
+  .lede { font-size: 18px; margin-top: 18px; }
+}

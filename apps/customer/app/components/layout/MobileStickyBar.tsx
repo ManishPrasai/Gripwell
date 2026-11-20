@@ -16,7 +16,7 @@ const itemStyle: React.CSSProperties = {
   background:     'transparent',
   border:         'none',
   cursor:         'pointer',
-  fontFamily:     "'DM Sans', sans-serif",
+  fontFamily:     'var(--gw-font)',
 }
 
 const labelStyle: React.CSSProperties = { fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.04em' }
@@ -37,7 +37,7 @@ export default function MobileStickyBar() {
             display: grid;
             grid-template-columns: repeat(4,1fr);
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
-            background: #0D1A12;
+            background: #1A1D23;
             box-shadow: 0 -8px 30px rgba(13,26,18,0.4);
             padding-bottom: env(safe-area-inset-bottom);
           }
@@ -52,7 +52,7 @@ export default function MobileStickyBar() {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           style={itemStyle}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8572A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6A1A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
           </svg>
           <span style={labelStyle}>Search</span>

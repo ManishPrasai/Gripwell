@@ -7,19 +7,21 @@ import { useRouter } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../../context/CartContext'
-import { fittingRate, isVehicleType, type VehicleType } from '../../../lib/fitting'
+import { fittingRate, isVehicleType, quoteOrder, money, type VehicleType, type CartTotals } from '../../../lib/fitting'
 
 // ── Stripe ───────────────────────────────────────────────────────────────────
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const AU_STATES = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA']
+const UK_COUNTIES = ['Greater London', 'Surrey', 'Kent', 'Essex', 'Hertfordshire', 'Berkshire', 'Buckinghamshire', 'Other']
+// Full UK postcode, e.g. NW1 9NX, SW1A 1AA, E1 6RL (space optional).
+const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i
 
 const DEFAULT_STORE = {
-  name:    'Nova Tyres Sefton',
-  address: '107 Carlingford St, Sefton',
-  state:   'NSW 2162',
-  phone:   '0403388774',
+  name:    'Gripwell Camden',
+  address: '14 Kentish Town Rd',
+  state:   'Camden NW1 9NX',
+  phone:   '+442079460101',
 }
 
 type Step = 1 | 2 | 3
@@ -29,19 +31,19 @@ const field: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
   padding: '11px 14px',
   border: '1.5px solid #D8D8D8', borderRadius: '8px',
-  fontFamily: "'DM Sans', sans-serif", fontSize: '14px',
+  fontFamily: 'var(--gw-font)', fontSize: '14px',
   color: '#1A1A1A', background: '#fff', outline: 'none',
 }
 const lbl: React.CSSProperties = {
   display: 'block',
-  fontFamily: "'DM Sans', sans-serif", fontSize: '12px',
+  fontFamily: 'var(--gw-font)', fontSize: '12px',
   fontWeight: 600, color: '#666', marginBottom: '6px',
 }
 
 // ── Brand logo with error fallback ───────────────────────────────────────────
 function BrandLogo({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
-  if (err) return <span style={{ fontFamily: "'DM Sans'", fontWeight: 700, fontSize: '11px', color: '#444' }}>{brand}</span>
+  if (!src || err) return <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '11px', color: '#444' }}>{brand}</span>
   return <Image src={src} alt={brand} width={68} height={16} style={{ objectFit: 'contain', height: '15px', width: 'auto', maxWidth: '68px' }} onError={() => setErr(true)} />
 }
 
@@ -69,11 +71,11 @@ function StepHead({
         background: active ? '#EDF7F1' : '#F5F5F5',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <i className={`ti ${icon}`} style={{ fontSize: '22px', color: active ? '#076330' : '#999' }} aria-hidden="true" />
+        <i className={`ti ${icon}`} style={{ fontSize: '22px', color: active ? '#2A2E36' : '#999' }} aria-hidden="true" />
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>{title}</p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#999', margin: '2px 0 0' }}>{sub}</p>
+        <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>{title}</p>
+        <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#999', margin: '2px 0 0' }}>{sub}</p>
       </div>
       {!active && (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BBB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,7 +104,7 @@ function OBtn({ children, onClick, type = 'button', disabled = false }: {
         color: disabled ? '#AAA' : '#fff',
         border: 'none', borderRadius: '10px', padding: '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-        fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px',
+        fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '15px',
         letterSpacing: '0.01em',
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.2s, background 0.2s',
@@ -128,10 +130,14 @@ function StripePaymentForm({
   onSuccess,
   total,
   billingDetails,
+  notes,
+  paymentIntentId,
 }: {
   onSuccess:      (orderNumber: string, orderTotal: number) => void
   total:          number
   billingDetails: StripeBillingDetails
+  notes:          string
+  paymentIntentId: string
 }) {
   const stripe   = useStripe()
   const elements = useElements()
@@ -145,6 +151,16 @@ function StripePaymentForm({
     setPayError(null)
 
     try {
+      // Put the notes on the PaymentIntent before paying, so the order keeps
+      // them even when the Stripe webhook records it instead of this page.
+      if (notes.trim()) {
+        await fetch('/api/checkout/notes', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ paymentIntentId, notes }),
+        }).catch(() => {})   // non-blocking: the success route still receives them below
+      }
+
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -160,11 +176,11 @@ function StripePaymentForm({
       }
 
       let ck: { email?: string; name?: string; storeName?: string } = {}
-      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
+      try { ck = JSON.parse(localStorage.getItem('gw_checkout') || '{}') } catch {}
       const res  = await fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null, email: ck.email, name: ck.name, storeName: ck.storeName }),
+        body:    JSON.stringify({ paymentIntentId: paymentIntent?.id ?? null, email: ck.email, name: ck.name, storeName: ck.storeName, notes }),
       })
       const data = await res.json()
 
@@ -187,17 +203,17 @@ function StripePaymentForm({
       {/* Security badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#EDF7F1', border: '1px solid #B8DFC5', borderRadius: '8px', padding: '10px 14px' }}>
         <svg width="16" height="18" viewBox="0 0 24 28" fill="none">
-          <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="#076330"/>
+          <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="#2A2E36"/>
           <polyline points="8 13.5 11 16.5 16 10.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '13px', color: '#076330' }}>
+        <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 600, fontSize: '13px', color: '#2A2E36' }}>
           Pay securely powered by Stripe
         </span>
       </div>
 
       {/* Card form — billing fields suppressed, already collected in steps 1 & 2 */}
       {!elementReady && (
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+        <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
           Loading payment form…
         </p>
       )}
@@ -212,7 +228,7 @@ function StripePaymentForm({
       {/* Payment error */}
       {payError && (
         <div style={{ background: '#FFF2F2', border: '1px solid #FFCDD2', borderRadius: '8px', padding: '12px 16px' }}>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#C62828', margin: 0 }}>{payError}</p>
+          <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#C62828', margin: 0 }}>{payError}</p>
         </div>
       )}
 
@@ -224,7 +240,7 @@ function StripePaymentForm({
               <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="rgba(255,255,255,0.9)"/>
               <polyline points="8 13.5 11 16.5 16 10.5" stroke="#FF5A1F" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Place order — A${total.toFixed(2)}
+            Place order — {money(total)}
           </>
         )}
       </OBtn>
@@ -234,16 +250,16 @@ function StripePaymentForm({
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function CheckoutPage() {
-  const { items, cartTotal, cartCount, clearCart } = useCart()
+  const { items, cartCount, clearCart } = useCart()
   const router = useRouter()
 
   const [step, setStep] = useState<Step>(1)
 
   // Step 1
-  const [contact, setContact] = useState({ firstName: '', lastName: '', email: '', phone: '', prefix: '+61' })
+  const [contact, setContact] = useState({ firstName: '', lastName: '', email: '', phone: '', prefix: '+44' })
 
   // Step 2
-  const [billing, setBilling] = useState({ street: '', suburb: '', state: 'VIC', postcode: '', country: 'Australia' })
+  const [billing, setBilling] = useState({ street: '', city: '', county: 'Greater London', postcode: '' })
 
   // Step 3 — Stripe
   const [clientSecret,     setClientSecret]     = useState<string | null>(null)
@@ -255,7 +271,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('nova_selected_store')
+      const raw = localStorage.getItem('gw_selected_store')
       if (raw) {
         const s = JSON.parse(raw)
         setSelectedStore({
@@ -273,14 +289,18 @@ export default function CheckoutPage() {
   // what the server actually charges instead of a flat guessed fee.
   const [isFit,       setIsFit]       = useState(true)
   const [vehicleType, setVehicleType] = useState<VehicleType>('passenger')
-  const [fitCount,    setFitCount]    = useState(cartCount)
+  const [fitCount,    setFitCount]    = useState<number | null>(null) // null = every wheel position
+  const [cartRate,    setCartRate]    = useState<number | null>(null)
+  // Totals returned by the server when the PaymentIntent is created: exactly what Stripe charges.
+  const [charged,     setCharged]     = useState<CartTotals | null>(null)
 
   useEffect(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem('nova_fitting') || '{}')
+      const raw = JSON.parse(localStorage.getItem('gw_fitting') || '{}')
       setIsFit(raw.method !== 'pickup')
       setVehicleType(isVehicleType(raw.vehicleType) ? raw.vehicleType : 'passenger')
-      setFitCount(Number.isFinite(raw.fitCount) ? raw.fitCount : cartCount)
+      setFitCount(Number.isFinite(raw.fitCount) ? raw.fitCount : null)
+      setCartRate(Number.isFinite(raw.rate) ? raw.rate : null)
     } catch {}
   }, [cartCount])
 
@@ -290,7 +310,7 @@ export default function CheckoutPage() {
   const [redirectBanner, setRedirectBanner] = useState<{ ok: boolean; msg: string } | null>(null)
 
   // ── Handle return from redirect-based payment methods ─────────────────────
-  // When Stripe sends users back from PayPal / Afterpay / Klarna it appends
+  // When Stripe sends users back from PayPal / Clearpay / Klarna it appends
   // redirect_status, payment_intent, and payment_intent_client_secret to the URL.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -299,10 +319,10 @@ export default function CheckoutPage() {
     const piId   = params.get('payment_intent')
 
     if (status === 'succeeded' && piId) {
-      // Redirect-based method (PayPal / Afterpay / Klarna) returned successfully.
+      // Redirect-based method (PayPal / Clearpay / Klarna) returned successfully.
       // Call the success route to record the order, then navigate to confirmation.
       let ck: { email?: string; name?: string; storeName?: string } = {}
-      try { ck = JSON.parse(localStorage.getItem('nova_checkout') || '{}') } catch {}
+      try { ck = JSON.parse(localStorage.getItem('gw_checkout') || '{}') } catch {}
       fetch('/api/checkout/success', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -328,8 +348,14 @@ export default function CheckoutPage() {
     }
   }, []) // runs once on mount only
 
-  const fittingFee = isFit ? fittingRate(vehicleType) * fitCount : 0
-  const total      = cartTotal + fittingFee
+  // Same maths as the cart and the server (lib/fitting.ts). Once the server has
+  // priced the PaymentIntent, its figures win so the button shows the charge.
+  const estimate = quoteOrder({
+    lines: items.map(i => ({ productType: i.productType, quantity: i.qty, unitPrice: i.price })),
+    fittingRate: cartRate ?? fittingRate(vehicleType), fit: isFit, fitCount,
+  })
+  const totals   = charged ?? estimate
+  const total    = totals.total
   const divider = <div style={{ height: '1px', background: '#F0F0F0', margin: '0 24px' }} />
 
   // ── Billing details forwarded to Stripe (avoids duplicate fields in PaymentElement) ──
@@ -339,29 +365,37 @@ export default function CheckoutPage() {
     phone: `${contact.prefix}${contact.phone}`.replace(/\s/g, ''),
     address: {
       line1:       billing.street,
-      city:        billing.suburb,
-      state:       billing.state,
-      postal_code: billing.postcode,
-      country:     billing.country === 'New Zealand' ? 'NZ' : 'AU',
+      city:        billing.city,
+      state:       billing.county === 'Other' ? '' : billing.county,
+      postal_code: billing.postcode.trim().toUpperCase(),
+      country:     'GB',
     },
   }
 
   // ── Fetch Stripe PaymentIntent when advancing to Step 3 ───────────────────
   async function advanceToPayment() {
+    if (!billing.street.trim() || !billing.city.trim()) {
+      setPayIntentError('Enter your street address and town or city.')
+      return
+    }
+    if (!UK_POSTCODE.test(billing.postcode.trim())) {
+      setPayIntentError('Enter a full UK postcode, for example NW1 9NX.')
+      return
+    }
     setPayIntentLoading(true)
     setPayIntentError(null)
     // Persist contact + store for the order confirmation email (survives redirect flows).
     try {
       let storeName = ''
-      try { storeName = (JSON.parse(localStorage.getItem('nova_selected_store') || '{}') as { name?: string }).name || '' } catch {}
-      localStorage.setItem('nova_checkout', JSON.stringify({
+      try { storeName = (JSON.parse(localStorage.getItem('gw_selected_store') || '{}') as { name?: string }).name || '' } catch {}
+      localStorage.setItem('gw_checkout', JSON.stringify({
         email: contact.email, name: `${contact.firstName} ${contact.lastName}`.trim(), storeName,
       }))
     } catch {}
     try {
       // Carry the cart's fitting choice so the server charges the right total.
       let fitting: { vehicleType?: string; method?: string; storeId?: string; fitCount?: number } = {}
-      try { fitting = JSON.parse(localStorage.getItem('nova_fitting') || '{}') } catch {}
+      try { fitting = JSON.parse(localStorage.getItem('gw_fitting') || '{}') } catch {}
       const res  = await fetch('/api/checkout/create-payment-intent', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -370,6 +404,7 @@ export default function CheckoutPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to initialize payment')
       setClientSecret(data.clientSecret)
+      if (data.totals) setCharged(data.totals)
       setStep(3)
     } catch (err) {
       setPayIntentError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -392,13 +427,13 @@ export default function CheckoutPage() {
       <main style={{ background: '#fff', minHeight: '100vh', paddingTop: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', maxWidth: '420px', padding: '0 24px' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#EDF7F1', border: '2px solid #19D26A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#076330" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2A2E36" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', color: '#1A1A1A', letterSpacing: '0.04em', marginBottom: '12px' }}>Order Confirmed!</h1>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
+          <h1 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '32px', color: '#1A1A1A', letterSpacing: '-0.02em', marginBottom: '12px' }}>Order Confirmed!</h1>
+          <p style={{ fontFamily: 'var(--gw-font)', fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
             Thanks for your order. Your items will be delivered directly to <strong>{selectedStore.name}</strong> for fitting. We&apos;ll be in touch shortly.
           </p>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px' }}>
             Back to home
           </Link>
         </div>
@@ -415,7 +450,7 @@ export default function CheckoutPage() {
           <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="#1A1A1A" />
           <polyline points="8 13.5 11 16.5 16 10.5" stroke="#19D26A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '20px', color: '#1A1A1A', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+        <h1 style={{ fontFamily: 'var(--gw-font)', fontWeight: 900, fontSize: '20px', color: '#1A1A1A', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
           Secured Checkout
         </h1>
       </div>
@@ -431,7 +466,7 @@ export default function CheckoutPage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C62828" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#C62828', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#C62828', margin: 0 }}>
               {redirectBanner.msg}
             </p>
             <button
@@ -482,19 +517,17 @@ export default function CheckoutPage() {
                       <select
                         value={contact.prefix}
                         onChange={e => setContact(p => ({ ...p, prefix: e.target.value }))}
-                        style={{ padding: '11px 8px 11px 12px', background: '#F7F7F7', border: 'none', borderRight: '1px solid #E5E5E5', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#333', cursor: 'pointer', flexShrink: 0 }}
+                        style={{ padding: '11px 8px 11px 12px', background: '#F7F7F7', border: 'none', borderRight: '1px solid #E5E5E5', outline: 'none', fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#333', cursor: 'pointer', flexShrink: 0 }}
                       >
-                        <option value="+61">🇦🇺 +61</option>
-                        <option value="+64">🇳🇿 +64</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+1">+1 (US)</option>
                       </select>
                       <input
                         type="tel"
-                        placeholder="0412 345 678"
+                        placeholder="07700 900 000"
                         value={contact.phone}
                         onChange={e => setContact(p => ({ ...p, phone: e.target.value }))}
-                        style={{ flex: 1, padding: '11px 14px', border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#1A1A1A' }}
+                        style={{ flex: 1, padding: '11px 14px', border: 'none', outline: 'none', fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#1A1A1A' }}
                       />
                     </div>
                   </div>
@@ -522,52 +555,38 @@ export default function CheckoutPage() {
                 <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
                     <label style={lbl}>Street Address</label>
-                    <input style={field} type="text" placeholder="123 Example Street" value={billing.street} onChange={e => setBilling(p => ({ ...p, street: e.target.value }))} />
+                    <input style={field} type="text" autoComplete="address-line1" placeholder="14 Kentish Town Rd" value={billing.street} onChange={e => setBilling(p => ({ ...p, street: e.target.value }))} />
                   </div>
                   <div>
-                    <label style={lbl}>Suburb / City</label>
-                    <input style={field} type="text" placeholder="Melbourne" value={billing.suburb} onChange={e => setBilling(p => ({ ...p, suburb: e.target.value }))} />
+                    <label style={lbl}>Town / City</label>
+                    <input style={field} type="text" autoComplete="address-level2" placeholder="London" value={billing.city} onChange={e => setBilling(p => ({ ...p, city: e.target.value }))} />
                   </div>
                   {/* auto-fit lets Country (the longest option text) wrap to
                       its own row on narrow phones instead of every column
                       being squeezed to ~70px and clipping its text. */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px' }}>
                     <div>
-                      <label style={lbl}>State</label>
+                      <label style={lbl}>County (optional)</label>
                       <div style={{ position: 'relative' }}>
                         <select
                           style={{ ...field, appearance: 'none', paddingRight: '36px', cursor: 'pointer' }}
-                          value={billing.state}
-                          onChange={e => setBilling(p => ({ ...p, state: e.target.value }))}
+                          value={billing.county}
+                          onChange={e => setBilling(p => ({ ...p, county: e.target.value }))}
                         >
-                          {AU_STATES.map(s => <option key={s}>{s}</option>)}
+                          {UK_COUNTIES.map(s => <option key={s}>{s}</option>)}
                         </select>
                         <svg style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
                       </div>
                     </div>
                     <div>
                       <label style={lbl}>Postcode</label>
-                      <input style={field} type="text" placeholder="3000" maxLength={4} value={billing.postcode} onChange={e => setBilling(p => ({ ...p, postcode: e.target.value }))} />
-                    </div>
-                    <div>
-                      <label style={lbl}>Country</label>
-                      <div style={{ position: 'relative' }}>
-                        <select
-                          style={{ ...field, appearance: 'none', paddingRight: '36px', cursor: 'pointer' }}
-                          value={billing.country}
-                          onChange={e => setBilling(p => ({ ...p, country: e.target.value }))}
-                        >
-                          <option>Australia</option>
-                          <option>New Zealand</option>
-                        </select>
-                        <svg style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-                      </div>
+                      <input style={{ ...field, textTransform: 'uppercase' }} type="text" autoComplete="postal-code" placeholder="NW1 9NX" maxLength={8} value={billing.postcode} onChange={e => setBilling(p => ({ ...p, postcode: e.target.value }))} />
                     </div>
                   </div>
 
                   {payIntentError && (
                     <div style={{ background: '#FFF2F2', border: '1px solid #FFCDD2', borderRadius: '8px', padding: '12px 16px' }}>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#C62828', margin: 0 }}>{payIntentError}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#C62828', margin: 0 }}>{payIntentError}</p>
                     </div>
                   )}
 
@@ -604,11 +623,11 @@ export default function CheckoutPage() {
                         appearance: {
                           theme: 'stripe',
                           variables: {
-                            colorPrimary: '#076330',
+                            colorPrimary: '#2A2E36',
                             colorBackground: '#ffffff',
                             colorText: '#1A1A1A',
                             colorDanger: '#C62828',
-                            fontFamily: "'DM Sans', sans-serif",
+                            fontFamily: 'var(--gw-font)',
                             borderRadius: '8px',
                             spacingUnit: '4px',
                           },
@@ -619,16 +638,18 @@ export default function CheckoutPage() {
                         onSuccess={handleSuccess}
                         total={total}
                         billingDetails={stripeBillingDetails}
+                        notes={notes}
+                        paymentIntentId={clientSecret.split('_secret_')[0]}
                       />
                     </Elements>
                   ) : (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#AAA' }}>Initializing secure payment…</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#AAA' }}>Initializing secure payment…</p>
                     </div>
                   )}
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#AAA', textAlign: 'center', margin: 0 }}>
                     By placing your order you agree to our{' '}
-                    <Link href="/warranty" style={{ color: '#888', textDecoration: 'underline' }}>Terms of Service</Link>
+                    <Link href="/terms" style={{ color: '#888', textDecoration: 'underline' }}>Terms of Service</Link>
                   </p>
                 </div>
               </>
@@ -643,10 +664,10 @@ export default function CheckoutPage() {
                   <i className="ti ti-clipboard-list" style={{ fontSize: '22px', color: '#999' }} aria-hidden="true" />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>
                     Order Notes <span style={{ fontWeight: 400, color: '#999', fontSize: '14px' }}>(optional)</span>
                   </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#999', margin: '2px 0 0' }}>Add any special instructions or notes for your order</p>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#999', margin: '2px 0 0' }}>Add any special instructions or notes for your order</p>
                 </div>
               </div>
               <div style={{ position: 'relative' }}>
@@ -657,7 +678,7 @@ export default function CheckoutPage() {
                   rows={4}
                   style={{ ...field, resize: 'vertical', paddingBottom: '28px', lineHeight: 1.6, minHeight: '100px' }}
                 />
-                <span style={{ position: 'absolute', bottom: '10px', right: '14px', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#C5C5C5' }}>
+                <span style={{ position: 'absolute', bottom: '10px', right: '14px', fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#C5C5C5' }}>
                   {notes.length}/300
                 </span>
               </div>
@@ -674,13 +695,13 @@ export default function CheckoutPage() {
           {/* Order summary */}
           <Card>
             <div style={{ padding: '20px 20px 0' }}>
-              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', marginBottom: '16px' }}>
+              <h2 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', marginBottom: '16px' }}>
                 Order Summary
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {items.length === 0 ? (
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '8px 0 16px', textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#AAA', padding: '8px 0 16px', textAlign: 'center' }}>
                     Your cart is empty
                   </p>
                 ) : items.map(item => (
@@ -690,12 +711,12 @@ export default function CheckoutPage() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <BrandLogo src={item.brandLogo} brand={item.brand} />
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#1A1A1A', margin: '3px 0 2px', lineHeight: 1.3 }}>{item.model}</p>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#999', margin: 0 }}>{item.size}&nbsp;{item.spec}</p>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#AAA', margin: '2px 0 0' }}>Qty: {item.qty}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '13px', color: '#1A1A1A', margin: '3px 0 2px', lineHeight: 1.3 }}>{item.model}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#999', margin: 0 }}>{item.size}&nbsp;{item.spec}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#AAA', margin: '2px 0 0' }}>Qty: {item.qty}</p>
                     </div>
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', flexShrink: 0 }}>
-                      A${(item.price * item.qty).toFixed(2)}
+                    <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', flexShrink: 0 }}>
+                      {money(item.price * item.qty)}
                     </p>
                   </div>
                 ))}
@@ -704,27 +725,27 @@ export default function CheckoutPage() {
 
             <div style={{ padding: '4px 20px 20px' }}>
               {[
-                { label: `Subtotal (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`, value: `$${cartTotal.toFixed(2)}` },
+                { label: `Products (${cartCount} ${cartCount === 1 ? 'item' : 'items'})`, value: money(totals.subtotal) },
                 isFit
-                  ? { label: 'Fitting & Balancing', value: `$${fittingFee.toFixed(2)}` }
+                  ? { label: `Fitting & balancing (${estimate.fitCount} × ${money(totals.fitting / Math.max(1, estimate.fitCount))})`, value: money(totals.fitting) }
                   : { label: 'Pickup', value: 'Free' },
-                { label: 'GST Status', value: 'GST Included', muted: true },
+                ...(totals.discount > 0 ? [{ label: 'Discount', value: `−${money(totals.discount)}` }] : []),
               ].map(r => (
                 <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#888', fontWeight: 500 }}>{r.label}</span>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: r.muted ? '#AAA' : '#444', fontWeight: r.muted ? 400 : 600 }}>{r.value}</span>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#888', fontWeight: 500 }}>{r.label}</span>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#444', fontWeight: 600 }}>{r.value}</span>
                 </div>
               ))}
 
               <div style={{ height: '1px', background: '#EBEBEB', margin: '12px 0' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#1A1A1A' }}>Total</span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '22px', color: '#FF5A1F' }}>
-                  A${total.toFixed(2)}
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '15px', color: '#1A1A1A' }}>Total</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 900, fontSize: '22px', color: '#FF5A1F' }}>
+                  {money(total)}
                 </span>
               </div>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#BBB', margin: 0 }}>GST Included</p>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#BBB', margin: 0 }}>Includes {money(totals.vat)} VAT</p>
             </div>
           </Card>
 
@@ -732,38 +753,38 @@ export default function CheckoutPage() {
           <Card>
             <div style={{ padding: '18px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <i className="ti ti-map-pin" style={{ fontSize: '16px', color: '#076330' }} aria-hidden="true" />
-                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', margin: 0 }}>
+                <i className="ti ti-map-pin" style={{ fontSize: '16px', color: '#2A2E36' }} aria-hidden="true" />
+                <h3 style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', margin: 0 }}>
                   Selected Fitting Station
                 </h3>
               </div>
 
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
                 {selectedStore.name}
               </p>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '2px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', marginBottom: '2px' }}>
                 {selectedStore.address}
               </p>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '8px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', marginBottom: '8px' }}>
                 {selectedStore.state}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '12px' }}>
                 <i className="ti ti-phone" style={{ fontSize: '13px', color: '#666' }} aria-hidden="true" />
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
               </div>
 
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>
                 Your items will be delivered directly to this store for fitting.
               </p>
 
               <div style={{ background: '#F7F7F7', border: '1px solid #E8E8E8', borderRadius: '10px', padding: '12px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                 <i className="ti ti-truck" style={{ fontSize: '18px', color: '#555', flexShrink: 0, marginTop: '1px' }} aria-hidden="true" />
                 <div>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#1A1A1A', marginBottom: '2px' }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '13px', color: '#1A1A1A', marginBottom: '2px' }}>
                     Delivery charges —{' '}
-                    <span style={{ color: '#076330' }}>A$0.00</span>
+                    <span style={{ color: '#2A2E36' }}>£0.00</span>
                   </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.5 }}>
                     No shipping fee — items are sent directly to your selected store.
                   </p>
                 </div>

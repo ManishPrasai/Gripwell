@@ -1,14 +1,14 @@
 /* ============================================================
-   NOVA TYRES — Product detail page (tyre / wheel PDP)
+   Gripwell — Product detail page (tyre / wheel PDP)
    Rebuilt to match the Product design canvas. Scoped under
    .nova-pdp so tokens never leak into the rest of the app.
    ============================================================ */
 
 .nova-pdp {
   /* ── palette, taken straight from the design ── */
-  --accent:      #FF6817;
+  --accent:      #FF6A1A;
   --accent-dark: #E55A0E;
-  --green:       #076330;
+  --green:       #2A2E36;
   --green-dark:  #054A24;
   --green-live:  #0A8A3A;
   --green-soft:  #EAF3ED;

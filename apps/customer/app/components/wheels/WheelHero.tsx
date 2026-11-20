@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { C, FONT, FIELD_LABEL, SELECT, CTA } from '../shop/tokens'
 import { NOVA_SWITCHBOARD_HREF } from '../../../lib/stores'
 
-const WHEEL_BRANDS = ['All brands', 'King Wheels', 'ROH', 'Black Rhino', 'Sonix']
+const WHEEL_BRANDS = ['All brands', 'Halden', 'Ostra', 'Marlow', 'Vanta']
 const DIAMETERS    = ['13','14','15','16','17','18','19','20','22']
 
 /* Exactly the finishes stocked in the Wheel table — the design also mocked

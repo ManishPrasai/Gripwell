@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
     const total = Number(order.total)
     const amount = parsed.data.amount ?? total
-    if (amount > total + 0.001) throw badRequest(`Refund cannot exceed the order total (A$${total.toFixed(2)})`)
+    if (amount > total + 0.001) throw badRequest(`Refund cannot exceed the order total (£${total.toFixed(2)})`)
     const isFull = amount >= total - 0.001
     const cents = Math.round(amount * 100)
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         orderId: order.id,
         status: isFull ? 'REFUNDED' : 'PARTIALLY_REFUNDED',
         changedBy: admin.id,
-        note: `Refunded A$${amount.toFixed(2)}${order.stripePaymentIntentId ? ' via Stripe' : ' (manual)'}${parsed.data.reason ? ` — ${parsed.data.reason}` : ''}`,
+        note: `Refunded £${amount.toFixed(2)}${order.stripePaymentIntentId ? ' via Stripe' : ' (manual)'}${parsed.data.reason ? ` — ${parsed.data.reason}` : ''}`,
       },
     })
 

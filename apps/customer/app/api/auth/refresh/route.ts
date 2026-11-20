@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma, generateAccessToken, generateRefreshToken, hashRefreshToken } from '@nova/database'
 
 export async function POST(req: NextRequest) {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const newRefreshToken = generateRefreshToken()
     const newRefreshTokenHash = hashRefreshToken(newRefreshToken)
 
-    // Rotate refresh token â€” invalidate old, create new
+    // Rotate refresh token — invalidate old, create new
     await prisma.customerSession.update({
       where: { id: session.id },
       data: {

@@ -20,12 +20,12 @@ export async function resolveCartCustomerId(
   const guestId = existing ?? randomUUID()
 
   const customer = await prisma.customer.upsert({
-    where: { email: `guest+${guestId}@cart.novatyres.local` },
+    where: { email: `guest+${guestId}@cart.gripwell.local` },
     update: {},
     create: {
       firstName:    'Guest',
       lastName:     'Customer',
-      email:        `guest+${guestId}@cart.novatyres.local`,
+      email:        `guest+${guestId}@cart.gripwell.local`,
       passwordHash: 'guest:cart',
     },
     select: { id: true },

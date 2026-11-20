@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · Calls & Enquiries (ported)
+   Gripwell — Admin · Calls & Enquiries (ported)
    ============================================================ */
 import * as React from "react";
 import { useState } from "react";
@@ -19,14 +19,14 @@ const MECHS = [
   { name: "Tom Baker", init: "TB", av: "#0EA5A5" },
   { name: "Aisha Rahman", init: "AR", av: "#D6336C" },
   { name: "Jack Whitfield", init: "JW", av: "#7048E8" },
-  { name: "Raj Thakur", init: "RT", av: "#0E9F57" },
+  { name: "Raj Thakur", init: "RT", av: "#2D6BE0" },
   { name: "Liam O'Brien", init: "LO", av: "#2F9E44" },
 ];
-const SERVICES = ["Log Book Service", "Free Pre-RWC Check", "Yearly Service", "Brake Replacement", "Ultimate Service", "Tyre Fit + Balance", "Wheel Alignment", "3 Year Service"];
+const SERVICES = ["Log Book Service", "Free MOT check", "Yearly Service", "Brake Replacement", "Ultimate Service", "Tyre Fit + Balance", "Wheel Alignment", "3 Year Service"];
 
 export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void }) {
   const D = (ctx as any)?.D || NOVA;
-  const allStores = D.stores.map((s) => s.name);
+  const allStores = D.stores.map((s: any) => s.name);
   const [rows, setRows] = useState<any[]>(() => ctx.scopeBy(D.calls, "store").map((c: any) => ({ ...c })));
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
@@ -52,7 +52,7 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
   function addBookingToQueue(b: any) { D.bookings.unshift(b); }
 
   // Persist the logged call as an Enquiry. Managers are pinned to their own
-  // store server-side; for admins we resolve the selected store name → id.
+  // store server-side; for admins we resolve the selected store name â†' id.
   async function persistCall(form: any) {
     const CALL_TYPE: Record<string, string> = { booking: "booking", missed: "missed", enquiry: "general" };
     const storeId = (D.stores.find((s: any) => s.name === form.store) || {}).id;
@@ -73,7 +73,7 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
   function saveCall(form: any) {
     void persistCall(form);
     const init = form.customer.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "?";
-    const av = ["#076330", "#2D6BE0", "#0E9F57", "#E08600", "#D6336C", "#7048E8"][Math.floor(Math.random() * 6)];
+    const av = ["#2A2E36", "#2D6BE0", "#2D6BE0", "#E08600", "#D6336C", "#7048E8"][Math.floor(Math.random() * 6)];
     const base = { id: "k" + Date.now(), customer: form.customer, phone: form.phone, init, av, store: form.store, kind: form.kind, topic: form.topic, time: "Today · just now", duration: form.duration || "—", handledBy: ctx.name, note: form.note };
 
     if (form.kind === "booking") {
@@ -115,7 +115,7 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
       </div>
 
       {needCallback > 0 && (
-        <div className="role-banner"><Icon name="phone" /><span><b>{needCallback} {needCallback === 1 ? "caller needs" : "callers need"} a call back</b> — don't leave them waiting too long.</span><span className="spacer"></span><button className="btn sm ghost" onClick={() => setFilter("missed")}>Show missed</button></div>
+        <div className="role-banner"><Icon name="phone" /><span><b>{needCallback} {needCallback === 1 ? "caller needs" : "callers need"} a call back</b> — don’t leave them waiting too long.</span><span className="spacer"></span><button className="btn sm ghost" onClick={() => setFilter("missed")}>Show missed</button></div>
       )}
 
       <div className="summary-row">
@@ -131,7 +131,7 @@ export function CallsPage({ ctx, nav }: { ctx: Ctx; nav?: (p: string) => void })
           <select value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}
             style={{ height: 38, borderRadius: 10, border: "1px solid var(--border)", background: "var(--chip)", color: "var(--ink)", fontSize: 13, fontWeight: 600, padding: "0 32px 0 12px", appearance: "none", WebkitAppearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", cursor: "pointer", flexShrink: 0 }}>
             <option value="all">All stores</option>
-            {allStores.map((s) => <option key={s} value={s}>{s}</option>)}
+            {allStores.map((s: any) => <option key={s} value={s}>{s}</option>)}
           </select>
         )}
         <div className="tabs">
@@ -227,7 +227,7 @@ function LogCallModal({ ctx, from, onClose, onSave }: { ctx: Ctx; from?: any; on
   const [kind, setKind] = useState(from ? "booking" : "enquiry");
   const [f, setF] = useState<any>({
     customer: from ? from.customer : "", phone: from ? from.phone : "",
-    store: from ? from.store : (ctx.role === "manager" ? ctx.store : "Springvale"),
+    store: from ? from.store : (ctx.role === "manager" ? ctx.store : "Camden"),
     topic: from ? from.topic : "", duration: "", note: from ? from.note : "",
     quoted: from && from.quoted ? from.quoted : "", outcome: "thinking",
     vehicle: from && from.vehicle ? from.vehicle : "", service: SERVICES[0], price: "", when: "", mech: MECHS[0].name,
@@ -284,7 +284,7 @@ function LogCallModal({ ctx, from, onClose, onSave }: { ctx: Ctx; from?: any; on
         <div className="form-grid">
           <div className="field"><label>Store</label>
             <select value={f.store} onChange={(e) => set("store", e.target.value)} disabled={ctx.role === "manager"}>
-              {D.stores.map((s) => <option key={s.id}>{s.name}</option>)}
+              {D.stores.map((s: any) => <option key={s.id}>{s.name}</option>)}
             </select>
           </div>
           {kind !== "missed" && <div className="field"><label>Call length <span className="opt">(optional)</span></label><input value={f.duration} onChange={(e) => set("duration", e.target.value)} placeholder="e.g. 4m" /></div>}

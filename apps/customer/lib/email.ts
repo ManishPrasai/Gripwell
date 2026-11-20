@@ -3,7 +3,7 @@
 
    Config (Worker secrets / .env.local):
      RESEND_API_KEY   — required to actually send (missing → logs + skips)
-     EMAIL_FROM       — e.g. "Nova Tyres <accounts@novatyres.com.au>"
+     EMAIL_FROM       — e.g. "Gripwell <hello@gripwell.demo>"
      EMAIL_REPLY_TO   — optional, a real inbox for customer replies
 
    Sending is best-effort: a failure never breaks checkout — it's logged and
@@ -11,10 +11,11 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 import { SITE_URL } from './site'
+import { money } from './fitting'
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 // Invoice / order-confirmation sender. Override with EMAIL_FROM if needed.
-const DEFAULT_FROM = 'Nova Tyres <no-reply@novatyres.com.au>'
+const DEFAULT_FROM = 'Gripwell <no-reply@gripwell.demo>'
 
 async function sendEmail(opts: { to: string; subject: string; html: string; from?: string; replyTo?: string }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY
@@ -56,7 +57,7 @@ export interface OrderEmailData {
   orderNumber:  string
   items:        OrderEmailItem[]
   subtotal:     number
-  gst:          number
+  VAT:          number
   fitting:      number
   discount:     number
   total:        number
@@ -66,13 +67,12 @@ export interface OrderEmailData {
   storeName?:   string
 }
 
-const money = (n: number) => `A$${n.toFixed(2)}`
 
 export async function sendOrderConfirmation(d: OrderEmailData): Promise<boolean> {
   if (!d.to) return false
   return sendEmail({
     to:      d.to,
-    subject: `Order ${d.orderNumber} confirmed — Nova Tyres`,
+    subject: `Order ${d.orderNumber} confirmed — Gripwell`,
     html:    orderConfirmationHtml(d),
   })
 }
@@ -81,38 +81,38 @@ function orderConfirmationHtml(d: OrderEmailData): string {
   const rows = d.items.map(it => `
     <tr>
       <td style="padding:12px 0;border-bottom:1px solid #EEE">
-        <div style="font-weight:700;color:#16211B;font-size:14px">${esc(it.name)}</div>
+        <div style="font-weight:700;color:#1A1D23;font-size:14px">${esc(it.name)}</div>
         ${it.sub ? `<div style="color:#85908A;font-size:12px;margin-top:2px">${esc(it.sub)}</div>` : ''}
       </td>
-      <td style="padding:12px 0;border-bottom:1px solid #EEE;text-align:center;color:#47554D;font-size:14px">${it.qty}</td>
-      <td style="padding:12px 0;border-bottom:1px solid #EEE;text-align:right;color:#16211B;font-size:14px;white-space:nowrap">${money(it.total)}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #EEE;text-align:center;color:#4B5563;font-size:14px">${it.qty}</td>
+      <td style="padding:12px 0;border-bottom:1px solid #EEE;text-align:right;color:#1A1D23;font-size:14px;white-space:nowrap">${money(it.total)}</td>
     </tr>`).join('')
 
   const totalRow = (label: string, val: string, opts: { strong?: boolean; muted?: boolean } = {}) => `
     <tr>
-      <td style="padding:5px 0;color:${opts.muted ? '#85908A' : '#47554D'};font-size:${opts.strong ? '15px' : '13.5px'};font-weight:${opts.strong ? 700 : 400}">${label}</td>
-      <td style="padding:5px 0;text-align:right;color:${opts.strong ? '#16211B' : '#47554D'};font-size:${opts.strong ? '15px' : '13.5px'};font-weight:${opts.strong ? 800 : 500};white-space:nowrap">${val}</td>
+      <td style="padding:5px 0;color:${opts.muted ? '#85908A' : '#4B5563'};font-size:${opts.strong ? '15px' : '13.5px'};font-weight:${opts.strong ? 700 : 400}">${label}</td>
+      <td style="padding:5px 0;text-align:right;color:${opts.strong ? '#1A1D23' : '#4B5563'};font-size:${opts.strong ? '15px' : '13.5px'};font-weight:${opts.strong ? 800 : 500};white-space:nowrap">${val}</td>
     </tr>`
 
   const fulfil = d.fulfilMethod === 'fit'
-    ? `Fitting at <strong>${esc(d.storeName || 'your chosen Nova Tyres store')}</strong>${d.fitCount < d.itemCount ? ` · ${d.fitCount} of ${d.itemCount} fitted, ${d.itemCount - d.fitCount} to take home` : ` · all ${d.itemCount} fitted`}`
-    : `Pickup at <strong>${esc(d.storeName || 'your chosen Nova Tyres store')}</strong>`
+    ? `Fitting at <strong>${esc(d.storeName || 'your chosen Gripwell store')}</strong>${d.fitCount < d.itemCount ? ` · ${d.fitCount} of ${d.itemCount} fitted, ${d.itemCount - d.fitCount} to take home` : ` · all ${d.itemCount} fitted`}`
+    : `Pickup at <strong>${esc(d.storeName || 'your chosen Gripwell store')}</strong>`
 
   return `<!doctype html>
 <html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#076330;border-radius:16px 16px 0 0;padding:26px 28px">
-      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    <div style="background:#2A2E36;border-radius:16px 16px 0 0;padding:26px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">Gripwell</div>
       <div style="color:rgba(255,255,255,.75);font-size:13px;margin-top:2px">Order confirmation &amp; tax invoice</div>
     </div>
     <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:28px">
-      <p style="margin:0 0 4px;color:#16211B;font-size:16px">Hi ${esc(d.customerName)},</p>
-      <p style="margin:0 0 20px;color:#47554D;font-size:14px;line-height:1.6">Thanks for your order — it's confirmed. Here are the details.</p>
+      <p style="margin:0 0 4px;color:#1A1D23;font-size:16px">Hi ${esc(d.customerName)},</p>
+      <p style="margin:0 0 20px;color:#4B5563;font-size:14px;line-height:1.6">Thanks for your order — it's confirmed. Here are the details.</p>
 
       <div style="background:#F5F4EF;border-radius:10px;padding:14px 16px;margin-bottom:22px">
         <div style="color:#85908A;font-size:12px;text-transform:uppercase;letter-spacing:.06em">Order number</div>
-        <div style="color:#16211B;font-weight:800;font-size:18px;margin-top:2px">${esc(d.orderNumber)}</div>
-        <div style="color:#47554D;font-size:13px;margin-top:8px">${fulfil}</div>
+        <div style="color:#1A1D23;font-weight:800;font-size:18px;margin-top:2px">${esc(d.orderNumber)}</div>
+        <div style="color:#4B5563;font-size:13px;margin-top:8px">${fulfil}</div>
       </div>
 
       <table style="width:100%;border-collapse:collapse">
@@ -128,24 +128,24 @@ function orderConfirmationHtml(d: OrderEmailData): string {
 
       <table style="width:100%;border-collapse:collapse;margin-top:16px">
         ${totalRow('Products', money(d.subtotal))}
-        ${totalRow('GST (10%)', money(d.gst))}
-        ${d.fitting > 0 ? totalRow(`Fitting service (${d.fitCount} × )`, money(d.fitting)) : ''}
+        ${totalRow('Includes VAT (20%)', money(d.VAT))}
+        ${d.fitting > 0 ? totalRow(`Fitting service (${d.fitCount} × ${money(d.fitting / Math.max(1, d.fitCount))})`, money(d.fitting)) : ''}
         ${d.discount > 0 ? totalRow('Discount', `− ${money(d.discount)}`) : ''}
         <tr><td colspan="2" style="padding:6px 0"><div style="height:1px;background:#EBEBEB"></div></td></tr>
-        ${totalRow('Total (GST included)', money(d.total), { strong: true })}
+        ${totalRow('Total paid', money(d.total), { strong: true })}
       </table>
 
       <p style="margin:24px 0 0;color:#85908A;font-size:12.5px;line-height:1.6">
         We'll be in touch when your order is ready. Questions? Just reply to this email.
       </p>
     </div>
-    <p style="text-align:center;color:#B0B0A8;font-size:11px;margin-top:16px">© Nova Tyres · Australian tyre &amp; wheel retailer</p>
+    <p style="text-align:center;color:#B0B0A8;font-size:11px;margin-top:16px">&#169; Gripwell &middot; London tyre &amp; wheel retailer</p>
   </div>
 </body></html>`
 }
 
 /* ── Sales / promotional email (from the marketing address) ────────────────── */
-const DEFAULT_MARKETING_FROM = 'Nova Tyres <updates@novatyres.com.au>'
+const DEFAULT_MARKETING_FROM = 'Gripwell <updates@gripwell.demo>'
 
 export interface SalesEmailData {
   to:            string
@@ -162,7 +162,7 @@ export async function sendSalesEmail(d: SalesEmailData): Promise<boolean> {
   const from = process.env.EMAIL_MARKETING_FROM || DEFAULT_MARKETING_FROM
   return sendEmail({
     to:      d.to,
-    subject: `${d.headline} — Nova Tyres`,
+    subject: `${d.headline} — Gripwell`,
     html:    salesHtml(d),
     from,
   })
@@ -173,30 +173,30 @@ function salesHtml(d: SalesEmailData): string {
   return `<!doctype html>
 <html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#076330;border-radius:16px 16px 0 0;padding:22px 28px">
-      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    <div style="background:#2A2E36;border-radius:16px 16px 0 0;padding:22px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">Gripwell</div>
     </div>
     <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px;text-align:center">
-      <div style="display:inline-block;background:#FAECE7;color:#E8572A;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:999px">Sale on now</div>
-      <h1 style="margin:18px 0 8px;color:#16211B;font-size:28px;line-height:1.15;letter-spacing:-.02em">${esc(d.headline)}</h1>
-      ${d.subhead ? `<p style="margin:0 auto 22px;color:#47554D;font-size:15px;line-height:1.6;max-width:42ch">${esc(d.subhead)}</p>` : ''}
+      <div style="display:inline-block;background:#FFF0E8;color:#FF6A1A;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:999px">Sale on now</div>
+      <h1 style="margin:18px 0 8px;color:#1A1D23;font-size:28px;line-height:1.15;letter-spacing:-.02em">${esc(d.headline)}</h1>
+      ${d.subhead ? `<p style="margin:0 auto 22px;color:#4B5563;font-size:15px;line-height:1.6;max-width:42ch">${esc(d.subhead)}</p>` : ''}
       ${d.code ? `
-        <div style="margin:0 auto 24px;max-width:320px;border:2px dashed #E8572A;border-radius:12px;padding:16px">
+        <div style="margin:0 auto 24px;max-width:320px;border:2px dashed #FF6A1A;border-radius:12px;padding:16px">
           <div style="color:#85908A;font-size:12px;text-transform:uppercase;letter-spacing:.06em">Use code</div>
-          <div style="color:#E8572A;font-weight:800;font-size:24px;letter-spacing:.04em;margin-top:2px">${esc(d.code)}</div>
+          <div style="color:#FF6A1A;font-weight:800;font-size:24px;letter-spacing:.04em;margin-top:2px">${esc(d.code)}</div>
         </div>` : ''}
-      <a href="${esc(cta)}" style="display:inline-block;background:#E8572A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">${esc(d.ctaLabel || 'Shop the sale')}</a>
+      <a href="${esc(cta)}" style="display:inline-block;background:#FF6A1A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">${esc(d.ctaLabel || 'Shop the sale')}</a>
 
       <table style="width:100%;border-collapse:collapse;margin-top:32px;border-top:1px solid #EBEBEB;padding-top:8px">
         <tr>
-          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🏷️<br>Warehouse-direct prices</td>
-          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🔧<br>Fitting at 7 stores</td>
-          <td style="padding:18px 8px 0;text-align:center;color:#47554D;font-size:12.5px;vertical-align:top">🚚<br>Fast Australia-wide delivery</td>
+          <td style="padding:18px 8px 0;text-align:center;color:#4B5563;font-size:12.5px;vertical-align:top">🏷️<br>Warehouse-direct prices</td>
+          <td style="padding:18px 8px 0;text-align:center;color:#4B5563;font-size:12.5px;vertical-align:top">🔧<br>Fitting at 7 stores</td>
+          <td style="padding:18px 8px 0;text-align:center;color:#4B5563;font-size:12.5px;vertical-align:top">&#128666;<br>Fast UK delivery</td>
         </tr>
       </table>
     </div>
     <p style="text-align:center;color:#B0B0A8;font-size:11px;margin-top:16px;line-height:1.6">
-      You're receiving this because you shop with Nova Tyres.<br>© Nova Tyres · Reply to unsubscribe.
+      You're receiving this because you shop with Gripwell.<br>© Gripwell · Reply to unsubscribe.
     </p>
   </div>
 </body></html>`
@@ -208,7 +208,7 @@ export async function sendNewsletterConfirmation(to: string, token: string): Pro
   const confirmUrl = `${SITE_URL}/api/newsletter/confirm?token=${encodeURIComponent(token)}`
   return sendEmail({
     to,
-    subject: 'Confirm your Nova Tyres subscription',
+    subject: 'Confirm your Gripwell subscription',
     html: newsletterConfirmHtml(confirmUrl),
   })
 }
@@ -217,15 +217,15 @@ function newsletterConfirmHtml(confirmUrl: string): string {
   return `<!doctype html>
 <html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#076330;border-radius:16px 16px 0 0;padding:26px 28px">
-      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    <div style="background:#2A2E36;border-radius:16px 16px 0 0;padding:26px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">Gripwell</div>
     </div>
     <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px;text-align:center">
-      <h1 style="margin:0 0 10px;color:#16211B;font-size:22px;line-height:1.25">One click to confirm</h1>
-      <p style="margin:0 auto 24px;color:#47554D;font-size:14px;line-height:1.6;max-width:40ch">
+      <h1 style="margin:0 0 10px;color:#1A1D23;font-size:22px;line-height:1.25">One click to confirm</h1>
+      <p style="margin:0 auto 24px;color:#4B5563;font-size:14px;line-height:1.6;max-width:40ch">
         Confirm your email to start receiving deals before they sell out.
       </p>
-      <a href="${esc(confirmUrl)}" style="display:inline-block;background:#E8572A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">
+      <a href="${esc(confirmUrl)}" style="display:inline-block;background:#FF6A1A;color:#fff;font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;padding:15px 34px;border-radius:12px">
         Confirm subscription
       </a>
       <p style="margin:24px 0 0;color:#B0B0A8;font-size:12px;line-height:1.6">
@@ -242,7 +242,7 @@ function newsletterConfirmHtml(confirmUrl: string): string {
    table — same model the admin dashboard's live enquiries feed already
    queries — this email is just so nobody has to be staring at the dashboard
    to catch a time-sensitive claim). */
-const WARRANTY_NOTIFY_EMAIL = process.env.WARRANTY_NOTIFY_EMAIL || 'info@novatyres.com.au'
+const WARRANTY_NOTIFY_EMAIL = process.env.WARRANTY_NOTIFY_EMAIL || 'info@gripwell.demo'
 
 export interface WarrantyClaimData {
   claimType:    'warranty' | 'refund'
@@ -263,17 +263,17 @@ export async function sendWarrantyClaimConfirmation(d: WarrantyClaimData): Promi
   const label = d.claimType === 'warranty' ? 'warranty claim' : 'refund request'
   return sendEmail({
     to:      d.email,
-    subject: `We've received your ${label} — Nova Tyres`,
+    subject: `We've received your ${label} — Gripwell`,
     html:    `<!doctype html>
 <html><body style="margin:0;background:#FAF9F5;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px">
-    <div style="background:#076330;border-radius:16px 16px 0 0;padding:26px 28px">
-      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">NOVA TYRES</div>
+    <div style="background:#2A2E36;border-radius:16px 16px 0 0;padding:26px 28px">
+      <div style="color:#fff;font-weight:800;font-size:20px;letter-spacing:.04em">Gripwell</div>
     </div>
     <div style="background:#fff;border:1px solid #EBEBEB;border-top:none;border-radius:0 0 16px 16px;padding:32px 28px">
-      <h1 style="margin:0 0 10px;color:#16211B;font-size:22px;line-height:1.25">Thanks, ${esc(d.name)} — we've got your ${label}.</h1>
-      <p style="margin:0 0 20px;color:#47554D;font-size:14px;line-height:1.6">Our Customer Support team will review it and get back to you with an outcome within <strong>5 working days</strong>. If a physical inspection is needed, we'll be in touch to arrange it.</p>
-      <div style="background:#F5F4EF;border-radius:10px;padding:14px 16px;font-size:13.5px;color:#47554D;line-height:1.7">
+      <h1 style="margin:0 0 10px;color:#1A1D23;font-size:22px;line-height:1.25">Thanks, ${esc(d.name)} — we've got your ${label}.</h1>
+      <p style="margin:0 0 20px;color:#4B5563;font-size:14px;line-height:1.6">Our Customer Support team will review it and get back to you with an outcome within <strong>5 working days</strong>. If a physical inspection is needed, we'll be in touch to arrange it.</p>
+      <div style="background:#F5F4EF;border-radius:10px;padding:14px 16px;font-size:13.5px;color:#4B5563;line-height:1.7">
         <div><strong>Product:</strong> ${esc(d.productName)}</div>
         ${d.orderNumber ? `<div><strong>Order:</strong> ${esc(d.orderNumber)}</div>` : ''}
         <div><strong>Details:</strong> ${esc(d.reason)}</div>
@@ -294,7 +294,7 @@ export async function sendWarrantyClaimNotification(d: WarrantyClaimData): Promi
     to:      WARRANTY_NOTIFY_EMAIL,
     subject: `${label}: ${d.name} — ${d.productName}`,
     replyTo: d.email,
-    html:    `<div style="font-family:sans-serif;font-size:14px;line-height:1.7;color:#16211B">
+    html:    `<div style="font-family:sans-serif;font-size:14px;line-height:1.7;color:#1A1D23">
       <p><strong>${esc(label)}</strong> submitted via the website.</p>
       <p>
         <strong>Name:</strong> ${esc(d.name)}<br>

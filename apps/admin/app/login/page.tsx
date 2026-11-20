@@ -36,7 +36,7 @@ function LoginPageInner() {
     setLoading(false);
   }
 
-  /* Step 1 — password */
+  /* Step 1 â" password */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -54,7 +54,7 @@ function LoginPageInner() {
       if (!res.ok) { triggerShake(data.error || "Invalid email or password."); return; }
 
       if (data.requiresTotp) {
-        /* Password correct but TOTP required — show code input */
+        /* Password correct but TOTP required â" show code input */
         setTempToken(data.tempToken);
         setTotpStep(true);
         setLoading(false);
@@ -67,7 +67,7 @@ function LoginPageInner() {
     }
   }
 
-  /* Step 2 — TOTP code */
+  /* Step 2 â" TOTP code */
   async function handleTotpSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -86,7 +86,7 @@ function LoginPageInner() {
       if (!res.ok) { triggerShake(data.error || "Invalid code."); return; }
 
       if (res.headers.get("x-totp-recovery-used")) {
-        /* Recovery code was consumed — tell user to re-enroll */
+        /* Recovery code was consumed â" tell user to re-enroll */
         setNeedsReenroll(true);
         setLoading(false);
         setTimeout(() => router.replace(searchParams.get("from") || "/"), 4000);
@@ -107,8 +107,8 @@ function LoginPageInner() {
 
         /* CSS variables (light only) */
         :root {
-          --brand: #1C3A2B; --brand-2: #2D5C42;
-          --accent: #E8572A;
+          --brand: #2A2E36; --brand-2: #3D4350;
+          --accent: #FF6A1A;
           --ink: #111411; --ink-2: #3a3d38; --ink-3: #7a7e77;
           --bg: #F4F5F3; --glass-solid: #fff;
           --chip: #EAECE8; --chip-2: #E0E2DE;
@@ -268,7 +268,7 @@ function LoginPageInner() {
         }
       `}</style>
 
-      {/* Top bar — logo only, no theme toggle */}
+      {/* Top bar â" logo only, no theme toggle */}
       <div className="auth-top">
         <a className="auth-logo" href="/">
           <span className="mark">
@@ -277,7 +277,7 @@ function LoginPageInner() {
               <path d="M14.5 6 11 2.5a3.8 3.8 0 0 0-4.9 4.9L9.5 11"/>
             </svg>
           </span>
-          <span><b>Nova Tyres</b><small>Console</small></span>
+          <span><b>Gripwell</b><small>Console</small></span>
         </a>
       </div>
 
@@ -287,7 +287,7 @@ function LoginPageInner() {
           <div className="brand-grain" />
           <span className="brand-kicker"><span className="pip" />Staff &amp; manager portal</span>
           <h1>Run every store<br />from <em>one place.</em></h1>
-          <p className="lede">Bookings, inventory, customer chat, reviews and your website — all in one calm, glassy console built for the floor.</p>
+          <p className="lede">Bookings, inventory, customer chat, reviews and your website â" all in one calm, glassy console built for the floor.</p>
 
           <div className="brand-feats">
             <div className="brand-feat">
@@ -323,18 +323,18 @@ function LoginPageInner() {
         <section className="auth-form-wrap">
           <div className={`auth-card${shake ? " err-shake" : ""}`}>
 
-            {/* ── TOTP step ────────────────────────────────────────────── */}
+            {/* â"€â"€ TOTP step â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */}
             {totpStep ? (
               <>
                 <div className="auth-head">
                   <h2>Two-factor check</h2>
-                  <p>{isRecovery ? "Enter one of your 8 recovery codes." : "Open Google Authenticator and enter the 6-digit code for Nova Tyres."}</p>
+                  <p>{isRecovery ? "Enter one of your 8 recovery codes." : "Open Google Authenticator and enter the 6-digit code for Gripwell."}</p>
                 </div>
 
                 {needsReenroll && (
                   <div className="a-error" style={{ background: "color-mix(in oklab,#f59e0b 10%,transparent)", borderColor: "color-mix(in oklab,#f59e0b 25%,transparent)", color: "#92400e" }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
-                    Recovery code used. TOTP has been disabled — you'll need to re-enroll in Settings after sign-in. Redirecting…
+                    Recovery code used. TOTP has been disabled â" you'll need to re-enroll in Settings after sign-in. Redirecting…
                   </div>
                 )}
 
@@ -372,21 +372,21 @@ function LoginPageInner() {
                   <div style={{ textAlign: "center", marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
                     <button type="button" onClick={() => { setIsRecovery(v => !v); setTotpCode(""); setError(""); }}
                       style={{ background: "none", border: "none", color: "var(--brand-2)", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                      {isRecovery ? "← Back to authenticator code" : "Lost your phone? Use a recovery code"}
+                      {isRecovery ? "â† Back to authenticator code" : "Lost your phone? Use a recovery code"}
                     </button>
                     <button type="button" onClick={() => { setTotpStep(false); setTotpCode(""); setError(""); }}
                       style={{ background: "none", border: "none", color: "var(--ink-3)", fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" }}>
-                      ← Back to sign in
+                      â† Back to sign in
                     </button>
                   </div>
                 </form>
               </>
             ) : (
-            /* ── Password step ─────────────────────────────────────────── */
+            /* â"€â"€ Password step â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
             <>
             <div className="auth-head">
               <h2>Welcome back</h2>
-              <p>Sign in to your Nova Tyres console.</p>
+              <p>Sign in to your Gripwell console.</p>
             </div>
 
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
@@ -417,7 +417,7 @@ function LoginPageInner() {
                     <rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/>
                   </svg>
                   <input
-                    id="email" type="email" placeholder="you@novatyres.au"
+                    id="email" type="email" placeholder="you@gripwell.au"
                     value={email} onChange={e => setEmail(e.target.value)}
                     autoComplete="username" autoFocus
                   />

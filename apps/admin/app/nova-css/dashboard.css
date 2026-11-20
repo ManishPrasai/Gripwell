@@ -1,7 +1,7 @@
 /* ============================================================
-   NOVA TYRES — Admin Console
+   Gripwell — Admin Console
    Apple-inspired glassmorphism. Light + dark.
-   Brand: green #076330 · orange #FF6817
+   Brand: green #2A2E36 · orange #FF6A1A
    ============================================================ */
 
 /* ---------- Reset ---------- */
@@ -23,14 +23,14 @@ ul, ol { list-style: none; }
   --mono: 'DM Mono', ui-monospace, monospace;
 
   /* brand */
-  --brand: #076330;
+  --brand: #2A2E36;
   --brand-2: #0A7D3D;
   --brand-ink: #043C1D;
-  --accent: #FF6817;
+  --accent: #FF6A1A;
   --accent-2: #FF8A45;
 
   /* status */
-  --ok: #0E9F57;
+  --ok: #2D6BE0;
   --warn: #E08600;
   --danger: #E5484D;
   --info: #2D6BE0;

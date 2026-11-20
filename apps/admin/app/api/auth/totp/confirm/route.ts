@@ -10,7 +10,7 @@ const joseSecret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || '')
 
 export async function POST(req: NextRequest) {
   try {
-    /* ── Auth check ──────────────────────────────────────────────────────── */
+    /* â"€â"€ Auth check â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
     const token = req.cookies.get('admin_access_token')?.value
     if (!token) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
@@ -21,22 +21,22 @@ export async function POST(req: NextRequest) {
     const adminId = payload.id as string
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
 
-    /* ── Zod validation ──────────────────────────────────────────────────── */
+    /* â"€â"€ Zod validation â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
     const { data, error } = await validate(req, TotpConfirmSchema)
     if (error) return error
 
     const { secret: base32Secret, code } = data
 
-    /* ── Verify 6-digit code against new secret (before saving) ─────────── */
+    /* â"€â"€ Verify 6-digit code against new secret (before saving) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
     const totp = new OTPAuth.TOTP({
-      issuer: 'Nova Tyres Admin', algorithm: 'SHA1', digits: 6, period: 30,
+      issuer: 'Gripwell Admin', algorithm: 'SHA1', digits: 6, period: 30,
       secret: OTPAuth.Secret.fromBase32(base32Secret),
     })
     if (totp.validate({ token: code.replace(/\s/g, ''), window: 1 }) === null) {
-      return NextResponse.json({ error: 'Incorrect code — scan the QR code again and retry' }, { status: 400 })
+      return NextResponse.json({ error: 'Incorrect code â" scan the QR code again and retry' }, { status: 400 })
     }
 
-    /* ── Save encrypted secret + recovery codes atomically ───────────────── */
+    /* â"€â"€ Save encrypted secret + recovery codes atomically â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
     const encryptedSecret = encryptSecret(base32Secret)
     const { plaintext: codes, hashes } = generateRecoveryCodes()
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       prisma.adminUser.update({ where: { id: adminId }, data: { totpSecret: encryptedSecret, totpEnabled: true } }),
     ])
 
-    /* ── Audit log ───────────────────────────────────────────────────────── */
+    /* â"€â"€ Audit log â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€ */
     await logAction({ adminId, action: 'TOTP_ENROLLED', entityType: 'AdminUser', entityId: adminId, ip })
 
     return NextResponse.json({ success: true, recoveryCodes: codes })

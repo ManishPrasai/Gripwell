@@ -8,10 +8,10 @@
 ──────────────────────────────────────────────────────────────────────── */
 
 export const C = {
-  orange:      '#FF6817',
+  orange:      '#FF6A1A',
   orangeDark:  '#E55A0E',
   orangeSoft:  '#FFF3EB',
-  green:       '#076330',
+  green:       '#2A2E36',
   greenDark:   '#054A24',
   greenSoft:   '#EAF3ED',
   greenInk:    '#04331B',
@@ -26,7 +26,7 @@ export const C = {
   line2:       '#E9E9E7',
   line3:       '#CCCCC8',
   wash:        '#F4F4F3',
-  onDark:      '#CFE5D8',
+  onDark:      '#D1D5DB',
   onDarkWarm:  '#FFB07A',
   onDarkMuted: '#9DBBA8',
 } as const

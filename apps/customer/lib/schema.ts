@@ -30,7 +30,7 @@ export function buildProductSchema(input: ProductSchemaInput) {
     offers: {
       '@type': 'Offer',
       url: absoluteUrl(input.path),
-      priceCurrency: 'AUD',
+      priceCurrency: 'GBP',
       price: input.price.toFixed(2),
       availability: input.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     },

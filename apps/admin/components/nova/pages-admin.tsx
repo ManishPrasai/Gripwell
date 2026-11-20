@@ -1,6 +1,6 @@
 "use client";
 /* ============================================================
-   NOVA TYRES — Admin · Customers + Discount Codes
+   Gripwell — Admin · Customers + Discount Codes
    ============================================================ */
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -27,7 +27,7 @@ export function CustomersPage({ ctx }: { ctx: Ctx; nav?: any }) {
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((d) => { if (!cancelled) { setRows(d.customers); setPages(d.pagination.totalPages || 1); setTotal(d.pagination.total); } })
-      .catch(() => { if (!cancelled) toast({ kind: "err", title: "Couldn't load customers" }); })
+      .catch(() => { if (!cancelled) toast({ kind: "err", title: "Couldn’t load customers" }); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [page, q]);
@@ -110,7 +110,7 @@ export function DiscountsPage({ ctx }: { ctx: Ctx; nav?: any }) {
       toast({ kind: "ok", title: "Code created", body: res.code + " is live." });
       ctx.refetch?.();
     } catch (e: any) {
-      toast({ kind: "err", title: "Couldn't create code", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t create code", body: e?.message || "Please try again." });
     }
   }
 
@@ -122,7 +122,7 @@ export function DiscountsPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setRows(prev);
-      toast({ kind: "err", title: "Couldn't update", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t update", body: e?.message || "Please try again." });
     }
   }
 
@@ -136,7 +136,7 @@ export function DiscountsPage({ ctx }: { ctx: Ctx; nav?: any }) {
       ctx.refetch?.();
     } catch (e: any) {
       setRows(prev);
-      toast({ kind: "err", title: "Couldn't delete", body: e?.message || "Please try again." });
+      toast({ kind: "err", title: "Couldn’t delete", body: e?.message || "Please try again." });
     }
   }
 
@@ -163,7 +163,7 @@ export function DiscountsPage({ ctx }: { ctx: Ctx; nav?: any }) {
                     <td>{fmtValue(d)}</td>
                     <td className="muted">{d.minOrderAmount ? "$" + d.minOrderAmount : "—"}</td>
                     <td className="mono">{d.currentUses}{d.maxUses ? " / " + d.maxUses : ""}</td>
-                    <td className="muted nowrap">{d.expiresAt ? new Date(d.expiresAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" }) : "Never"}</td>
+                    <td className="muted nowrap">{d.expiresAt ? new Date(d.expiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "Never"}</td>
                     <td><Switch on={d.active} onChange={() => toggleActive(d)} /></td>
                     <td><button className="iconbtn danger" onClick={() => setDel(d)}><Icon name="trash" /></button></td>
                   </tr>
@@ -226,7 +226,7 @@ export function AuditLogPage({ ctx }: { ctx: Ctx; nav?: any }) {
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((d) => { if (!cancelled) { setRows(d.entries); setPages(d.pagination.totalPages || 1); setTotal(d.pagination.total); if (d.actions?.length) setActions(d.actions); } })
-      .catch(() => { if (!cancelled) toast({ kind: "err", title: "Couldn't load audit log" }); })
+      .catch(() => { if (!cancelled) toast({ kind: "err", title: "Couldn’t load audit log" }); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [page, q, action]);

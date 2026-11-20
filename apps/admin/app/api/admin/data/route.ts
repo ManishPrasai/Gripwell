@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
         status: s.isActive ? 'open' : 'closed',
         phone: s.phone, manager: s.name,
         mgrInit: s.name.split(' ').map(w => w[0]).join('').slice(0, 2),
-        mgrAv: '#076330', rating: 4.8, reviews: 250,
+        mgrAv: '#2A2E36', rating: 4.8, reviews: 250,
         today: todayMap.get(s.id) ?? 0,
         capacity: Math.min(100, Math.round(((todayMap.get(s.id) ?? 0) / 16) * 100)),
         bays: 4, staff: staffMap.get(s.id) ?? 0,
@@ -179,9 +179,9 @@ export async function GET(req: NextRequest) {
       status: 'online',
       email: u.email,
       init: `${u.firstName[0]}${u.lastName[0]}`,
-      av: '#076330',
+      av: '#2A2E36',
       phone: '—',
-      since: u.createdAt.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }),
+      since: u.createdAt.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
     }))
 
     /* ── Inventory (tyres + wheels) ── */
@@ -220,7 +220,7 @@ export async function GET(req: NextRequest) {
       paymentStatus: o.paymentStatus.toLowerCase(),
       hasStripe: !!o.stripePaymentIntentId,
       store: o.store?.name ?? '—',
-      date: o.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+      date: o.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
     }))
 
     /* ── Bookings (Appointments) ── */
@@ -233,7 +233,7 @@ export async function GET(req: NextRequest) {
       mech: 'TBA', mInit: 'TB', mAv: '#0EA5A5',
       store: a.store.name,
       status: a.status.toLowerCase() === 'confirmed' ? 'pending' : a.status.toLowerCase(),
-      time: `${a.date.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })} · ${a.timeSlot}`,
+      time: `${a.date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} · ${a.timeSlot}`,
       price: Number(a.service.priceFrom),
       phone: a.customer.phone ?? '—',
     }))
@@ -244,10 +244,10 @@ export async function GET(req: NextRequest) {
       storeId: r.storeId,
       author: `${r.customer.firstName} ${r.customer.lastName.slice(0, 1)}.`,
       init: `${r.customer.firstName[0]}${r.customer.lastName[0]}`,
-      av: '#FF6817',
+      av: '#FF6A1A',
       store: r.store?.name ?? '—',
       rating: r.rating,
-      time: r.createdAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+      time: r.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       text: r.body ?? '',
       reply: r.reply ?? null,
       verified: r.isVerifiedPurchase,
@@ -258,7 +258,7 @@ export async function GET(req: NextRequest) {
       id: c.id,
       customer: c.customer ? `${c.customer.firstName} ${c.customer.lastName}` : 'Guest',
       init: c.customer ? `${c.customer.firstName[0]}${c.customer.lastName[0]}` : 'G',
-      av: '#076330',
+      av: '#2A2E36',
       store: c.store.name,
       status: c.status === 'active' ? 'open' : 'closed',
       unread: c.messages.filter(m => !m.isRead && m.senderType === 'CUSTOMER').length,
@@ -268,7 +268,7 @@ export async function GET(req: NextRequest) {
       messages: c.messages.map(m => ({
         from: m.senderType === 'CUSTOMER' ? 'customer' : 'store',
         text: m.body,
-        time: m.createdAt.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }),
+        time: m.createdAt.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' }),
       })),
     }))
 
@@ -278,11 +278,11 @@ export async function GET(req: NextRequest) {
       customer: e.name,
       phone: e.phone,
       init: e.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-      av: ['#076330','#2D6BE0','#D6336C','#E08600','#7048E8'][i % 5],
+      av: ['#2A2E36','#2D6BE0','#D6336C','#E08600','#7048E8'][i % 5],
       store: e.store?.name ?? '—',
       kind: e.type === 'general' ? 'enquiry' : e.type,
       topic: e.message.slice(0, 50),
-      time: e.createdAt.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }),
+      time: e.createdAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }),
       duration: '—',
       outcome: e.status === 'NEW' ? 'callback' : e.status === 'IN_PROGRESS' ? 'thinking' : 'resolved',
       handledBy: '—',
@@ -295,7 +295,7 @@ export async function GET(req: NextRequest) {
       title: p.entityId ?? p.entityType,
       url: p.entityId === 'home' ? '/' : `/${p.entityId}`,
       status: 'published',
-      edited: p.updatedAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+      edited: p.updatedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
       by: 'Admin',
       views: '—',
       icon: 'page',
@@ -317,7 +317,7 @@ export async function GET(req: NextRequest) {
       })
       const total = dayOrders.reduce((s, o) => s + Number(o.total), 0)
       revenue7.push({
-        d: day.toLocaleDateString('en-AU', { weekday: 'short' }),
+        d: day.toLocaleDateString('en-GB', { weekday: 'short' }),
         a: Math.round(total),
         b: dayOrders.length,
       })

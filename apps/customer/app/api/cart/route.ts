@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@nova/database'
 import { resolveCartCustomerId, attachGuestCookie } from '../../lib/guest-cart'
+import { isValidQuantity, MAX_TYRES_PER_ORDER } from '../../../lib/order-rules'
+
+const BAD_QTY = `Quantity must be a whole number from 1 to ${MAX_TYRES_PER_ORDER}.`
+
+/** Only live, priced catalogue items can enter a basket: stale browser carts
+    (old site, retired products) must not create rows that later price at £0. */
+async function isSellable(productType: unknown, productId: unknown): Promise<boolean> {
+  const where = { slug: String(productId), isActive: true, deletedAt: null, price: { gt: 0 } }
+  if (productType === 'tyre')  return !!(await prisma.tyre.findFirst({ where, select: { id: true } }))
+  if (productType === 'wheel') return !!(await prisma.wheel.findFirst({ where, select: { id: true } }))
+  return false
+}
 
 // ── GET /api/cart ─────────────────────────────────────────────────────────────
 // Returns every CartItem row belonging to this browser's guest cart.
@@ -19,7 +31,7 @@ export async function GET(req: NextRequest) {
 }
 
 // ── POST /api/cart ────────────────────────────────────────────────────────────
-// Add an item. If the row already exists, increments quantity by 1.
+// Add an item, or set an existing row to the given quantity (whole number 1–8).
 // Body: { productId: string, productType: 'tyre'|'wheel', quantity?: number }
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +40,12 @@ export async function POST(req: NextRequest) {
 
     if (!productId || !productType) {
       return NextResponse.json({ error: 'productId and productType are required' }, { status: 400 })
+    }
+    if (!isValidQuantity(quantity)) {
+      return NextResponse.json({ error: BAD_QTY }, { status: 400 })
+    }
+    if (!(await isSellable(productType, productId))) {
+      return NextResponse.json({ error: 'This product is no longer available.' }, { status: 404 })
     }
 
     const item = await prisma.cartItem.upsert({
@@ -46,7 +64,8 @@ export async function POST(req: NextRequest) {
 }
 
 // ── PUT /api/cart ─────────────────────────────────────────────────────────────
-// Set an item to a specific quantity. quantity ≤ 0 deletes the row.
+// Set an item to a specific quantity (whole number 1–8). Removing an item is
+// DELETE, never a zero or negative quantity.
 // Body: { productId: string, productType: string, quantity: number }
 export async function PUT(req: NextRequest) {
   try {
@@ -57,11 +76,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'productId, productType and quantity are required' }, { status: 400 })
     }
 
-    if (quantity <= 0) {
-      await prisma.cartItem.deleteMany({
-        where: { customerId, productType, productId },
-      })
-      return attachGuestCookie(NextResponse.json({ deleted: true }), guestId, isNew)
+    if (!isValidQuantity(quantity)) {
+      return NextResponse.json({ error: BAD_QTY }, { status: 400 })
+    }
+    if (!(await isSellable(productType, productId))) {
+      return NextResponse.json({ error: 'This product is no longer available.' }, { status: 404 })
     }
 
     const item = await prisma.cartItem.upsert({

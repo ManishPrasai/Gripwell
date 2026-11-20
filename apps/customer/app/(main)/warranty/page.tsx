@@ -4,10 +4,10 @@ import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { STORES, STORE_NETWORK_LABEL, NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF } from '../../../lib/stores'
 
-const G = '#076330'
+const G = '#2A2E36'
 
 const PILLS = [
-  { href: '#acl',        label: 'Your ACL rights' },
+  { href: '#acl',        label: 'Your legal rights' },
   { href: '#tyre',       label: 'Tyre warranty' },
   { href: '#work',       label: 'Workmanship' },
   { href: '#returns',    label: 'Returns & refunds' },
@@ -42,7 +42,7 @@ export default function WarrantyPage() {
       <section style={{ background: '#04331B', padding: 'clamp(36px,5vw,72px) clamp(16px,3vw,64px)' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ fontSize: '13px', color: '#7FA98C', marginBottom: '10px' }}>
-            <Link href="/" style={{ color: '#CFE5D8', textDecoration: 'none', fontWeight: 600 }}>Home</Link> / Warranty &amp; Refund Policy
+            <Link href="/" style={{ color: '#D1D5DB', textDecoration: 'none', fontWeight: 600 }}>Home</Link> / Warranty &amp; Refund Policy
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
             <span style={{ width: '44px', height: '4px', background: '#fff' }} />
@@ -56,7 +56,7 @@ export default function WarrantyPage() {
           <p style={{ fontSize: 'clamp(14.5px,1.5vw,17px)', lineHeight: 1.65, color: '#9DBBA8', margin: '14px 0 22px', maxWidth: '68ch' }}>
             We want you to be confident in every tyre we sell and every job we do. This page explains what&apos;s
             covered, how long for, how returns and cancellations work, and how to make a claim — on top of the
-            rights you already have under Australian law.
+            rights you already have under UK law.
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {PILLS.map(p => (
@@ -80,10 +80,10 @@ export default function WarrantyPage() {
           <div style={{ flex: 1.55, minWidth: 'min(520px,100%)', display: 'grid', gap: 'clamp(28px,4vw,44px)' }}>
 
             <div id="acl">
-              <h2 style={sectionH2}>Your rights under Australian Consumer Law</h2>
+              <h2 style={sectionH2}>Your rights under UK Consumer Rights Act</h2>
               <p style={bodyP}>
                 Regardless of anything below, our goods and services come with consumer guarantees under the
-                Australian Consumer Law that cannot be excluded, restricted or replaced. These rights apply
+                UK Consumer Rights Act that cannot be excluded, restricted or replaced. These rights apply
                 automatically and last for as long as is reasonable for the type of product or service. You
                 don&apos;t need the original paper receipt specifically — a bank statement, invoice, or other
                 reasonable proof of purchase works just as well — but you will need to be able to show you
@@ -91,26 +91,23 @@ export default function WarrantyPage() {
               </p>
               <div style={{ borderLeft: `4px solid ${G}`, background: '#F1F8F3', borderRadius: '0 10px 10px 0', padding: '18px 20px' }}>
                 <div style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: G, marginBottom: '8px' }}>
-                  Required consumer-law statement
+                  Your rights in short
                 </div>
                 <p style={{ fontSize: '14.5px', lineHeight: 1.7, color: '#2B2B28', margin: '0 0 10px' }}>
-                  Our goods and services come with guarantees that cannot be excluded under the Australian
-                  Consumer Law. For major failures with the service, you are entitled:
+                  Under the Consumer Rights Act 2015, tyres and wheels must be of satisfactory quality, fit
+                  for purpose and as described, and fitting must be carried out with reasonable care and skill.
+                  If they are not:
                 </p>
                 <ul style={{ fontSize: '14.5px', lineHeight: 1.7, color: '#2B2B28', margin: '0 0 10px', paddingLeft: '20px' }}>
-                  <li>to cancel your service contract with us; and</li>
-                  <li>to a refund for the unused portion, or to compensation for its reduced value.</li>
+                  <li>within 30 days you can reject faulty goods for a full refund;</li>
+                  <li>within 6 months you can ask for a repair or replacement, and if that fails, a refund
+                    (a fault found in this period is presumed to have been there when you bought it);</li>
+                  <li>for fitting that wasn&apos;t done with reasonable care and skill, we will redo it at no
+                    cost, or give you a price reduction if that isn&apos;t possible.</li>
                 </ul>
-                <p style={{ fontSize: '14.5px', lineHeight: 1.7, color: '#2B2B28', margin: '0 0 10px' }}>
-                  You are also entitled to choose a refund or replacement for major failures with goods. If a
-                  failure with the goods or a service does not amount to a major failure, you are entitled to
-                  have the failure rectified in a reasonable time. If this is not done you are entitled to a
-                  refund for the goods and to cancel the contract for the service and obtain a refund of any
-                  unused portion.
-                </p>
                 <p style={{ fontSize: '14.5px', lineHeight: 1.7, color: '#2B2B28', margin: 0 }}>
-                  You are also entitled to be compensated for any other reasonably foreseeable loss or damage
-                  from a failure in the goods or service.
+                  This is a plain-English summary for this demo store, not legal advice. Citizens Advice
+                  explains the full rules.
                 </p>
               </div>
             </div>
@@ -158,12 +155,12 @@ export default function WarrantyPage() {
               <h2 style={sectionH2}>Returns, cancellations and refunds</h2>
               <p style={{ fontSize: '14px', lineHeight: 1.65, color: '#6B6A64', margin: '0 0 14px', fontStyle: 'italic' }}>
                 These terms cover change-of-mind returns and cancellations. If a tyre or our workmanship is
-                faulty, that&apos;s covered by the tyre warranty, workmanship warranty and your Australian
-                Consumer Law rights above instead — none of which are affected by the terms below.
+                faulty, that&apos;s covered by the tyre warranty, workmanship warranty and your UK
+                Consumer Rights Act rights above instead — none of which are affected by the terms below.
               </p>
               <ul style={{ fontSize: '15px', lineHeight: 1.75, color: '#2B2B28', margin: 0, paddingLeft: '20px' }}>
                 <li>Change-of-mind returns must be made within <strong>14 days</strong> of the invoice date.</li>
-                <li>Cancellations may incur a restocking fee of <strong>25–40%</strong> of the order value.</li>
+                <li>Cancellations may incur a restocking fee of <strong>25—40%</strong> of the order value.</li>
                 <li>Once an order has been sent, freight charges are non-refundable, and freight costs are payable by the customer.</li>
                 <li>Special order tyres and products cannot be returned for change of mind.</li>
               </ul>
@@ -175,7 +172,7 @@ export default function WarrantyPage() {
                 Changing the wheels and/or tyres fitted to your vehicle can affect its compliance and
                 roadworthiness. Before any modification is carried out, it&apos;s your responsibility as the
                 vehicle owner to check with the relevant road and traffic authority that the change is permitted
-                for your vehicle. Our team is glad to advise on fitment and compatibility, but Nova Tyres isn&apos;t
+                for your vehicle. Our team is glad to advise on fitment and compatibility, but Gripwell isn&apos;t
                 responsible for legal or registration issues arising from a particular wheel or tyre combination
                 on your vehicle.
               </p>
@@ -232,9 +229,9 @@ export default function WarrantyPage() {
           <div>
             <div style={detailsH}>Our details</div>
             <div style={{ fontSize: '14px', lineHeight: 1.7, color: '#4A4A46' }}>
-              Nova Tyres Pty Ltd<br />
+              Gripwell Ltd<br />
               Phone <a href={NOVA_SWITCHBOARD_HREF} className="wr-link" style={{ fontWeight: 700, textDecoration: 'none' }}>{NOVA_SWITCHBOARD}</a><br />
-              Email <a href="mailto:info@novatyres.com.au" className="wr-link" style={{ fontWeight: 700, textDecoration: 'none' }}>info@novatyres.com.au</a>
+              Email <a href="mailto:info@gripwell.demo" className="wr-link" style={{ fontWeight: 700, textDecoration: 'none' }}>info@gripwell.demo</a>
             </div>
           </div>
           <div>
@@ -248,7 +245,7 @@ export default function WarrantyPage() {
             <div style={detailsH}>Good to know</div>
             <div style={{ fontSize: '13.5px', lineHeight: 1.65, color: '#6B6A64' }}>
               This warranty is provided in addition to, and does not limit or replace, your rights under the
-              Australian Consumer Law.
+              UK Consumer Rights Act.
             </div>
           </div>
         </div>
@@ -345,7 +342,7 @@ function ClaimForm() {
                 <label><span style={labelCap}>Contact number *</span><input name="phone" type="tel" required placeholder="04xx xxx xxx" style={inputStyle} /></label>
                 <label><span style={labelCap}>Order number <span style={{ textTransform: 'none', color: '#9C9A93' }}>(if you have it)</span></span><input name="orderNumber" type="text" placeholder="e.g. #10482" style={inputStyle} /></label>
                 <label style={{ gridColumn: '1/-1' }}><span style={labelCap}>Address *</span><input name="address" type="text" required placeholder="Street, suburb, state, postcode" style={inputStyle} /></label>
-                <label><span style={labelCap}>Product name *</span><input name="productName" type="text" required placeholder="e.g. Continental CrossContact A/T 245/70R16" style={inputStyle} /></label>
+                <label><span style={labelCap}>Product name *</span><input name="productName" type="text" required placeholder="e.g. Meridian CrossTrack A/T 245/70R16" style={inputStyle} /></label>
                 <label><span style={labelCap}>Number of tyres affected</span><input name="tyreCount" type="number" min={1} placeholder="e.g. 2" style={inputStyle} /></label>
                 <label style={{ gridColumn: '1/-1' }}>
                   <span style={labelCap}>Why are you making this {reasonWord}? *</span>
@@ -360,7 +357,7 @@ function ClaimForm() {
 
               <label style={{ display: 'flex', gap: '9px', alignItems: 'flex-start', marginTop: '16px', fontSize: '13px', color: '#6B6A64', lineHeight: 1.5 }}>
                 <input type="checkbox" required style={{ accentColor: G, width: '16px', height: '16px', flex: 'none', marginTop: '2px' }} />
-                I understand Nova Tyres may need to physically inspect the tyre, and that this claim is assessed alongside my rights under the Australian Consumer Law.
+                I understand Gripwell may need to physically inspect the tyre, and that this claim is assessed alongside my rights under the UK Consumer Rights Act.
               </label>
 
               {error && <p style={{ color: '#C62828', fontSize: '13.5px', fontWeight: 600, marginTop: '14px' }}>{error}</p>}
@@ -373,7 +370,7 @@ function ClaimForm() {
                 {submitting ? 'Submitting…' : `Submit ${reasonWord}`}
               </button>
               <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px', color: '#8D8B85' }}>
-                Prefer email? Send the details above to <a href="mailto:info@novatyres.com.au" className="wr-link" style={{ fontWeight: 700 }}>info@novatyres.com.au</a> — or call <a href={NOVA_SWITCHBOARD_HREF} className="wr-link" style={{ fontWeight: 700 }}>{NOVA_SWITCHBOARD}</a>.
+                Prefer email? Send the details above to <a href="mailto:info@gripwell.demo" className="wr-link" style={{ fontWeight: 700 }}>info@gripwell.demo</a> — or call <a href={NOVA_SWITCHBOARD_HREF} className="wr-link" style={{ fontWeight: 700 }}>{NOVA_SWITCHBOARD}</a>.
               </div>
             </form>
           ) : (

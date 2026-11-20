@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
 /*
   The "More than tyres · Services" accordion from the mobile home artboard.
@@ -8,12 +9,12 @@ import { useState } from 'react'
   in sync; only the presentation differs (tap-to-expand rows on mobile).
 */
 const SERVICES = [
-  { id: 'fitting',  name: 'Fitting & balancing', free: true,  body: 'Included with every tyre — new valves and disposal too.' },
+  { id: 'fitting',  name: 'Fitting & balancing', free: false, body: `From ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} per tyre fitted — balancing, new valves and disposal included.` },
   { id: 'align',    name: 'Wheel alignment',     free: false, body: 'Computerised four-wheel alignment for even tyre wear and better handling.' },
   { id: 'puncture', name: 'Puncture repair',     free: false, body: "Repaired while you wait, where it's safe to do so." },
-  { id: 'logbook',  name: 'Log book service',    free: false, body: 'Manufacturer-schedule servicing that keeps your new-car warranty intact.' },
+  { id: 'logbook',  name: 'Manufacturer service',    free: false, body: 'Manufacturer-schedule servicing that keeps your new-car warranty intact.' },
   { id: 'safety',   name: 'Safety inspection',   free: true,  body: 'Tread, pressures, brakes and lights — a 15-minute once-over.' },
-  { id: 'rwc',      name: 'Pre-RWC check',       free: false, body: 'Know what needs fixing before the roadworthy test.' },
+  { id: 'MOT',      name: 'Pre-MOT check',       free: false, body: 'Know what needs fixing before the MOT test.' },
 ]
 
 export default function MobileServicesList() {
@@ -31,21 +32,21 @@ export default function MobileServicesList() {
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
                 padding: '13px 2px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: 'var(--gw-font)',
               }}
             >
-              <span style={{ fontSize: '14px', fontWeight: 700, color: '#16211B', display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: '#1A1D23', display: 'flex', alignItems: 'center', gap: '7px' }}>
                 {svc.name}
                 {svc.free && (
-                  <span style={{ background: '#E8F5EE', color: '#076330', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '3px', letterSpacing: '0.06em' }}>
+                  <span style={{ background: '#EDEEF0', color: '#2A2E36', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '3px', letterSpacing: '0.06em' }}>
                     FREE
                   </span>
                 )}
               </span>
-              <span style={{ color: '#9DB0A5', fontSize: '13px', flexShrink: 0, transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .18s' }}>›</span>
+              <span style={{ color: '#9EA3AD', fontSize: '13px', flexShrink: 0, transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .18s' }}>›</span>
             </button>
             {isOpen && (
-              <p style={{ margin: '0 0 13px', fontSize: '12.5px', color: '#6E7C74', lineHeight: 1.5, animation: 'nvMobFade .2s ease' }}>
+              <p style={{ margin: '0 0 13px', fontSize: '12.5px', color: '#6B7280', lineHeight: 1.5, animation: 'nvMobFade .2s ease' }}>
                 {svc.body}
               </p>
             )}
