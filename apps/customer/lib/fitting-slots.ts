@@ -101,3 +101,11 @@ export function nextFree(opts: {
   }
   return null
 }
+
+/** The board's Bays column, in the words a driver would use. */
+export function bayStatus(r: { time: string | null; day: string | null; free: number; leftToday: number }): string {
+  if (!r.time)           return 'Full this week'
+  if (r.day !== 'Today') return 'Full today'
+  if (r.leftToday === 1) return 'Last bay'
+  return `${r.free} free`
+}

@@ -44,9 +44,10 @@ const payments = [
 /* ── Shared styles ───────────────────────────────────────────────────────── */
 
 const colHeading: React.CSSProperties = {
-  fontFamily:    "'Bebas Neue', sans-serif",
-  fontSize:      '15px',
-  letterSpacing: '.06em',
+  fontFamily:    'var(--gw-font)',
+  fontSize:      '12px',
+  fontWeight:    800,
+  letterSpacing: '.08em',
   textTransform: 'uppercase',
   color:         '#1A1D23',
   marginBottom:  '14px',
@@ -69,7 +70,7 @@ const socialTile: React.CSSProperties = {
 /* ── Component ───────────────────────────────────────────────────────────── */
 export default function Footer() {
   return (
-    <footer style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <footer style={{ fontFamily: 'var(--gw-font)' }}>
       <style>{`
         .nv-footlink {
           font-size: 14px;
@@ -175,7 +176,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Utility bar: green band ── */}
+      {/* ── Utility bar: graphite band ── */}
       <div style={{ background: '#2A2E36', color: '#F1EFE7', padding: 'clamp(18px,2.4vw,22px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px 32px' }}>
           <span style={{ fontSize: '13.5px', color: '#D1D5DB' }}>
@@ -199,13 +200,13 @@ export default function Footer() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '13px', fontWeight: 700, color: '#D1D5DB' }}>Follow Us</span>
-            <a href="#" aria-label="LinkedIn" className="nv-social" style={{ ...socialTile, color: '#0A66C2' }}>
+            <a href="#" aria-label="LinkedIn" className="nv-social" style={{ ...socialTile, color: 'var(--muted-foreground)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM2.9 21h4.16V9.4H2.9V21Zm7.02 0h4.16v-6.3c0-1.66.6-2.66 2.02-2.66 1.32 0 1.86.94 1.86 2.7V21H22.1v-6.9c0-3.4-1.82-4.98-4.24-4.98-1.96 0-2.84 1.08-3.33 1.84V9.4H9.92c.06 1.16 0 11.6 0 11.6Z"/></svg>
             </a>
-            <a href="#" aria-label="Facebook" className="nv-social" style={{ ...socialTile, color: '#1877F2' }}>
+            <a href="#" aria-label="Facebook" className="nv-social" style={{ ...socialTile, color: 'var(--muted-foreground)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.5l.4-3H13.5V8.3c0-.9.3-1.5 1.6-1.5h1.5V4.2C16.3 4.1 15.2 4 14 4c-2.5 0-4.2 1.5-4.2 4.3v2.2H7.3v3h2.5V21h3.7z"/></svg>
             </a>
-            <a href="#" aria-label="Instagram" className="nv-social" style={{ ...socialTile, color: '#E1306C' }}>
+            <a href="#" aria-label="Instagram" className="nv-social" style={{ ...socialTile, color: 'var(--muted-foreground)' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" /></svg>
             </a>
           </div>

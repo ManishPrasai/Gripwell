@@ -1,7 +1,7 @@
 // Slot generation checks. Run: npm test -w customer
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { freeSlots, nextFree, londonNow, addDays, dayLabel } from './fitting-slots.ts'
+import { freeSlots, nextFree, londonNow, addDays, dayLabel, bayStatus } from './fitting-slots.ts'
 
 const WEEKDAY = { open: '08:00', close: '17:30', closed: false }
 
@@ -62,4 +62,12 @@ test('London clock follows BST and GMT', () => {
   assert.equal(londonNow(new Date('2026-07-01T12:00:00Z')).clock, '13:00')
   assert.equal(londonNow(new Date('2026-11-19T12:00:00Z')).clock, '12:00')
   assert.equal(addDays('2026-12-31', 1), '2027-01-01')
+})
+
+test('bays column: free count, last bay, full today, full this week', () => {
+  assert.equal(bayStatus({ time: '09:00', day: 'Today', free: 2, leftToday: 12 }), '2 free')
+  assert.equal(bayStatus({ time: '09:00', day: 'Today', free: 1, leftToday: 12 }), '1 free')
+  assert.equal(bayStatus({ time: '15:00', day: 'Today', free: 1, leftToday: 1 }), 'Last bay')
+  assert.equal(bayStatus({ time: '08:00', day: 'Tomorrow', free: 2, leftToday: 0 }), 'Full today')
+  assert.equal(bayStatus({ time: null, day: null, free: 0, leftToday: 0 }), 'Full this week')
 })

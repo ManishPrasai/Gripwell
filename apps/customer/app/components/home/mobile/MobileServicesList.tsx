@@ -9,7 +9,7 @@ import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
   in sync; only the presentation differs (tap-to-expand rows on mobile).
 */
 const SERVICES = [
-  { id: 'fitting',  name: 'Fitting & balancing', free: false, body: `From ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} a tyre — balancing, new valves and disposal included.` },
+  { id: 'fitting',  name: 'Fitting & balancing', free: false, body: `From ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} per tyre fitted — balancing, new valves and disposal included.` },
   { id: 'align',    name: 'Wheel alignment',     free: false, body: 'Computerised four-wheel alignment for even tyre wear and better handling.' },
   { id: 'puncture', name: 'Puncture repair',     free: false, body: "Repaired while you wait, where it's safe to do so." },
   { id: 'logbook',  name: 'Manufacturer service',    free: false, body: 'Manufacturer-schedule servicing that keeps your new-car warranty intact.' },
@@ -32,7 +32,7 @@ export default function MobileServicesList() {
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
                 padding: '13px 2px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: 'var(--gw-font)',
               }}
             >
               <span style={{ fontSize: '14px', fontWeight: 700, color: '#1A1D23', display: 'flex', alignItems: 'center', gap: '7px' }}>

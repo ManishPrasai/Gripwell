@@ -34,7 +34,7 @@ export default function NewsletterSection() {
       style={{
         maxWidth: '1180px', margin: '0 auto',
         padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,40px)',
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: 'var(--gw-font)',
       }}
     >
       <style>{`
@@ -50,10 +50,10 @@ export default function NewsletterSection() {
         style={{ background: '#2A2E36', borderRadius: '20px', padding: 'clamp(28px,4vw,52px)' }}
       >
         <div>
-          <p style={{ margin: '0 0 10px', fontFamily: "'DM Mono', monospace", fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#FF6A1A' }}>
+          <p style={{ margin: '0 0 10px', fontFamily: 'var(--gw-font)', fontSize: '11.5px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#FF6A1A' }}>
             Gripwell mailing list
           </p>
-          <h2 style={{ margin: '0 0 12px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(32px,4vw,46px)', letterSpacing: '0.02em', color: '#F1EFE7', lineHeight: 1.02 }}>
+          <h2 style={{ margin: '0 0 12px', fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: 'clamp(23px,2.9vw,33px)', letterSpacing: '-0.02em', color: '#F1EFE7', lineHeight: 1.02 }}>
             Deals before they sell out
           </h2>
           <p style={{ margin: 0, color: '#9EA3AD', fontSize: '15px', lineHeight: 1.65, maxWidth: '44ch' }}>
@@ -77,7 +77,7 @@ export default function NewsletterSection() {
               type="submit" className="nv-news-btn" disabled={submitting}
               style={{
                 background: '#FF6A1A', color: '#fff', border: 'none', borderRadius: '10px',
-                padding: '0 30px', height: '54px', fontFamily: "'DM Sans', sans-serif",
+                padding: '0 30px', height: '54px', fontFamily: 'var(--gw-font)',
                 fontSize: '15px', fontWeight: 700, cursor: submitting ? 'default' : 'pointer', whiteSpace: 'nowrap',
                 opacity: submitting ? 0.7 : 1,
                 transition: 'transform .18s cubic-bezier(.22,1,.36,1), background .2s, box-shadow .2s, opacity .2s',

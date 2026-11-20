@@ -61,7 +61,7 @@
   text-overflow: ellipsis;
 }
 .field select:focus-visible { outline: 3px solid var(--gw-ink); outline-offset: 1px; }
-.field select:disabled { background-color: var(--gw-paper); color: var(--gw-ink-3); border-style: dashed; cursor: not-allowed; }
+.field select:disabled { background-color: var(--gw-paper); border-color: var(--gw-line); color: var(--gw-ink-3); opacity: .55; cursor: not-allowed; }
 .field select[aria-invalid='true'] { border-color: #B42318; border-width: 2px; }
 
 .hint {

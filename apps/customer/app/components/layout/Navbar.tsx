@@ -254,25 +254,25 @@ export default function Navbar() {
       {/* ── Announcement strip ── */}
       <div
         style={{
-          background: '#054d25', color: '#D1D5DB', fontSize: '13px',
+          background: 'var(--gw-ink)', color: '#D1D5DB', fontSize: '13px',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           gap: '8px', flexWrap: 'wrap', padding: '9px 16px', textAlign: 'center',
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: 'var(--gw-font)',
         }}
       >
-        <span>Fitting from <strong style={{ color: '#FFFFFF', fontWeight: 700 }}>{money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}</strong> a tyre, balancing &amp; new valves included</span>
+        <span>Fitting from <strong style={{ color: '#FFFFFF', fontWeight: 700 }}>{money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}</strong> per tyre fitted, balancing &amp; new valves included</span>
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
         <span>{STORE_NETWORK_LABEL}</span>
         <span style={{ color: 'rgba(207,229,216,0.55)' }}>·</span>
         <span>Call <a href={NOVA_PHONE_HREF} style={{ color: '#FFB07A', fontWeight: 700, textDecoration: 'none' }}>{NOVA_PHONE}</a></span>
       </div>
 
-      {/* ── Sticky green header ── */}
+      {/* ── Sticky graphite header ── */}
       <header
         style={{
           position: 'sticky', top: 0, zIndex: 60,
           background: '#2A2E36', boxShadow: '0 2px 12px rgba(13,26,18,0.25)',
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: 'var(--gw-font)',
         }}
       >
         <div
@@ -467,12 +467,12 @@ export default function Navbar() {
             style={{
               width: '100%', maxWidth: '900px', background: '#fff', borderRadius: '16px',
               padding: '28px 28px 24px', boxShadow: '0 40px 80px -20px rgba(0,0,0,0.5)',
-              fontFamily: "'DM Sans', sans-serif",
+              fontFamily: 'var(--gw-font)',
               animation: 'nv-modal-pop .22s cubic-bezier(.22,1,.36,1) both',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '11px', letterSpacing: '0.16em', color: '#6B7280', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', letterSpacing: '0.16em', color: '#6B7280', textTransform: 'uppercase' }}>
                 Search
               </span>
               <button
@@ -494,7 +494,7 @@ export default function Navbar() {
               <input
                 ref={searchInputRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
                 placeholder="Search tyres, wheels, sizes, brands…"
-                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '17px', color: '#1A1D23', background: 'transparent' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontFamily: 'var(--gw-font)', fontSize: '17px', color: '#1A1D23', background: 'transparent' }}
               />
             </form>
 
@@ -521,7 +521,7 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <Link href={sizeOrTextHref(query.trim())} onClick={() => setSearchOpen(false)}
-                  style={{ display: 'block', margin: '14px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '11px', color: '#2A2E36', textDecoration: 'none', cursor: 'pointer' }}
+                  style={{ display: 'block', margin: '14px 0 0', textAlign: 'center', fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#2A2E36', textDecoration: 'none', cursor: 'pointer' }}
                 >
                   See all {resultCount} results →
                 </Link>
@@ -534,7 +534,7 @@ export default function Navbar() {
               </div>
             )}
 
-            <p style={{ margin: '18px 0 0', textAlign: 'center', fontFamily: "'DM Mono', monospace", fontSize: '10.5px', color: '#9EA3AD' }}>
+            <p style={{ margin: '18px 0 0', textAlign: 'center', fontFamily: 'var(--gw-font)', fontSize: '10.5px', color: '#9EA3AD' }}>
               Press Esc to close
             </p>
           </div>

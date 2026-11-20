@@ -14,7 +14,7 @@ import { money, DEFAULT_FITTING_PRICES } from '../../../../lib/fitting'
 
   Ported from the "Mobile Hero — Find My Tyre" artboard. The file is a server
   component (zero JavaScript) except four small client islands: MobileHeader
-  (cart badge), MobileFindTyre (hero size flow), MobileDealsRail (featured
+  (cart badge), MobileDealsRail (featured
   feed) and MobileServicesList / MobileTabBar. Everything else is static
   markup, so the tree a desktop visitor never sees costs almost nothing.
 
@@ -44,15 +44,8 @@ const BRANDS = [
 ]
 
 const STANDARD = [
-  { n: '01', t: 'Clear, all-in prices',       d: `Prices include VAT. Fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} a tyre, balancing and valves included.` },
-  { n: '02', t: 'Warehouse-direct prices',    d: 'No middleman markup — just fair prices on every brand.' },
-]
-
-const SOCIAL = [
-  { src: '/images/social/social-1.jpg', tag: 'IG', alt: 'Customer car on the open road' },
-  { src: '/images/social/social-2.jpg', tag: 'IG', alt: 'Fresh set of wheels in the bay' },
-  { src: '/images/social/social-3.jpg', tag: 'FB', alt: 'A Gripwell fit-out' },
-  { src: '/images/social/social-4.jpg', tag: 'IG', alt: 'Front end of a customer car' },
+  { n: '01', t: 'Clear, all-in prices',       d: `Prices include VAT. Fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} per tyre fitted, balancing and valves included.` },
+  { n: '02', t: 'No hidden fees',             d: 'The price on the page is the price you pay, fitting and VAT included.' },
 ]
 
 export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
@@ -60,7 +53,7 @@ export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
 
   return (
     <div style={{ background: '#1A1D23' }}>
-      <div className="nv-mob-shell" style={{ background: '#FAF9F5', fontFamily: "'DM Sans', sans-serif", maxWidth: '480px', margin: '0 auto' }}>
+      <div className="nv-mob-shell" style={{ background: '#FAF9F5', fontFamily: 'var(--gw-font)', maxWidth: '480px', margin: '0 auto' }}>
         <MobileHeader />
         {hero}
 
@@ -98,7 +91,7 @@ export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
         </section>
 
         {/* ── The Gripwell Standard ──────────────────────────────── */}
-        <section style={{ background: '#0F2A1C', padding: '26px 16px 30px' }}>
+        <section style={{ background: 'var(--gw-graphite)', padding: '26px 16px 30px' }}>
           <span style={{ display: 'block', color: '#fff', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
             The Gripwell Standard
           </span>
@@ -123,7 +116,7 @@ export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
             {BRANDS.map(b => (
               <div key={b.name} style={{ background: '#FFFFFF', border: '1px solid #E7E5DE', borderRadius: '8px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
-                <span style={{ fontSize: '12px', fontFamily: "'DM Sans', sans-serif", fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1A1D23', textAlign: 'center' }}>{b.name}</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--gw-font)', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#1A1D23', textAlign: 'center' }}>{b.name}</span>
               </div>
             ))}
           </div>
@@ -156,28 +149,6 @@ export default function MobileHome({ hero }: { hero?: React.ReactNode }) {
           <Link href="/service?goto=shops" style={{ display: 'inline-block', marginTop: '12px', fontSize: '12.5px', fontWeight: 700, color: '#2A2E36', textDecoration: 'none' }}>
             View all {STORES.length} locations →
           </Link>
-        </section>
-
-        {/* ── Social ─────────────────────────────────────────── */}
-        <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: '26px 0 4px' }}>
-          <div style={{ padding: '0 16px', marginBottom: '14px' }}>
-            <h2 style={{ margin: '0 0 8px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: '22px', letterSpacing: '0.02em', color: '#1A1D23' }}>
-              <span style={{ color: '#FF6A1A' }}>#gripwell</span> in Social Media
-            </h2>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              {['Facebook', 'Instagram', 'TikTok'].map(s => (
-                <span key={s} style={{ fontSize: '12px', fontWeight: 700, color: '#2A2E36' }}>{s}</span>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 0 }}>
-            {SOCIAL.map(s => (
-              <div key={s.src} style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', background: '#12241A' }}>
-                <Image src={s.src} alt={s.alt} fill sizes="50vw" style={{ objectFit: 'cover' }} />
-                <span style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(13,26,18,.72)', color: '#F1EFE7', fontSize: '9px', padding: '2px 6px', borderRadius: '5px' }}>{s.tag}</span>
-              </div>
-            ))}
-          </div>
         </section>
 
         {/* ── Footer ─────────────────────────────────────────── */}

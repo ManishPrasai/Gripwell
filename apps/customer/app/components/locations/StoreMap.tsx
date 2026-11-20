@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import type { Map as LeafletMap } from 'leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 export interface MappableStore {
@@ -18,20 +18,15 @@ const DEFAULT_CENTER: [number, number] = [51.505, -0.09]
 const DEFAULT_ZOOM   = 11
 const FOCUS_ZOOM     = 14
 
-/* Fix Leaflet's default icon path broken by webpack asset hashing. */
-function fixLeafletIcons() {
-  if (typeof window === 'undefined') return
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const L = require('leaflet')
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  })
-}
-fixLeafletIcons()
+/* One brand pin for every branch (Gripwell orange, graphite dot). A divIcon
+   needs no image assets, so there is no broken default-icon path to patch. */
+const PIN = L.divIcon({
+  className: '',
+  html: '<svg width="28" height="38" viewBox="0 0 28 38" aria-hidden="true"><path d="M14 1C7 1 1.5 6.5 1.5 13.4 1.5 22.6 14 37 14 37s12.5-14.4 12.5-23.6C26.5 6.5 21 1 14 1Z" fill="var(--gw-orange)" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="4.6" fill="var(--gw-graphite)"/></svg>',
+  iconSize:    [28, 38],
+  iconAnchor:  [14, 37],
+  popupAnchor: [0, -34],
+})
 
 function MapController({ selected }: { selected: MappableStore | null }) {
   const map = useMap()
@@ -42,7 +37,7 @@ function MapController({ selected }: { selected: MappableStore | null }) {
   return null
 }
 
-function FitAll({ stores }: { stores: MappableStore[] }) {
+function FitAll({ stores, reserveBottom }: { stores: MappableStore[]; reserveBottom: number }) {
   const map  = useMap()
   const done = useRef(false)
   useEffect(() => {
@@ -50,7 +45,7 @@ function FitAll({ stores }: { stores: MappableStore[] }) {
     if (stores.length === 1) {
       map.setView([stores[0].lat, stores[0].lng], FOCUS_ZOOM)
     } else {
-      map.fitBounds(stores.map(s => [s.lat, s.lng] as [number, number]), { padding: [48, 48] })
+      map.fitBounds(stores.map(s => [s.lat, s.lng] as [number, number]), { paddingTopLeft: [32, 40], paddingBottomRight: [32, 32 + reserveBottom] })
     }
     done.current = true
   }, [map, stores])
@@ -66,12 +61,12 @@ interface StoreMapProps<T extends MappableStore> {
 }
 
 export default function StoreMap<T extends MappableStore>({
-  stores, selectedStore, onSelectStore, interactive = true,
+  stores, selectedStore, onSelectStore, interactive = true, fullDetail = false,
 }: StoreMapProps<T>) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '260px' }}>
       <style>{`
-        .leaflet-container { font-family: 'DM Sans', system-ui, sans-serif; }
+        .leaflet-container { font-family: var(--gw-font); }
         .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
         .leaflet-popup-content { margin: 12px 14px; }
       `}</style>
@@ -100,6 +95,7 @@ export default function StoreMap<T extends MappableStore>({
           <Marker
             key={store.id}
             position={[store.lat, store.lng]}
+            icon={PIN}
             eventHandlers={{ click: () => onSelectStore(store) }}
           >
             <Popup>
@@ -110,7 +106,8 @@ export default function StoreMap<T extends MappableStore>({
           </Marker>
         ))}
 
-        <FitAll stores={stores} />
+        {/* fullDetail maps carry a floating detail card along the bottom edge; keep pins clear of it */}
+        <FitAll stores={stores} reserveBottom={fullDetail ? 96 : 0} />
         <MapController selected={selectedStore} />
       </MapContainer>
     </div>

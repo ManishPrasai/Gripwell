@@ -16,7 +16,7 @@ const itemStyle: React.CSSProperties = {
   background:     'transparent',
   border:         'none',
   cursor:         'pointer',
-  fontFamily:     "'DM Sans', sans-serif",
+  fontFamily:     'var(--gw-font)',
 }
 
 const labelStyle: React.CSSProperties = { fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.04em' }

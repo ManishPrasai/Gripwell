@@ -7,7 +7,7 @@ import { money, DEFAULT_FITTING_PRICES } from '../../../lib/fitting'
 const SERVICES = [
   { title: 'Wheel alignment',    free: false, body: 'Computerised four-wheel alignment for even wear and straight steering.' },
   { title: 'Puncture repair',    free: false, body: "Repaired while you wait, where it's safe to do so." },
-  { title: 'Fitting & balancing',free: false, body: `From ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} a tyre — balancing, new valves and disposal included.` },
+  { title: 'Fitting & balancing',free: false, body: `From ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} per tyre fitted — balancing, new valves and disposal included.` },
   { title: 'Manufacturer service',   free: false, body: 'Manufacturer-schedule servicing that keeps your new-car warranty.' },
   { title: 'Safety inspection',  free: true,  body: 'Tread, pressures, brakes and lights — a 15-minute once-over.' },
   { title: 'Pre-MOT check',      free: true,  body: 'Know what needs fixing before the MOT test.' },
@@ -18,7 +18,7 @@ export default function InStoreServices() {
     <section
       style={{
         background: '#FAF9F5',
-        padding: 'clamp(46px,5.4vw,72px) 0', fontFamily: "'DM Sans', sans-serif",
+        padding: 'clamp(46px,5.4vw,72px) 0', fontFamily: 'var(--gw-font)',
       }}
     >
       <style>{`

@@ -19,6 +19,29 @@ const STORES = [
   { name: 'Gripwell City',        slug: 'citycentre',  address: '9 Cheapside',         suburb: 'City of London', state: 'Central London', postcode: 'EC2V 6AA', phone: '+44 20 7946 0707', email: 'city@gripwell.demo',        lat: 51.5138,  lon: -0.0934 },
 ]
 
+// Passenger fitting per tyre, VAT incl. Each branch sets its own; the lowest
+// (Camden) is the "from" price in site copy (DEFAULT_FITTING_PRICES.passenger).
+const FITTING_RATES: Record<string, number> = {
+  camden: 25, brixton: 27, shoreditch: 28, islington: 30, hammersmith: 32, citycentre: 33, greenwich: 35,
+}
+// Larger vehicles cost more to fit, by the same step at every branch.
+const FITTING_EXTRA = { passenger: 0, suv: 5, commercial: 10, truck: 25 } as const
+
+// Existing fitting bookings that give the home board a believable mix.
+// Two bays per branch, 60-minute jobs (apps/customer/lib/fitting-slots.ts);
+// a time listed twice books both bays. Repeated on every open day for two weeks.
+const hourly = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => `${String(from + i).padStart(2, '0')}:00`)
+const FULL_DAY = [...hourly(8, 16), ...hourly(8, 16)]
+const BOARD_BOOKINGS: Record<string, { today?: string[]; daily: string[] }> = {
+  camden:      { daily: ['11:00', '14:00'] },                                       // 08:00 · 2 free
+  shoreditch:  { daily: ['08:00', ...hourly(8, 16)] },                              // 09:00 · 1 free
+  brixton:     { daily: ['08:00', '08:00', '09:00', '09:00', '15:00'] },            // 10:00 · 2 free
+  hammersmith: { daily: [...hourly(8, 10), ...hourly(8, 16)] },                     // 11:00 · 1 free
+  islington:   { daily: [...hourly(8, 11), ...hourly(8, 11), '14:30'] },            // 12:00 · 2 free
+  greenwich:   { daily: FULL_DAY.filter((t, i) => !(t === '15:00' && i >= 9)) },    // 15:00 · last bay
+  citycentre:  { today: FULL_DAY, daily: ['09:30', '13:00'] },                      // full today
+}
+
 const STORE_HOURS = [
   { day: 'Monday',    openTime: '08:00', closeTime: '17:30', isClosed: false },
   { day: 'Tuesday',   openTime: '08:00', closeTime: '17:30', isClosed: false },
@@ -158,12 +181,12 @@ const WHEELS = [
     description: 'Premium off-road alloy wheel built for serious 4x4 performance. Deep dish design with aggressive styling and high load rating for heavy-duty applications.',
   },
   {
-    brand: 'Halden', model: 'Bastion', slug: 'halden-bastion-18x9',
+    brand: 'Halden', model: 'Bastion', slug: 'halden-bastion-18x9', isFeatured: true,
     diameter: 18, width: 9.0, pcd: '5×114.3', offset: 12,  finish: 'Bronze',       price: 265.00,
     description: 'Heavy-duty durability meets refined aesthetics. Multi-spoke design in striking bronze pairs perfectly with lifted SUVs and double-cab pickups.',
   },
   {
-    brand: 'Ostra', model: 'Ranger',    slug: 'ostra-ranger-16x8',
+    brand: 'Ostra', model: 'Ranger',    slug: 'ostra-ranger-16x8', isFeatured: true,
     diameter: 16, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gunmetal',     price: 195.00,
     description: "A tough, proven off-road wheel. The Ostra Ranger is engineered for tough conditions with a proven track record across all terrains — mud, rock and everything in between.",
   },
@@ -173,12 +196,12 @@ const WHEELS = [
     description: 'Combines aggressive styling with everyday usability. Large diameter options for lifted trucks and SUVs that need presence without sacrificing practicality.',
   },
   {
-    brand: 'Marlow', model: 'Stride',   slug: 'marlow-stride-17x8',
+    brand: 'Marlow', model: 'Stride',   slug: 'marlow-stride-17x8', isFeatured: true,
     diameter: 17, width: 8.0, pcd: '6×139.7', offset: -10, finish: 'Gloss Black',  price: 185.00,
     description: 'Value-packed alloy wheel offering great looks at an accessible price. The Marlow Stride is the perfect upgrade for 4x4s and pickups seeking style and strength.',
   },
   {
-    brand: 'Vanta', model: 'XR7',       slug: 'vanta-xr7-18x85',
+    brand: 'Vanta', model: 'XR7',       slug: 'vanta-xr7-18x85', isFeatured: true,
     diameter: 18, width: 8.5, pcd: '5×112',   offset: 35,  finish: 'Hyper Silver', price: 175.00,
     description: 'European styling at a sensible price. The XR7 features a refined multi-spoke design in hyper silver that complements European and Japanese passenger vehicles.',
   },
@@ -191,6 +214,16 @@ const SATURDAY_SLOTS = ['08:30', '09:30', '10:30', '11:30', '13:00', '14:00']
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** UTC midnight of London's calendar date, `offset` days from today. Prisma
+    stores @db.Date as the UTC date, so local-midnight Dates on a machine east
+    of London would land on the previous day. */
+function londonDay(offset = 0): Date {
+  const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  const d = new Date(`${ymd}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + offset)
+  return d
+}
 
 async function main() {
   console.log('🌱 Starting database seed...\n')
@@ -228,6 +261,19 @@ async function main() {
   }
   console.log(`✅ Store hours seeded (${STORES.length} stores × ${STORE_HOURS.length} days)`)
 
+  // ── Fitting prices (per branch) ─────────────────────────────────────────────
+  for (const [slug, base] of Object.entries(FITTING_RATES)) {
+    const storeId = storeIdMap[slug]
+    for (const [vehicleType, extra] of Object.entries(FITTING_EXTRA)) {
+      await prisma.storeFittingPrice.upsert({
+        where:  { storeId_vehicleType: { storeId, vehicleType } },
+        update: { price: base + extra },
+        create: { storeId, vehicleType, price: base + extra },
+      })
+    }
+  }
+  console.log(`✅ Fitting prices seeded (£${Math.min(...Object.values(FITTING_RATES))}–£${Math.max(...Object.values(FITTING_RATES))} per tyre fitted)`)
+
   // ── Services ────────────────────────────────────────────────────────────────
   const serviceIds: string[] = []
   for (const svc of SERVICES) {
@@ -255,16 +301,12 @@ async function main() {
   console.log(`✅ Store services linked`)
 
   // ── Appointment Slots (next 60 days) ────────────────────────────────────────
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
   const slotRows: { storeId: string; date: Date; time: string; isAvailable: boolean; maxBookings: number; currentBookings: number }[] = []
 
   for (const storeId of Object.values(storeIdMap)) {
     for (let d = 0; d < 60; d++) {
-      const date = new Date(today)
-      date.setDate(today.getDate() + d)
-      const dow = date.getDay() // 0=Sun, 6=Sat
+      const date = londonDay(d)
+      const dow = date.getUTCDay() // 0=Sun, 6=Sat
       if (dow === 0) continue   // closed Sundays
 
       const times = dow === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS
@@ -344,11 +386,11 @@ async function main() {
   for (const w of WHEELS) {
     const wheel = await prisma.wheel.upsert({
       where: { slug: w.slug },
-      update: { description: w.description, price: w.price, compareAtPrice: null },
+      update: { description: w.description, price: w.price, compareAtPrice: null, isFeatured: !!w.isFeatured },
       create: {
         brand: w.brand, model: w.model, description: w.description, slug: w.slug,
         diameter: w.diameter, width: w.width, pcd: w.pcd, offset: w.offset,
-        material: 'Alloy', finish: w.finish, price: w.price,
+        material: 'Alloy', finish: w.finish, price: w.price, isFeatured: !!w.isFeatured,
         compareAtPrice: null,
         stockQuantity: Math.floor(Math.random() * 16) + 4, isActive: true,
       },
@@ -456,7 +498,8 @@ async function main() {
   console.log(`✅ ${customers.length} demo customers seeded`)
 
   // Orders: 25 spread over the last 60 days, with mixed outcomes.
-  const RATE: Record<string, number> = { PASSENGER: 25, SUV: 30, MUD_TERRAIN: 30, COMMERCIAL: 35 }   // = DEFAULT_FITTING_PRICES
+  const TYPE_FIT: Record<string, keyof typeof FITTING_EXTRA> = { PASSENGER: 'passenger', SUV: 'suv', MUD_TERRAIN: 'suv', COMMERCIAL: 'commercial' }
+  const rate = (slug: string, tyreType: string) => FITTING_RATES[slug] + FITTING_EXTRA[TYPE_FIT[tyreType]]
   const ORDER_NOTES = ['Please call when the tyres arrive.', 'Locking wheel nut key is in the glovebox.', 'Can you check the tracking while it is in?']
   const staffFor = (slug: string) => managerIdBySlug[slug] ?? superAdmin.id
   const fittedOrders: { id: string; customerId: string; storeId: string; at: Date }[] = []
@@ -475,7 +518,7 @@ async function main() {
     const wheelQty = wheel ? 4 : 0
     const fit = i % 7 !== 3                                   // every 7th order is collected, not fitted
     const positions = Math.max(tyreQty, wheelQty)
-    const fitting = fit ? (tyre ? RATE[tyre.type] : RATE.PASSENGER) * positions : 0
+    const fitting = fit ? rate(storeSlug, tyre ? tyre.type : 'PASSENGER') * positions : 0
     const subtotal = (tyre ? tyre.price * tyreQty : 0) + (wheel ? wheel.price * wheelQty : 0)
     const total = subtotal + fitting
 
@@ -547,9 +590,9 @@ async function main() {
   const VEHICLES = ['2019 Ford Focus', '2021 Toyota RAV4', '2018 VW Golf', '2022 Kia Sportage', '2020 Nissan Qashqai', '2017 Vauxhall Astra']
   const APPT_DAYS = [-41, -33, -27, -20, -14, -9, -5, -2, 2, 4, 8, 13]
   for (let i = 0; i < APPT_DAYS.length; i++) {
-    const day = new Date(); day.setHours(0, 0, 0, 0); day.setDate(day.getDate() + APPT_DAYS[i])
-    if (day.getDay() === 0) day.setDate(day.getDate() + 1)  // branches are closed on Sundays
-    const times = day.getDay() === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS
+    const day = londonDay(APPT_DAYS[i])
+    if (day.getUTCDay() === 0) day.setUTCDate(day.getUTCDate() + 1)  // branches are closed on Sundays
+    const times = day.getUTCDay() === 6 ? SATURDAY_SLOTS : WEEKDAY_SLOTS
     const time = times[i % times.length]
     const storeId = storeIdMap[STORES[(i * 3) % STORES.length].slug]
     const slot = await prisma.appointmentSlot.upsert({
@@ -571,6 +614,42 @@ async function main() {
     })
   }
   console.log(`✅ ${APPT_DAYS.length} demo appointments seeded`)
+
+  // Board bookings: confirmed fittings for today and the next two weeks, so
+  // the home board shows some branches with 2 bays free, some with 1, one on
+  // its last bay and one full today. Re-run the seed to move "today" along.
+  let boardRows = 0
+  for (let d = 0; d < 14; d++) {
+    const day = londonDay(d)
+    const dow = day.getUTCDay()
+    if (dow === 0) continue
+    const close = dow === 6 ? 16 * 60 : 17 * 60 + 30
+    for (const [slug, plan] of Object.entries(BOARD_BOOKINGS)) {
+      const storeId = storeIdMap[slug]
+      const times = (d === 0 && plan.today) ? plan.today : plan.daily
+      for (let j = 0; j < times.length; j++) {
+        const time = times[j]
+        const [h, m] = time.split(':').map(Number)
+        if (h * 60 + m + 60 > close) continue              // job would overrun closing
+        const slot = await prisma.appointmentSlot.upsert({
+          where:  { storeId_date_time: { storeId, date: day, time } },
+          update: { currentBookings: { increment: 1 } },
+          create: { storeId, date: day, time, isAvailable: true, maxBookings: 2, currentBookings: 1 },
+        })
+        await prisma.appointment.create({
+          data: {
+            id: `demo-board-${slug}-${d}-${j}`,
+            customerId: customers[(boardRows * 3) % customers.length].id, storeId,
+            appointmentSlotId: slot.id, serviceId: services[boardRows % services.length].id,
+            date: day, timeSlot: time, status: 'CONFIRMED',
+            notes: `Fitting, 4 tyres. Vehicle: ${VEHICLES[boardRows % VEHICLES.length]}`,
+          },
+        })
+        boardRows++
+      }
+    }
+  }
+  console.log(`✅ ${boardRows} board bookings seeded (14 days)`)
 
   // Enquiries: a few, from demo customers.
   const ENQUIRIES = [

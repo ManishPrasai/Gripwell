@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bebas_Neue, DM_Sans, DM_Mono, Inter, Manrope, Doto } from 'next/font/google'
+import { DM_Sans, DM_Mono, Inter, Manrope, Doto } from 'next/font/google'
 import './globals.css'
 import Providers from './providers'
 import { Analytics } from '@vercel/analytics/next'
@@ -9,13 +9,6 @@ import { Analytics } from '@vercel/analytics/next'
    as @font-face — no external network request at runtime, no layout shift,
    and no "custom font in <head>" linting warning.
 ──────────────────────────────────────────────────────────────────────── */
-const bebasNeue = Bebas_Neue({
-  weight:   ['400'],
-  subsets:  ['latin'],
-  variable: '--font-bebas-neue',
-  display:  'swap',
-})
-
 const dmSans = DM_Sans({
   weight:   ['400', '500', '600', '700', '800', '900'],
   style:    ['normal', 'italic'],
@@ -74,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${dmSans.variable} ${dmMono.variable} ${inter.variable} ${manrope.variable} ${doto.variable}`}
+      className={`${dmSans.variable} ${dmMono.variable} ${inter.variable} ${manrope.variable} ${doto.variable}`}
     >
       <head>
         {/* Tabler icons CDN — kept here as it is a CSS icon font, not a text font */}

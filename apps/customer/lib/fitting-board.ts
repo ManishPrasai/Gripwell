@@ -2,7 +2,7 @@ import { prisma } from '@nova/database'
 import { STORES } from './stores'
 import { fittingRate, isVehicleType, type VehicleType } from './fitting'
 import {
-  DAY_NAMES, addDays, dayLabel, londonNow, nextFree,
+  DAY_NAMES, LEAD_MIN, addDays, dayLabel, freeSlots, londonNow, nextFree, weekdayOf,
   type DayHours, type LondonNow,
 } from './fitting-slots'
 
@@ -16,6 +16,7 @@ export interface BoardRow {
   day:         string | null // 'Today' | 'Tomorrow' | 'Sat 22 Nov'
   time:        string | null // 'HH:MM'
   free:        number        // bays free at that start
+  leftToday:   number        // free starts still bookable today (0 = full today)
   fittingRate: number        // £ per wheel position, passenger car, VAT incl.
 }
 
@@ -89,8 +90,14 @@ export async function loadBoard(vehicle: VehicleType = 'passenger', at: Date = n
       bookingsOn: date => bookings.get(db.id)?.get(date) ?? [],
       blockedOn:  date => off.get(`${db.id}|${date}`) ?? new Set(),
     })
+    const leftToday = freeSlots({
+      hours:     hours.get(weekdayOf(now.date)),
+      bookings:  bookings.get(db.id)?.get(now.date) ?? [],
+      blocked:   off.get(`${db.id}|${now.date}`),
+      notBefore: now.minutes + LEAD_MIN,
+    }).length
     return [{
-      storeId: s.id, short: s.short, area: s.suburb,
+      storeId: s.id, short: s.short, area: s.suburb, leftToday,
       date: next?.date ?? null,
       day:  next ? dayLabel(next.date, now.date) : null,
       time: next?.time ?? null,

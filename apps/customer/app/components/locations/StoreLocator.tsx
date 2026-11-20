@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { STORES, STORE_NETWORK_LABEL, telHref, fullAddress, directionsHref, type Store } from '../../../lib/stores'
+import { STORES, STORE_NETWORK_LABEL, NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF, telHref, fullAddress, directionsHref, type Store } from '../../../lib/stores'
 
 /* Leaflet touches `window` on import — client-only. The skeleton keeps the
    section's height stable so the page doesn't jump when the map arrives. */
@@ -16,9 +16,11 @@ const StoreMap = dynamic(() => import('./StoreMap'), {
 export type { Store }
 
 const RAIL_STEP = 520
+const PINS = STORES.map(({ id, name, address, suburb, lat, lng }) => ({ id, name, address, suburb, lat, lng }))
 
 export default function StoreLocator() {
-  const [active, setActive] = useState<Store>(STORES[0])
+  // Nothing picked on load, so the map opens on all branches, not zoomed into one.
+  const [active, setActive] = useState<Store | null>(null)
   const railRef = useRef<HTMLDivElement>(null)
 
   function scrollRail(delta: number) {
@@ -26,7 +28,7 @@ export default function StoreLocator() {
   }
 
   return (
-    <section id="locations" style={{ background: '#FFFFFF', padding: 'clamp(56px,6.5vw,88px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section id="locations" style={{ background: '#FFFFFF', padding: 'clamp(56px,6.5vw,88px) 0', fontFamily: 'var(--gw-font)' }}>
       <style>{`
         .nv-rail-btn:hover { background: #F0EFE9; border-color: #2A2E36; }
         .nv-store-tel:hover { background: #FF6A1A; }
@@ -38,10 +40,10 @@ export default function StoreLocator() {
         {/* ── Header ── */}
         <div data-reveal style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px 24px', marginBottom: 'clamp(22px,2.6vw,30px)' }}>
           <div style={{ minWidth: 0 }}>
-            <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#FF6A1A', marginBottom: '12px' }}>
+            <span style={{ display: 'block', fontFamily: 'var(--gw-font)', fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#FF6A1A', marginBottom: '12px' }}>
               Come see us
             </span>
-            <h2 style={{ margin: '0 0 10px', fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontSize: 'clamp(34px,4.6vw,58px)', letterSpacing: '0.015em', lineHeight: 1, color: '#1A1D23' }}>
+            <h2 style={{ margin: '0 0 10px', fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: 'clamp(24px,3.3vw,42px)', letterSpacing: '-0.02em', lineHeight: 1, color: '#1A1D23' }}>
               {STORE_NETWORK_LABEL}
             </h2>
             <p style={{ margin: 0, fontSize: '15.5px', color: '#6B7280' }}>
@@ -66,7 +68,7 @@ export default function StoreLocator() {
                 typed as the narrow MappableStore — resolve it back to the full
                 record before storing it as the active store. */}
             <StoreMap
-              stores={[active]}
+              stores={PINS}
               selectedStore={active}
               onSelectStore={s => {
                 const full = STORES.find(x => x.id === s.id)
@@ -86,32 +88,47 @@ export default function StoreLocator() {
               boxShadow: '0 18px 40px -24px rgba(20,25,22,0.5)', zIndex: 1000,
             }}
           >
-            <span style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
-              <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.03em', lineHeight: 1.05, color: '#1A1D23' }}>
-                {active.name}
+            {active ? (<>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '18px', letterSpacing: '-0.02em', lineHeight: 1.05, color: '#1A1D23' }}>
+                  {active.name}
+                </span>
+                <span style={{ fontSize: '12.5px', color: '#6B7280' }}>{fullAddress(active)}</span>
               </span>
-              <span style={{ fontSize: '12.5px', color: '#6B7280' }}>{fullAddress(active)}</span>
-            </span>
-            <span style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <a
+                  href={directionsHref(active)} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#F0EFE9', color: '#1A1D23', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m3 11 19-9-9 19-2-8-8-2z" />
+                  </svg>
+                  Directions
+                </a>
+                <a
+                  href={telHref(active.tel)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#2A2E36', color: '#fff', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  {active.tel}
+                </a>
+              </span>
+            </>) : (<>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+                <span style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.02em', lineHeight: 1.05, color: '#1A1D23' }}>
+                  {STORES.length} branches, one switchboard
+                </span>
+                <span style={{ fontSize: '12.5px', color: '#6B7280' }}>Tap a pin or a branch below for directions and its own number.</span>
+              </span>
               <a
-                href={directionsHref(active)} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#F0EFE9', color: '#1A1D23', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="m3 11 19-9-9 19-2-8-8-2z" />
-                </svg>
-                Directions
-              </a>
-              <a
-                href={telHref(active.tel)}
+                href={NOVA_SWITCHBOARD_HREF}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#2A2E36', color: '#fff', textDecoration: 'none', borderRadius: '8px', padding: '10px 14px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-                {active.tel}
+                {NOVA_SWITCHBOARD}
               </a>
-            </span>
+            </>)}
           </div>
         </div>
 
@@ -143,7 +160,7 @@ export default function StoreLocator() {
           style={{ display: 'flex', gap: '16px', overflowX: 'auto', overscrollBehaviorX: 'contain', WebkitOverflowScrolling: 'touch', paddingBottom: '10px' }}
         >
           {STORES.map(st => {
-            const on = st.id === active.id
+            const on = st.id === active?.id
             return (
               <div
                 key={st.id}
@@ -162,10 +179,10 @@ export default function StoreLocator() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', minWidth: 0 }}>
-                  <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '25px', letterSpacing: '0.03em', lineHeight: 1.05, color: '#1A1D23' }}>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.02em', lineHeight: 1.05, color: '#1A1D23' }}>
                     {st.short}
                   </span>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '10px', letterSpacing: '0.12em', color: '#2A2E36' }}>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontSize: '10px', letterSpacing: '0.12em', color: '#2A2E36' }}>
                     {st.state}
                   </span>
                 </div>
@@ -173,7 +190,7 @@ export default function StoreLocator() {
                 {on && (
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '10px',
-                    fontFamily: "'DM Sans', sans-serif", fontSize: '13px', fontWeight: 700, color: '#FF6A1A',
+                    fontFamily: 'var(--gw-font)', fontSize: '13px', fontWeight: 700, color: '#FF6A1A',
                   }}>
                     Showing on map
                   </span>

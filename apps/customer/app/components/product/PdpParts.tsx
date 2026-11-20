@@ -127,10 +127,10 @@ export function ExpertPanel({ kind }: { kind: 'tyre' | 'wheel' }) {
 }
 
 const FITTING_FEES = [
-  { label: 'Passenger car',        price: '£25 per tyre' },
-  { label: 'SUV or 4x4',      price: '£30 per tyre' },
-  { label: 'Van / light commercial', price: '£35 per tyre' },
-  { label: 'Truck',                price: '£50 per tyre' },
+  { label: 'Passenger car',        price: '£25 per tyre fitted' },
+  { label: 'SUV or 4x4',      price: '£30 per tyre fitted' },
+  { label: 'Van / light commercial', price: '£35 per tyre fitted' },
+  { label: 'Truck',                price: '£50 per tyre fitted' },
 ]
 
 export function FittingPanel() {

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { money, quoteOrder } from '@/lib/fitting'
 import { NOVA_SWITCHBOARD, NOVA_SWITCHBOARD_HREF } from '@/lib/stores'
 import type { Board, BoardRow } from '@/lib/fitting-board'
+import { bayStatus } from '@/lib/fitting-slots'
 import s from './FittingBoard.module.css'
 
 /* ── Fitting departures ────────────────────────────────────────────────
@@ -85,11 +86,11 @@ export default function FittingBoard({
                 <span key={freshKey ?? 'rate'} className={freshKey ? s.fresh : undefined}>
                   {priced
                     ? <>{money(fittedTotal(unitPrice, r.fittingRate))}<span className={s.unit}>incl. VAT</span></>
-                    : <>{money(r.fittingRate, { whole: true })}<span className={s.unit}>per wheel</span></>}
+                    : <>{money(r.fittingRate, { whole: true })}<span className={s.unit}>per tyre fitted</span></>}
                 </span>
               </td>
               <td className={s.bays}>
-                {r.time ? `${r.free} free` : 'Full this week'}
+                {bayStatus(r)}
               </td>
             </tr>
           ))}

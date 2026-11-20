@@ -10,7 +10,7 @@ import { money, DEFAULT_FITTING_PRICES } from '../../../lib/fitting'
 /* No manufacturer artwork: every brand renders as a text wordmark. */
 const BRAND_LOGOS: Record<string, string> = {}
 
-/* Brands without artwork fall back to a Bebas wordmark chip rather than a
+/* Brands without artwork fall back to a text wordmark chip rather than a
    wrong logo — the design supports both chip variants. */
 function brandLogoFor(brand: string): string | null {
   return BRAND_LOGOS[brand.toLowerCase()] ?? null
@@ -103,7 +103,7 @@ function SkeletonCard() {
 
 /* ─── Card ────────────────────────────────────────────────────────────────── */
 function DealCard({ deal }: { deal: Deal }) {
-  const unit = `per ${deal.tab === 'wheels' ? 'wheel' : 'tyre'} · fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })}`
+  const unit = `per ${deal.tab === 'wheels' ? 'wheel' : 'tyre'} · fitting from ${money(DEFAULT_FITTING_PRICES.passenger, { whole: true })} per tyre fitted`
   const { addToCart } = useCart()
   const [hovered, setHovered] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
@@ -174,7 +174,7 @@ function DealCard({ deal }: { deal: Deal }) {
           display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start',
           border: '1px solid #E7E5DE', borderRadius: '8px', height: '30px',
           padding: '0 12px', marginBottom: '12px', background: '#FFFFFF',
-          fontFamily: "'Bebas Neue', sans-serif", fontSize: '15px',
+          fontFamily: 'var(--gw-font)', fontSize: '12px', fontWeight: 800,
           letterSpacing: '0.08em', color: '#1A1D23',
         }}>
           {deal.brand.toUpperCase()}
@@ -184,7 +184,7 @@ function DealCard({ deal }: { deal: Deal }) {
       <span style={{ display: 'block', fontSize: '17px', fontWeight: 700, color: '#1A1A1A', marginBottom: '3px' }}>
         {deal.model}
       </span>
-      <span style={{ display: 'block', fontFamily: "'DM Mono', monospace", fontSize: '12.5px', color: '#6B7280', marginBottom: '10px', overflowWrap: 'anywhere' }}>
+      <span style={{ display: 'block', fontFamily: 'var(--gw-font)', fontSize: '12.5px', color: '#6B7280', marginBottom: '10px', overflowWrap: 'anywhere' }}>
         {deal.size}{deal.spec ? `  ${deal.spec}` : ''}
       </span>
 
@@ -194,7 +194,7 @@ function DealCard({ deal }: { deal: Deal }) {
       }}>
         <span style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap', minWidth: 0 }}>
           <span style={{
-            fontFamily: "'Bebas Neue', sans-serif", fontSize: '25px', lineHeight: 1,
+            fontFamily: 'var(--gw-font)', fontSize: '21px', fontWeight: 800, lineHeight: 1,
             color: deal.was != null ? '#FF6A1A' : '#1A1D23',
           }}>
             {money(deal.price, { whole: true })}
@@ -209,7 +209,7 @@ function DealCard({ deal }: { deal: Deal }) {
             display: 'inline-flex', alignItems: 'center', gap: '6px',
             background: justAdded ? '#0A7D3D' : '#2A2E36', color: '#fff',
             padding: '9px 13px', borderRadius: '8px', border: 'none',
-            fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 700,
+            fontFamily: 'var(--gw-font)', fontSize: '12.5px', fontWeight: 700,
             flexShrink: 0, cursor: 'pointer', transition: 'background .2s', whiteSpace: 'nowrap',
           }}
         >
@@ -254,7 +254,7 @@ export default function BestDeals() {
         background: '#FAF9F5',
         maxWidth: '1180px', margin: '0 auto',
         padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,40px)',
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: 'var(--gw-font)',
       }}
     >
       <style>{`

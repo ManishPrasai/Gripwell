@@ -85,7 +85,7 @@
 
 @theme inline {
 
-  --font-heading: 'Bebas Neue', sans-serif;
+  --font-heading: var(--font-manrope), sans-serif;
 
   --font-sans: var(--font-sans);
 
@@ -228,7 +228,7 @@
 
   --sidebar-ring: oklch(0.556 0 0);
 
-    --font-heading: 'Bebas Neue', sans-serif;
+    --font-heading: var(--font-manrope), sans-serif;
   --font-body: 'Inter', sans-serif;
 }
 

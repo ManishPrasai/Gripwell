@@ -6,7 +6,6 @@ import BrandsStrip       from '../components/home/BrandsStrip'
 import CustomerReviews   from '../components/home/CustomerReviews'
 import StoreLocator      from '@/app/components/locations/StoreLocator'
 import NewsletterSection from '../components/home/NewsletterSection'
-import SocialGrid        from '../components/home/SocialGrid'
 import MobileStickyBar   from '../components/layout/MobileStickyBar'
 import MobileHome        from '../components/home/mobile/MobileHome'
 import { pageMetadata }  from '../../lib/seo'
@@ -59,7 +58,6 @@ export default async function HomePage() {
           <CustomerReviews />
           <StoreLocator />
           <NewsletterSection />
-          <SocialGrid />
           <MobileStickyBar />
         </main>
       </div>

@@ -24,7 +24,7 @@ const CATEGORIES = [
 
 export default function BrowseByCategory() {
   return (
-    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: 'clamp(52px,6vw,80px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section style={{ background: '#FFFFFF', borderTop: '1px solid #E7E5DE', padding: 'clamp(52px,6vw,80px) 0', fontFamily: 'var(--gw-font)' }}>
       <style>{`
         .nv-cat-grid { display: grid; gap: 20px; grid-template-columns: repeat(5,minmax(0,1fr)); }
         @media (max-width: 1100px) { .nv-cat-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }

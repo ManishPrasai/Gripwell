@@ -31,19 +31,19 @@ const field: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
   padding: '11px 14px',
   border: '1.5px solid #D8D8D8', borderRadius: '8px',
-  fontFamily: "'DM Sans', sans-serif", fontSize: '14px',
+  fontFamily: 'var(--gw-font)', fontSize: '14px',
   color: '#1A1A1A', background: '#fff', outline: 'none',
 }
 const lbl: React.CSSProperties = {
   display: 'block',
-  fontFamily: "'DM Sans', sans-serif", fontSize: '12px',
+  fontFamily: 'var(--gw-font)', fontSize: '12px',
   fontWeight: 600, color: '#666', marginBottom: '6px',
 }
 
 // ── Brand logo with error fallback ───────────────────────────────────────────
 function BrandLogo({ src, brand }: { src: string; brand: string }) {
   const [err, setErr] = useState(false)
-  if (!src || err) return <span style={{ fontFamily: "'DM Sans'", fontWeight: 700, fontSize: '11px', color: '#444' }}>{brand}</span>
+  if (!src || err) return <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '11px', color: '#444' }}>{brand}</span>
   return <Image src={src} alt={brand} width={68} height={16} style={{ objectFit: 'contain', height: '15px', width: 'auto', maxWidth: '68px' }} onError={() => setErr(true)} />
 }
 
@@ -74,8 +74,8 @@ function StepHead({
         <i className={`ti ${icon}`} style={{ fontSize: '22px', color: active ? '#2A2E36' : '#999' }} aria-hidden="true" />
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>{title}</p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#999', margin: '2px 0 0' }}>{sub}</p>
+        <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>{title}</p>
+        <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#999', margin: '2px 0 0' }}>{sub}</p>
       </div>
       {!active && (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BBB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,7 +104,7 @@ function OBtn({ children, onClick, type = 'button', disabled = false }: {
         color: disabled ? '#AAA' : '#fff',
         border: 'none', borderRadius: '10px', padding: '14px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-        fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '15px',
+        fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '15px',
         letterSpacing: '0.01em',
         cursor: disabled ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.2s, background 0.2s',
@@ -206,14 +206,14 @@ function StripePaymentForm({
           <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="#2A2E36"/>
           <polyline points="8 13.5 11 16.5 16 10.5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: '13px', color: '#2A2E36' }}>
+        <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 600, fontSize: '13px', color: '#2A2E36' }}>
           Pay securely powered by Stripe
         </span>
       </div>
 
       {/* Card form — billing fields suppressed, already collected in steps 1 & 2 */}
       {!elementReady && (
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+        <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#AAA', textAlign: 'center', margin: 0 }}>
           Loading payment form…
         </p>
       )}
@@ -228,7 +228,7 @@ function StripePaymentForm({
       {/* Payment error */}
       {payError && (
         <div style={{ background: '#FFF2F2', border: '1px solid #FFCDD2', borderRadius: '8px', padding: '12px 16px' }}>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#C62828', margin: 0 }}>{payError}</p>
+          <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#C62828', margin: 0 }}>{payError}</p>
         </div>
       )}
 
@@ -429,11 +429,11 @@ export default function CheckoutPage() {
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#EDF7F1', border: '2px solid #19D26A', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2A2E36" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', color: '#1A1A1A', letterSpacing: '0.04em', marginBottom: '12px' }}>Order Confirmed!</h1>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
+          <h1 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '32px', color: '#1A1A1A', letterSpacing: '-0.02em', marginBottom: '12px' }}>Order Confirmed!</h1>
+          <p style={{ fontFamily: 'var(--gw-font)', fontSize: '15px', color: '#666', lineHeight: 1.7, marginBottom: '28px' }}>
             Thanks for your order. Your items will be delivered directly to <strong>{selectedStore.name}</strong> for fitting. We&apos;ll be in touch shortly.
           </p>
-          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px' }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#FF5A1F', color: '#fff', padding: '13px 28px', borderRadius: '999px', textDecoration: 'none', fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px' }}>
             Back to home
           </Link>
         </div>
@@ -450,7 +450,7 @@ export default function CheckoutPage() {
           <path d="M12 1L2 5.5V12c0 6.08 4.33 11.74 10 13.12C17.67 23.74 22 18.08 22 12V5.5L12 1z" fill="#1A1A1A" />
           <polyline points="8 13.5 11 16.5 16 10.5" stroke="#19D26A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '20px', color: '#1A1A1A', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+        <h1 style={{ fontFamily: 'var(--gw-font)', fontWeight: 900, fontSize: '20px', color: '#1A1A1A', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
           Secured Checkout
         </h1>
       </div>
@@ -466,7 +466,7 @@ export default function CheckoutPage() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C62828" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#C62828', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#C62828', margin: 0 }}>
               {redirectBanner.msg}
             </p>
             <button
@@ -517,7 +517,7 @@ export default function CheckoutPage() {
                       <select
                         value={contact.prefix}
                         onChange={e => setContact(p => ({ ...p, prefix: e.target.value }))}
-                        style={{ padding: '11px 8px 11px 12px', background: '#F7F7F7', border: 'none', borderRight: '1px solid #E5E5E5', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#333', cursor: 'pointer', flexShrink: 0 }}
+                        style={{ padding: '11px 8px 11px 12px', background: '#F7F7F7', border: 'none', borderRight: '1px solid #E5E5E5', outline: 'none', fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#333', cursor: 'pointer', flexShrink: 0 }}
                       >
                         <option value="+44">+44 (UK)</option>
                         <option value="+1">+1 (US)</option>
@@ -527,7 +527,7 @@ export default function CheckoutPage() {
                         placeholder="07700 900 000"
                         value={contact.phone}
                         onChange={e => setContact(p => ({ ...p, phone: e.target.value }))}
-                        style={{ flex: 1, padding: '11px 14px', border: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#1A1A1A' }}
+                        style={{ flex: 1, padding: '11px 14px', border: 'none', outline: 'none', fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#1A1A1A' }}
                       />
                     </div>
                   </div>
@@ -586,7 +586,7 @@ export default function CheckoutPage() {
 
                   {payIntentError && (
                     <div style={{ background: '#FFF2F2', border: '1px solid #FFCDD2', borderRadius: '8px', padding: '12px 16px' }}>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#C62828', margin: 0 }}>{payIntentError}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#C62828', margin: 0 }}>{payIntentError}</p>
                     </div>
                   )}
 
@@ -627,7 +627,7 @@ export default function CheckoutPage() {
                             colorBackground: '#ffffff',
                             colorText: '#1A1A1A',
                             colorDanger: '#C62828',
-                            fontFamily: "'DM Sans', sans-serif",
+                            fontFamily: 'var(--gw-font)',
                             borderRadius: '8px',
                             spacingUnit: '4px',
                           },
@@ -644,10 +644,10 @@ export default function CheckoutPage() {
                     </Elements>
                   ) : (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: '#AAA' }}>Initializing secure payment…</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '14px', color: '#AAA' }}>Initializing secure payment…</p>
                     </div>
                   )}
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#AAA', textAlign: 'center', margin: 0 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#AAA', textAlign: 'center', margin: 0 }}>
                     By placing your order you agree to our{' '}
                     <Link href="/terms" style={{ color: '#888', textDecoration: 'underline' }}>Terms of Service</Link>
                   </p>
@@ -664,10 +664,10 @@ export default function CheckoutPage() {
                   <i className="ti ti-clipboard-list" style={{ fontSize: '22px', color: '#999' }} aria-hidden="true" />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', margin: 0 }}>
                     Order Notes <span style={{ fontWeight: 400, color: '#999', fontSize: '14px' }}>(optional)</span>
                   </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#999', margin: '2px 0 0' }}>Add any special instructions or notes for your order</p>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#999', margin: '2px 0 0' }}>Add any special instructions or notes for your order</p>
                 </div>
               </div>
               <div style={{ position: 'relative' }}>
@@ -678,7 +678,7 @@ export default function CheckoutPage() {
                   rows={4}
                   style={{ ...field, resize: 'vertical', paddingBottom: '28px', lineHeight: 1.6, minHeight: '100px' }}
                 />
-                <span style={{ position: 'absolute', bottom: '10px', right: '14px', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#C5C5C5' }}>
+                <span style={{ position: 'absolute', bottom: '10px', right: '14px', fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#C5C5C5' }}>
                   {notes.length}/300
                 </span>
               </div>
@@ -695,13 +695,13 @@ export default function CheckoutPage() {
           {/* Order summary */}
           <Card>
             <div style={{ padding: '20px 20px 0' }}>
-              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '16px', color: '#1A1A1A', marginBottom: '16px' }}>
+              <h2 style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '16px', color: '#1A1A1A', marginBottom: '16px' }}>
                 Order Summary
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                 {items.length === 0 ? (
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#AAA', padding: '8px 0 16px', textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#AAA', padding: '8px 0 16px', textAlign: 'center' }}>
                     Your cart is empty
                   </p>
                 ) : items.map(item => (
@@ -711,11 +711,11 @@ export default function CheckoutPage() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <BrandLogo src={item.brandLogo} brand={item.brand} />
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#1A1A1A', margin: '3px 0 2px', lineHeight: 1.3 }}>{item.model}</p>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#999', margin: 0 }}>{item.size}&nbsp;{item.spec}</p>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#AAA', margin: '2px 0 0' }}>Qty: {item.qty}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '13px', color: '#1A1A1A', margin: '3px 0 2px', lineHeight: 1.3 }}>{item.model}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#999', margin: 0 }}>{item.size}&nbsp;{item.spec}</p>
+                      <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#AAA', margin: '2px 0 0' }}>Qty: {item.qty}</p>
                     </div>
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', flexShrink: 0 }}>
+                    <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', flexShrink: 0 }}>
                       {money(item.price * item.qty)}
                     </p>
                   </div>
@@ -732,20 +732,20 @@ export default function CheckoutPage() {
                 ...(totals.discount > 0 ? [{ label: 'Discount', value: `−${money(totals.discount)}` }] : []),
               ].map(r => (
                 <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '9px' }}>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#888', fontWeight: 500 }}>{r.label}</span>
-                  <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: '#444', fontWeight: 600 }}>{r.value}</span>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#888', fontWeight: 500 }}>{r.label}</span>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontSize: '13px', color: '#444', fontWeight: 600 }}>{r.value}</span>
                 </div>
               ))}
 
               <div style={{ height: '1px', background: '#EBEBEB', margin: '12px 0' }} />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: '15px', color: '#1A1A1A' }}>Total</span>
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 900, fontSize: '22px', color: '#FF5A1F' }}>
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '15px', color: '#1A1A1A' }}>Total</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 900, fontSize: '22px', color: '#FF5A1F' }}>
                   {money(total)}
                 </span>
               </div>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', color: '#BBB', margin: 0 }}>Includes {money(totals.vat)} VAT</p>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#BBB', margin: 0 }}>Includes {money(totals.vat)} VAT</p>
             </div>
           </Card>
 
@@ -754,37 +754,37 @@ export default function CheckoutPage() {
             <div style={{ padding: '18px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                 <i className="ti ti-map-pin" style={{ fontSize: '16px', color: '#2A2E36' }} aria-hidden="true" />
-                <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', margin: 0 }}>
+                <h3 style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', margin: 0 }}>
                   Selected Fitting Station
                 </h3>
               </div>
 
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '14px', color: '#1A1A1A', marginBottom: '4px' }}>
                 {selectedStore.name}
               </p>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '2px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', marginBottom: '2px' }}>
                 {selectedStore.address}
               </p>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', marginBottom: '8px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', marginBottom: '8px' }}>
                 {selectedStore.state}
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '12px' }}>
                 <i className="ti ti-phone" style={{ fontSize: '13px', color: '#666' }} aria-hidden="true" />
-                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#666' }}>{selectedStore.phone}</span>
               </div>
 
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>
+              <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', lineHeight: 1.6, marginBottom: '12px' }}>
                 Your items will be delivered directly to this store for fitting.
               </p>
 
               <div style={{ background: '#F7F7F7', border: '1px solid #E8E8E8', borderRadius: '10px', padding: '12px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                 <i className="ti ti-truck" style={{ fontSize: '18px', color: '#555', flexShrink: 0, marginTop: '1px' }} aria-hidden="true" />
                 <div>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: '13px', color: '#1A1A1A', marginBottom: '2px' }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontWeight: 700, fontSize: '13px', color: '#1A1A1A', marginBottom: '2px' }}>
                     Delivery charges —{' '}
                     <span style={{ color: '#2A2E36' }}>£0.00</span>
                   </p>
-                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontFamily: 'var(--gw-font)', fontSize: '12px', color: '#888', margin: 0, lineHeight: 1.5 }}>
                     No shipping fee — items are sent directly to your selected store.
                   </p>
                 </div>

@@ -19,7 +19,7 @@ export default function DeparturesHero({ board, sizes, cars }: { board: Board | 
         </h1>
         <p className={s.lede}>
           Every time on the board is a real free fitting bay.
-          {from != null && <> Fitting from {money(from, { whole: true })} a wheel, balancing and valves included.</>}
+          {from != null && <> Fitting from {money(from, { whole: true })} per tyre fitted, balancing and valves included.</>}
           {' '}All prices include VAT.
         </p>
       </HomeFinder>

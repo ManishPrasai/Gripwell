@@ -24,7 +24,7 @@ function Pin({ size = 12 }: { size?: number }) {
 
 export default function CustomerReviews() {
   return (
-    <section id="reviews" style={{ background: '#F0EFE9', padding: 'clamp(60px,7.6vw,104px) 0', fontFamily: "'DM Sans', sans-serif" }}>
+    <section id="reviews" style={{ background: '#F0EFE9', padding: 'clamp(60px,7.6vw,104px) 0', fontFamily: 'var(--gw-font)' }}>
       <style>{`
         /*
           The featured quote spans both rows of the 3-column layout, so the four
@@ -51,16 +51,16 @@ export default function CustomerReviews() {
         {/* ── Header ── */}
         <div data-reveal style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px', marginBottom: 'clamp(26px,3.2vw,44px)' }}>
           <div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontFamily: "'DM Mono', monospace", fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#6B7280', marginBottom: '18px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--gw-font)', fontSize: '12px', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#6B7280', marginBottom: '18px' }}>
               <span style={{ width: '22px', height: '1px', background: '#FF6A1A', display: 'inline-block' }} />
               Customer reviews
             </span>
-            <h2 style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontWeight: 400, fontStyle: 'italic', fontSize: 'clamp(44px,6.8vw,88px)', lineHeight: 0.94, letterSpacing: '-0.015em', color: '#1A1D23' }}>
+            <h2 style={{ margin: 0, fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: 'clamp(32px,4.9vw,63px)', lineHeight: 0.94, letterSpacing: '-0.015em', color: '#1A1D23' }}>
               What customers say.
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '18px', paddingBottom: '6px' }}>
-            <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(52px,6vw,76px)', lineHeight: 0.85, color: '#1A1D23' }}>{RATING}</span>
+            <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: 'clamp(37px,4.3vw,55px)', lineHeight: 0.85, color: '#1A1D23' }}>{RATING}</span>
             <span style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
               <span style={{ color: '#F5A623', fontSize: '16px', letterSpacing: '3px', lineHeight: 1 }}>★★★★★</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#6B7280', whiteSpace: 'nowrap' }}>
@@ -83,7 +83,7 @@ export default function CustomerReviews() {
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
               <span style={{ color: '#FF6A1A', fontSize: '17px', letterSpacing: '3px', lineHeight: 1 }}>★★★★★</span>
             </span>
-            <blockquote style={{ margin: 0, fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(24px,2.8vw,36px)', lineHeight: 1.16, letterSpacing: '0.01em', color: '#F1EFE7' }}>
+            <blockquote style={{ margin: 0, fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: 'clamp(17px,2.0vw,26px)', lineHeight: 1.16, letterSpacing: '-0.02em', color: '#F1EFE7' }}>
               &ldquo;{FEATURED.text}&rdquo;
             </blockquote>
             <figcaption style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -82,11 +82,11 @@ export default function MobileDealsRail() {
                 <div style={{ position: 'relative', height: '76px', marginBottom: '10px' }}>
                   <Image src={d.image} alt={`${d.brand} ${d.model}`} fill sizes="150px" style={{ objectFit: 'contain' }} />
                 </div>
-                <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '13px', letterSpacing: '0.06em', color: '#2A2E36', marginBottom: '4px' }}>{d.brand.toUpperCase()}</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '10px', letterSpacing: '-0.02em', color: '#2A2E36', marginBottom: '4px' }}>{d.brand.toUpperCase()}</span>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, marginBottom: '2px' }}>{d.model}</span>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '11px', color: '#6B7280', marginBottom: '8px' }}>{d.size}</span>
+                <span style={{ fontFamily: 'var(--gw-font)', fontSize: '11px', color: '#6B7280', marginBottom: '8px' }}>{d.size}</span>
                 <span style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #E7E5DE' }}>
-                  <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '19px', color: '#1A1D23' }}>{fmt(d.price)}</span>
+                  <span style={{ fontFamily: 'var(--gw-font)', fontWeight: 800, fontSize: '15px', color: '#1A1D23' }}>{fmt(d.price)}</span>
                   {d.was != null && <span style={{ fontSize: '10px', color: '#9EA3AD', textDecoration: 'line-through' }}>{fmt(d.was)}</span>}
                 </span>
               </Link>
