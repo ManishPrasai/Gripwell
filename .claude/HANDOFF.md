@@ -42,7 +42,7 @@
   - Checks: no overflow at 1440 or 390; page height 4768 / 5900. Every new colour pair passes AA (lowest 4.7:1). The detector reports only the 4 known cramped-padding false positives.
   - Not fixed: the hero photo is still the hazy backlit shot; Commons had no bright, logo-free replacement. Pin highlighting on row hover was skipped.
   - Re-critique of round 4: 27/40 (`.impeccable/critique/…18-01-11Z…`). Trend 25 → 24 → 26 → 27.
-- **Round 5 (2026-11-20, latest), all 27/40 findings fixed; uncommitted; user will re-run `/impeccable critique`:**
+- **Round 5 (2026-11-20, latest), all 27/40 findings fixed; committed and pushed in `28f3d90` (all of comps A–F, E kit, briefs). Next: user re-runs `/impeccable critique`, then port F to `apps/customer`.**
   - Deals: cards are now typographic, led by the size ("205/55" with "R16 · V rated" underneath), so no product photo. Then the brand, model, the fitted set-of-4 total and "£X a tyre / + £25 fitting a tyre" on two lines. A 1px border, with the shadow only on hover. Heading: "Popular tyres, priced fitted". `F_DEAL_IMG` was removed. A tread-stripe strip was tried and dropped because the detector flagged `repeating-stripes-gradient`.
   - Type: `.h2` is now `clamp(1.625rem, 1rem + 2.5vw, 2.25rem)` (26px floor), and `.sec` has more top padding.
   - States: the finder has `novalidate` and an inline error ("Choose your tyre width to see prices.", `aria-invalid`), plus a "Choose a width first" helper under Profile/Rim. The footer newsletter has an inline invalid-email message and a double-opt-in success message. The "Last bay" badge now reads "Last slot", which fits at 390. The section line explains the order: "Soonest first, then cheapest fitting". This tie-break is a comp decision, so production `loadBoard` has to match it.
@@ -147,4 +147,4 @@
 - Stripe test mode holds old incomplete PaymentIntents from critiques; harmless.
 
 ---
-_Last updated: 2026-11-20 (late) by terminal CLI Claude Code (Comp F round 5: all 27/40 critique fixes, typographic deals, "Try it end to end" close, inline states; uncommitted, user to re-critique)._
+_Last updated: 2026-11-20 (late) by terminal CLI Claude Code (Comp F round 5 committed and pushed in 28f3d90; remote has moved to github.com/ManishPrasai/Gripwell)._
