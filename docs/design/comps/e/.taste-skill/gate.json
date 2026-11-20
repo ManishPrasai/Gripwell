@@ -1,0 +1,267 @@
+{
+ "start": "2026-11-20T09:38:24.063Z",
+ "round": 2,
+ "idle": 0,
+ "errors": 0,
+ "status": "pass",
+ "history": [
+  {
+   "at": "2026-11-20T10:50:46.443Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 2,
+   "round": 1,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-20T10:52:29.795Z",
+   "mode": "manual",
+   "status": "fail",
+   "fails": 3,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  },
+  {
+   "at": "2026-11-20T12:22:29.027Z",
+   "mode": "manual",
+   "status": "pass",
+   "fails": 0,
+   "round": 2,
+   "reused": false,
+   "stopHookActive": false
+  }
+ ],
+ "max": 3,
+ "marker": {
+  "page": "index.html",
+  "url": null,
+  "root": null,
+  "kind": "place",
+  "category": "tyres fitted at London branches",
+  "primary": "Book a fitting",
+  "rounds": 3,
+  "start": "2026-11-20T09:38:24.063Z",
+  "by": "gate.mjs --start"
+ },
+ "manual": true,
+ "roundKey": "da50b278db8e45a4:da39a3ee",
+ "roundFree": false,
+ "idleFree": false,
+ "blockKey": null,
+ "fp": "1bafa873c3affb78",
+ "page": "index.html",
+ "found": {
+  "fails": [
+   {
+    "check": "scroll-reveal",
+    "where": "div.span-6.stack-5 > form.form.book-form > div.btn-row > button.btn.btn--primary \"Book a fitting\"",
+    "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
+    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
+    "widths": [
+     390
+    ],
+    "from": "consistency",
+    "ids": [
+     "scroll-reveal"
+    ],
+    "wheres": [
+     "div.span-6.stack-5 > form.form.book-form > div.btn-row > button.btn.btn--primary \"Book a fitting\""
+    ]
+   }
+  ],
+  "warns": [
+   {
+    "check": "scroll-reveal",
+    "where": "section#workshop > div.wrap.grid > figure.develop.span-6",
+    "msg": "starts an animation (1.6 s) the moment it is scrolled into view (an IntersectionObserver) on img (inside a dealt moment's section, [data-moment]: an enter moment is expected on every kind; its still is judged under reduced motion)",
+    "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "main#top > section.hero.hero--place / section#visit",
+    "msg": "299px between these sections, +38% against the median 217px",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "photo-set",
+    "where": "section#tyres > div.wrap > div.strip > img:nth-of-type(3) \"photo-f6379859-360.jpg\"",
+    "msg": "6 photographs in more than one look: warm and cool photographs mixed (b* -7 to +15); the odd one out is photo-f6379859-360.jpg",
+    "fix": "grade the photographs to one look (light, colour, warmth), or replace the odd one out",
+    "widths": [
+     1440,
+     390
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "photo-credit",
+    "where": "(the page text)",
+    "msg": "1 library source (wikimedia): the page credits wikimedia; confirm each shows the client's own product, place or people",
+    "fix": "confirm the library photograph shows the client's own product, place or people; otherwise replace it",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.nav__item:nth-of-type(1) > div.nav__menu > div.wrap.grid > a.menu-card.span-4:nth-of-type(2) \"Wheel alignmentFour wheels, at the bay\"",
+    "msg": "\"Wheel alignmentFour wheels, at the bay\" opens a section headed \"Tyres and fitting prices\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.nav__item:nth-of-type(1) > div.nav__menu > div.wrap.grid > a.menu-card.span-4:nth-of-type(3) \"Pre-MOT checkFree, before the test\"",
+    "msg": "\"Pre-MOT checkFree, before the test\" opens a section headed \"Tyres and fitting prices\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.wrap.nav__bar > nav.nav__links > div.nav__item:nth-of-type(2) > a.nav__link \"Workshop\"",
+    "msg": "\"Workshop\" opens a section headed \"What a tyre fitting includes\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.wrap.nav__bar > nav.nav__links > div.nav__item:nth-of-type(3) > a.nav__link \"Visit\"",
+    "msg": "\"Visit\" opens a section headed \"Seven London branches\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "header.nav.nav--split > div.wrap.nav__bar > a.nav__logo \"Gripwell\"",
+    "msg": "\"Gripwell\" opens a section headed \"Tyres fitted at seven London branches\"",
+    "fix": "name each nav link after the heading of the section it opens",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-labels",
+    "where": "div.nav__item:nth-of-type(1) > div.nav__menu > div.wrap.grid > a.menu-card.span-4:nth-of-type(1) \"Tyre fittingFrom £25 a tyre, b\"",
+    "msg": "3 entries of one menu go to the same place (#tyres): \"Tyre fittingFrom £25 a tyre, b\", \"Wheel alignmentFour wheels, at\", \"Pre-MOT checkFree, before the \"",
+    "fix": "give each menu entry its own target (its section, its tab, its page), or show fewer entries",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "label-centre",
+    "where": "header.nav.nav--split > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"Book a fitting\"",
+    "msg": "its label sits 18px off-centre (25px of room at the left, 43px at the right)",
+    "fix": "centre the label in its button, or fill the empty side with an icon",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "nav-current",
+    "where": "header.nav.nav--split",
+    "msg": "the nav stays on screen with 3 links to the page's sections, but never marks the one you are in (no link changes as the page scrolls)",
+    "fix": "mark the link of the section on screen (a colour, a weight or a line under it) as the visitor scrolls",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "action-repeat",
+    "where": "header.nav.nav--split > div.wrap.nav__bar > div.nav__actions > a.btn.btn--primary \"book a fitting\"",
+    "msg": "\"book a fitting\" shows 2 times on the first screen at 1440px (nav, hero): the nav's button and the hero's; nothing else on the screen may repeat it",
+    "fix": "show the action once a screen besides the nav's button: the hero's, the close's or the phone bar's, never all at once",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "open-now",
+    "where": "div.grid.grid--top:nth-of-type(2) > div.visit.visit--card > div.visit__head > p.t-small:nth-of-type(2) \"Open now, until 17:30\"",
+    "msg": "\"Open now, until 17:30\" is read from the hours on the page: they must be the brief's; hours you assumed carry data-assumed and drop this line",
+    "fix": "take the hours from the brief; assumed hours carry data-assumed and no open-now line (copy.md)",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "form-send",
+    "where": "div.wrap > div.grid.grid--top > div.span-6.stack-5 > form.form.book-form \"mailto:bookings@gripwell.example\"",
+    "msg": "the form opens a mail to bookings@gripwell.example: a stand-in until the client gives its form address; list it in the report",
+    "fix": "send the form to the client's address (data-endpoint) and show the confirmation only after it answers; list a mailto stand-in in the report",
+    "widths": [
+     1440
+    ],
+    "from": "consistency"
+   },
+   {
+    "check": "section-gaps",
+    "where": "section#tyres / section#workshop",
+    "msg": "300px between these sections, +42% against the median 212px",
+    "fix": "use one gap between sections (all within 25% of each other)",
+    "widths": [
+     390
+    ],
+    "from": "consistency"
+   }
+  ],
+  "crashed": [],
+  "seconds": {
+   "consistency": 87,
+   "layout": 3
+  }
+ },
+ "open": [],
+ "waived": [
+  {
+   "check": "scroll-reveal",
+   "where": "div.span-6.stack-5 > form.form.book-form > div.btn-row > button.btn.btn--primary \"Book a fitting\"",
+   "msg": "starts \"color\" (0.1 s) the moment it is scrolled into view (an IntersectionObserver)",
+   "fix": "show it at rest: no fade, rise or unmask when it is scrolled into view",
+   "widths": [
+    390
+   ],
+   "from": "consistency",
+   "ids": [
+    "scroll-reveal"
+   ],
+   "wheres": [
+    "div.span-6.stack-5 > form.form.book-form > div.btn-row > button.btn.btn--primary \"Book a fitting\""
+   ],
+   "reason": "The 0.1 s colour change is the kit's own button state from assets/motion; the page sets no transition, fade or reveal on the form button."
+  }
+ ],
+ "warnCount": 16,
+ "at": "2026-11-20T12:22:29.027Z"
+}

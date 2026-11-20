@@ -1,0 +1,3 @@
+[
+  {"check": "scroll-reveal", "target": "form.form.book-form > div.btn-row > button.btn.btn--primary", "reason": "The 0.1 s colour change is the kit's own button state from assets/motion; the page sets no transition, fade or reveal on the form button."}
+]

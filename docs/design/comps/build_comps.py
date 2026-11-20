@@ -1,5 +1,5 @@
-# Builds docs/design/comps/{a,b,c,d}/index.html: static comps of the Gripwell home page.
-# Usage: python build_comps.py docs/design/comps [d ...]   (name comps to rebuild only those; A–C are signed off)
+# Builds docs/design/comps/{a,b,c,d,f}/index.html (e is built by its own e/.taste-skill/build_e.py): static comps of the Gripwell home page.
+# Usage: python build_comps.py docs/design/comps [f ...]   (name comps to rebuild only those; A–D are signed off)
 # Each file shows the page twice, side by side: a 1440px frame and a 390px frame
 # (two srcdoc iframes, so each frame's media queries really fire at its width).
 import json, html, os, sys
@@ -269,18 +269,21 @@ MAP_JS = r"""
 (function(){
   var PINS = %s;
   document.querySelectorAll('[data-map]').forEach(function(el){
-    var m = L.map(el,{scrollWheelZoom:false,attributionControl:true,zoomSnap:0.25});
+    var pins = el.dataset.pins ? JSON.parse(el.dataset.pins) : PINS;  /* data-pins: [[label,lat,lng],...] */
+    var still = el.hasAttribute('data-still') && window.innerWidth < 768;  /* phones: the map never catches a scroll */
+    var m = L.map(el,{scrollWheelZoom:false,attributionControl:true,zoomSnap:0.25,dragging:!still,touchZoom:!still,doubleClickZoom:!still,zoomControl:!still,keyboard:!still});
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       {maxZoom:16,attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'}).addTo(m);
     var icon = L.divIcon({className:'pin',iconSize:[28,38],iconAnchor:[14,37],tooltipAnchor:[0,-30],
       html:'<svg width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1.5 6.5 1.5 13.4 1.5 22.6 14 37 14 37s12.5-14.4 12.5-23.6C26.5 6.5 21 1 14 1Z" fill="#FF6A1A" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="4.6" fill="#2A2E36"/></svg>'});
     var labels = el.hasAttribute('data-labels') && window.innerWidth >= 700;
-    PINS.forEach(function(p){
-      var mk = L.marker([p[1],p[2]],{icon:icon,title:p[0]}).addTo(m);
-      if (labels) mk.bindTooltip(p[0],{permanent:true,direction:'top',className:'lbl'});
-      else mk.bindPopup('<b>'+p[0]+'</b>');
+    pins.forEach(function(p){
+      /* still maps are a picture: pins are not tap targets. p[3]: optional label side; p[4]: always labelled (the answer) */
+      var mk = L.marker([p[1],p[2]],{icon:icon,title:p[0],interactive:!still,keyboard:!still}).addTo(m);
+      if (labels || p[4]) mk.bindTooltip(p[0],{permanent:true,direction:p[3]||'top',className:'lbl'+(p[4]?' lead':'')});
+      else if (!still) mk.bindPopup('<b>'+p[0]+'</b>');
     });
-    m.fitBounds(PINS.map(function(p){return [p[1],p[2]]}),{padding:[36,36]});
+    m.fitBounds(pins.map(function(p){return [p[1],p[2]]}),{padding:[36,36]});
   });
 })();
 </script>
@@ -337,18 +340,18 @@ STAGE = """<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8"><meta n
 
 def comp_href(c):  # comps may have been renamed by hand (e.g. "a/index a.html"); link to what is there
     d = f'{OUT}/{c}'
-    found = sorted(f for f in os.listdir(d) if f.endswith('.html')) if os.path.isdir(d) else []
+    found = sorted(f for f in os.listdir(d) if f.startswith('index') and f.endswith('.html')) if os.path.isdir(d) else []
     return f'../{c}/' + (found[0] if found else 'index.html').replace(' ', '%20')
 
 def stage(comp, title, note, doc, comps='abc'):
     nav = ''.join(f'<a href="{comp_href(c)}"{" aria-current=page" if c == comp else ""}>Comp {c.upper()}</a>' for c in comps)
     return STAGE % {'title': esc(title), 'note': esc(note), 'nav': nav, 'doc': esc(doc, quote=True)}
 
-def write(comp, title, note, css, body, comps='abc', **page_kw):
+def write(comp, title, note, css, body, comps='abc', doc_title=None, **page_kw):
     if ONLY and comp not in ONLY:
         return
     os.makedirs(f'{OUT}/{comp}', exist_ok=True)
-    doc = page(f'Gripwell · {title}', css, body, **page_kw)
+    doc = page(doc_title or f'Gripwell · {title}', css, body, **page_kw)
     open(f'{OUT}/{comp}/index.html', 'w', encoding='utf-8').write(stage(comp, f'Comp {comp.upper()} · {title}', note, doc, comps))
 
 def pic(pid, alt, sizes='100vw', big=False, cls='', eager=False):
@@ -880,4 +883,412 @@ def d_body():
 
 write('d', 'Final pick', 'Light page; today’s availability as white branch cards. Manrope only. Technician photo in the hero; real branch data as of Fri 20 Nov 08:10.',
       D_CSS, d_body(), comps='abcd', fonts=D_FONTS, base='')
+
+# ════════════════════════════ COMP F ════════════════════════════
+# D's structure with the execution fixes from gripwell-comp-f-prompt.md (repo root): white-dominant page,
+# no caps kickers / numbers / arrows, 3-level card elevation, availability badges first, deals moved up,
+# real photos in all six services, mobile sticky search bar. Manrope 400–700 only (same font link as D).
+F_AS_OF = 'Fri 20 Nov, as of 08:10'
+F_CSS = r"""
+:root{
+  --paper:#F5F0E8; --surface:#FFFFFF; --ink:#1E2128; --ink-2:#4A505B; --graphite:#2A2E36; --graphite-2:#1E2128;  /* brief's #FAF8F4 was 1.06:1 against white (invisible); #F3EDE3 read muddy */
+  --orange:#FF6A1A; --orange-down:#E85A0E; --muted-fg:#6B6B6B; --line:#E5E5E5;
+  --orange-text:#C2410C; --green-text:#166534;  /* AA text versions of the brief's orange and green; green darkened from #15803D (4.59:1) so badges clear AA on --paper too */
+  --f:'Manrope',system-ui,sans-serif; --gut:clamp(16px,4vw,48px); --max:1280px;
+  --e1:0 1px 3px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.03);
+  --e2:0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--surface);color:var(--ink);font:400 1rem/1.6 var(--f);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+img:not(.logo):not(.icon){filter:contrast(1.04) saturate(.9)}
+a{color:inherit;text-decoration:none} button,input,select{font-family:inherit}
+h1,h2,h3,p{margin:0} h1,h2,h3{text-wrap:balance} p{max-width:70ch;text-wrap:pretty}
+::selection{background:#FFD8C2;color:var(--ink)} input{caret-color:var(--orange-text)} :root{accent-color:var(--orange)}
+ul,ol{list-style:none;margin:0;padding:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wrap{max-width:calc(var(--max) + 2*var(--gut));margin:0 auto;padding:0 var(--gut)}
+.sec{padding:clamp(56px,8vw,104px) 0 clamp(48px,7vw,96px)}
+.h2{font-size:clamp(1.625rem,1rem + 2.5vw,2.25rem);font-weight:700;letter-spacing:-.025em;line-height:1.15}  /* 26px floor: was 20px, barely above the 18px h3 */
+h3{font-size:1.125rem;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.meta{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:10px;border:0;font:600 1rem/1 var(--f);cursor:pointer;transition:background .2s}
+.btn-primary{background:var(--orange);color:var(--ink)}  /* dark text on orange (5.6:1); white was 2.9:1 */ .btn-primary:hover,.btn-primary:active{background:var(--orange-down)}
+.btn-line{background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)} .btn-line:hover{background:rgba(30,33,40,.06)}
+.icon{flex:none}
+
+/* demo strip: tells an evaluator what is real before they try it */
+.demo{background:var(--ink);color:rgba(255,255,255,.8);font-size:.875rem;line-height:1.4}
+.demo .wrap{max-width:none;padding-top:10px;padding-bottom:10px;text-align:center}
+.demo a{margin-left:8px;color:#fff;font-weight:600;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:3px}
+.demo a:hover{text-decoration-color:#fff} .demo :focus-visible{outline-color:#fff}
+
+/* nav */
+.nav{background:var(--surface);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:16px;min-height:64px}
+.nav .home{display:inline-flex;align-items:center;min-height:44px} .nav .logo{height:24px;width:auto}
+.nav .links{display:none;flex:1;justify-content:center;gap:clamp(12px,2vw,32px);font-size:.9375rem;font-weight:500;color:var(--ink-2)}
+.nav .links a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap} .nav .links a:hover{color:var(--ink)}
+.nav .sp{flex:1}
+.nav .acct{display:none;align-items:center;min-height:44px;font-size:.9375rem;font-weight:500}
+.basket{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--line);font-size:.9375rem;font-weight:600;white-space:nowrap}
+.basket:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.menu{width:44px;height:44px;display:grid;place-items:center;border-radius:10px;background:none;border:1px solid var(--line);color:var(--ink)}
+@media (min-width:768px){ .nav .wrap{min-height:72px} .nav .links,.nav .acct{display:inline-flex} .nav .sp,.menu{display:none} .nav .logo{height:26px} }
+
+/* 1 hero */
+.hero{padding:clamp(24px,4vw,64px) 0 clamp(32px,5vw,64px)}
+.hero .grid{display:grid;gap:40px}
+.hero .grid>*{min-width:0}
+.hero h1{font-size:clamp(1.75rem,4vw,3rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.hero .lede{margin-top:16px;color:var(--muted-fg);max-width:52ch}
+.hero picture{display:none}
+.hero .ph{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 40%;border-radius:16px}
+@media (min-width:768px){ .hero .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,64px);align-items:center} .hero picture{display:block} .hero .ph{aspect-ratio:1} }
+.finder{margin-top:28px;padding:24px;background:var(--surface);border-radius:16px;box-shadow:var(--e2)}
+@media (max-width:767px){ .finder{padding:20px 16px} }
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{min-height:44px;padding:0 20px;border-radius:999px;border:1.5px solid var(--graphite);background:none;font:600 .9375rem/1 var(--f);color:var(--graphite);cursor:pointer}
+.tab[aria-checked=true]{background:var(--graphite);color:#fff}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:6px;min-width:0} .field.w{grid-column:1/-1}
+.field label{font-size:.875rem;color:var(--muted-fg)}
+.field select{appearance:none;width:100%;height:48px;padding:0 32px 0 14px;border:1px solid var(--muted-fg);border-radius:10px;
+  background:var(--surface) CHEVRON no-repeat right 14px center;font:500 1rem/1 var(--f);color:var(--ink)}
+.field select:disabled{background-color:var(--paper);border-color:#B8B8B8;color:var(--muted-fg);cursor:not-allowed}
+.help{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:4px;font-size:.875rem;color:var(--muted-fg)}
+.help:hover{color:var(--ink)}
+.help .q{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:.8125rem;font-weight:700;line-height:1}
+.hint{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.go{margin-top:16px;width:100%}
+.dep{grid-column:1/-1;margin-top:-4px;font-size:.875rem;line-height:1.4;color:var(--muted-fg)}
+.err{margin-top:6px;font-size:.875rem;font-weight:600;line-height:1.4;color:#B91C1C} .err:empty{display:none}  /* 6.5:1 on white */
+.field select[aria-invalid=true]{border-color:#B91C1C;box-shadow:0 0 0 1px #B91C1C}
+.nb{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:8px;font-size:.9375rem;color:var(--ink-2)}
+.nb b{font-weight:600;color:var(--ink)} .nb:hover b{text-decoration:underline;text-underline-offset:3px}
+.nb .dot{flex:none;width:8px;height:8px;border-radius:50%;background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.16)}
+
+/* 2 how it works: a thin progress strip, not a section */
+.how{border-bottom:1px solid var(--line)}
+.how ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:14px 0 16px;font-size:.875rem;font-weight:500;line-height:1.35;color:var(--ink)}
+.how li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 6px;text-align:center}
+.how .ln{position:absolute;top:11px;left:calc(-50% + 20px);width:calc(100% - 40px);height:1px;background:var(--line)}
+.how svg{color:var(--muted-fg)}
+@media (min-width:768px){
+  .how ol{display:flex;justify-content:center;align-items:center;min-height:72px;padding:0}
+  .how li{position:static;flex-direction:row;gap:10px;padding:0;white-space:nowrap}
+  .how .ln{position:static;width:clamp(32px,6vw,96px);margin:0 6px}
+}
+
+/* 3 where and when: every branch once, soonest free bay first (replaces the rail + the branches section) */
+.where{background:var(--paper)}
+.whead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.wsub{margin:8px 0 24px;color:var(--muted-fg)}
+.wgrid{display:grid;gap:24px}
+.wgrid>*{min-width:0}
+@media (min-width:768px){ .wgrid{grid-template-columns:7fr 5fr;gap:clamp(24px,3vw,40px);align-items:start} }
+.lead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px 32px;padding:clamp(20px,3vw,32px);border-radius:16px;background:var(--graphite);color:#fff;box-shadow:var(--e2)}
+.lead .ll{display:grid;justify-items:start}
+.lead .lt{margin-top:12px;font-size:clamp(3.5rem,7vw,5.5rem);font-weight:700;letter-spacing:-.04em;line-height:.9}
+.lead .lw{margin-top:10px;font-size:1.125rem;font-weight:600}
+.lead .lr{flex:1 1 220px;display:grid;gap:16px}
+.lead .la{font-size:.9375rem;line-height:1.5;color:rgba(255,255,255,.72)} .lead .la b{font-weight:600;color:#fff}
+.lead:hover .btn{background:var(--orange-down)} .lead:focus-visible{outline-offset:3px}
+.b-lead{background:rgba(74,222,128,.16);color:#BBF7D0}
+.slots{margin-top:8px}
+.slot{display:grid;grid-template-columns:4.5rem minmax(0,1fr) auto;gap:4px 16px;align-items:center;min-height:72px;padding:12px 4px;border-bottom:1px solid #E2DACC}
+.slot:hover .sn b{text-decoration:underline;text-underline-offset:3px}
+.st{font-size:1.375rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.st small,.sf small{display:block;font-size:.8125rem;font-weight:500;letter-spacing:0;color:var(--muted-fg)}
+.sb{display:grid;gap:2px;min-width:0}
+.sn{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px} .sn b{font-weight:600}
+.sf{text-align:right;font-weight:700;line-height:1.25}
+.slot.full .st{color:var(--muted-fg)}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:.8125rem;font-weight:600;line-height:1.3;white-space:nowrap}
+.b-free{background:rgba(34,197,94,.12);color:var(--green-text)}
+.b-last{background:rgba(255,106,26,.1);color:#9A3412;animation:pulse 2s ease infinite}  /* the tint pulses, the text stays solid */
+.b-full{background:rgba(0,0,0,.05);color:#5F5F5F}
+@keyframes pulse{50%{background-color:rgba(255,106,26,.22)}}
+@media (prefers-reduced-motion:reduce){ .b-last{animation:none} }
+.week{margin-top:16px;font-size:.875rem;color:var(--muted-fg)}
+.nw{white-space:nowrap}
+.map{height:220px;border-radius:12px;overflow:hidden;background:#E8E8E8;isolation:isolate}
+@media (min-width:768px){ .map{position:sticky;top:24px;height:clamp(440px,40vw,560px)} }
+.leaflet-container{font-family:var(--f)!important}
+.map .leaflet-bar a{width:44px!important;height:44px!important;line-height:44px!important;font-family:var(--f)}
+.pin svg{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.leaflet-tooltip.lbl{background:var(--graphite);color:#fff;border:0;border-radius:6px;font:600 12px/1 var(--f);padding:5px 7px;box-shadow:none}
+.leaflet-tooltip.lbl::before{display:none}
+.leaflet-tooltip.lbl.lead{background:var(--orange);color:var(--ink)}
+@media (max-width:767px){ .map{height:180px} }
+
+/* 4 deals: typographic cards led by the size (one tyre photo four times read as a placeholder); fitted total leads the price */
+.dsub{margin-top:8px;color:var(--muted-fg)}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+@media (min-width:768px){ .dgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px);margin-top:32px} }
+.dc{display:flex;flex-direction:column;height:100%;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .2s,box-shadow .2s}
+.dc:hover{border-color:#D4D4D4;box-shadow:var(--e1)}
+@media (min-width:768px){ .dc{padding:16px} }
+.dc .spec{display:grid;align-content:end;gap:4px;min-height:clamp(96px,10vw,128px);padding:14px;margin-bottom:14px;border-radius:8px;background:#F4F3F0}
+.dc .szb{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;letter-spacing:-.04em;line-height:1}
+.dc .szr{font-size:.9375rem;font-weight:600;color:var(--ink-2)}
+.dc .brn{font-size:.875rem;font-weight:600;color:var(--ink-2)}
+.dc .pp{margin-top:auto;padding-top:14px;display:grid;gap:2px}
+.dc .tot{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--orange-text)}
+.dc .tl{font-size:.875rem;font-weight:600;line-height:1.35}
+.dc .per{font-size:.8125rem;line-height:1.4;color:var(--muted-fg)}
+@media (max-width:767px){ .dc h3{font-size:1rem} .dc .tot{font-size:1.375rem} }
+
+/* 5 why */
+.why{background:var(--graphite-2);color:#fff}
+.why ul{display:grid;gap:32px;margin-top:32px}
+@media (min-width:768px){ .why ul{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(32px,4vw,56px);margin-top:40px} }
+.why li{padding-top:20px;border-top:1px solid rgba(255,255,255,.16)}
+.why h3{color:#fff}
+.why p{margin-top:8px;font-size:.9375rem;color:rgba(255,255,255,.7)}
+.why a{display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-weight:600;color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:4px}
+.why a:hover{text-decoration-color:#fff} .why :focus-visible{outline-color:#fff}
+
+/* 6 services: four photographed, the rest in one line with the phone number */
+.ssub{margin-top:8px;color:var(--muted-fg)} .ssub a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px;margin-top:24px}
+@media (min-width:768px){ .sgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:40px clamp(16px,2vw,24px);margin-top:32px} }
+.sc{min-width:0}
+.sc .ph{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:12px}
+.sc h3{margin-top:12px}
+.sc .pr{margin-top:2px}
+.sc p{display:none;margin-top:4px}
+.sc p.pr{display:block}
+@media (min-width:768px){ .sc .ph{aspect-ratio:4/3} .sc h3{margin-top:16px} .sc p{display:block} }
+@media (max-width:767px){ .sc h3{font-size:1rem} }
+.also{max-width:62ch;margin-top:32px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-2)}
+.also b{font-weight:600;color:var(--ink)}
+.also a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+
+/* 8 close: try it end to end (replaces the floating newsletter card) */
+.end{background:var(--paper)}
+.egrid{display:grid;gap:32px}
+@media (min-width:768px){ .egrid{grid-template-columns:5fr 6fr;gap:clamp(32px,5vw,72px);align-items:start} }
+.end .elede{margin-top:12px;color:var(--ink-2);max-width:46ch}
+.end .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.steps{counter-reset:s}
+.steps li{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:0 12px;padding:16px 0;border-top:1px solid #E2DACC}
+.steps li:last-child{border-bottom:1px solid #E2DACC}
+.steps li::before{counter-increment:s;content:counter(s);font-size:1.375rem;font-weight:700;line-height:1.25;color:var(--orange-text);font-variant-numeric:tabular-nums}  /* the order matters: it is the journey */
+.steps b{display:block;font-weight:600;color:var(--ink)}
+.steps .sd{display:block;font-size:.9375rem;color:var(--muted-fg)}
+
+/* 9 footer */
+.ftr{background:var(--graphite);color:rgba(255,255,255,.7);font-size:.9375rem}
+.ftr .cols{display:grid;gap:32px;padding:48px 0 32px}
+@media (min-width:768px){ .ftr .cols{grid-template-columns:1.5fr 1fr 1fr;gap:clamp(24px,4vw,64px);padding:64px 0 40px} }
+.ftr .logo{height:26px;width:auto;margin-bottom:12px}
+.ftr .fh{font-size:1rem;font-weight:600;letter-spacing:-.01em;color:#fff;margin-bottom:4px}
+.ftr a:hover{color:#fff} .ftr :focus-visible{outline-color:#fff}
+.ftr ul a,.ftr address a{display:flex;align-items:center;min-height:44px}
+@media (min-width:768px){ .ftr ul a,.ftr address a{min-height:36px} }
+.ftr address{font-style:normal;display:grid;justify-items:start}
+.soc{display:flex;gap:4px;margin:16px 0 0 -10px}
+.soc a{width:44px;height:44px;display:grid;place-items:center;background:none;color:rgba(255,255,255,.5);transition:color .2s}  /* .3 was 2.6:1; .5 is the lightest that clears 3:1 */
+.soc a:hover{color:#fff}
+.soc svg{width:20px;height:20px}
+.fnl{margin-top:24px;max-width:420px}
+.fnl label{display:block;margin-bottom:8px;font-size:.9375rem;font-weight:600;color:#fff}
+.fnl .row{display:flex;gap:8px}
+.fnl input{flex:1;min-width:0;min-height:48px;padding:0 14px;border:1px solid rgba(255,255,255,.5);border-radius:10px;background:transparent;color:#fff;font:400 1rem var(--f)}
+.fnl input::placeholder{color:rgba(255,255,255,.6)} .fnl input[aria-invalid=true]{border-color:#FCA5A5}
+.btn-ghost{background:none;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7)} .btn-ghost:hover{box-shadow:inset 0 0 0 1.5px #fff}
+.fnl .msg{min-height:1.5em;margin-top:6px;font-size:.875rem;color:rgba(255,255,255,.8)} .fnl .msg.bad{color:#FCA5A5}
+.ftr .base{border-top:1px solid rgba(255,255,255,.12);padding:8px 0 20px;display:flex;flex-wrap:wrap;gap:0 24px;align-items:center;justify-content:space-between;font-size:.875rem}
+.ftr .base nav{display:flex;flex-wrap:wrap;gap:0 20px} .ftr .base a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+
+/* 10 mobile sticky bar: slides up once the hero's search button has scrolled away */
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:1100;height:64px;padding:8px 16px;background:var(--surface);box-shadow:0 -1px 4px rgba(0,0,0,.08);
+  transform:translateY(110%);visibility:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),visibility 0s .3s}
+.sbar.on{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){ .sbar,.sbar.on{transition:none} }
+.sbar .btn{width:100%}
+@media (max-width:767px){ body{padding-bottom:72px} }
+@media (min-width:768px){ .sbar{display:none} }
+""".replace('CHEVRON', CHEVRON)
+
+def ico(d, size=16):  # inline monochrome stroke icon; colour comes from currentColor
+    return (f'<svg class="icon" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+            f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{d}</svg>')
+I_PIN = '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>'
+I_CLOCK = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+I_TICK = '<path d="m5 12.5 4.5 4.5L19 7.5"/>'
+I_TYRE = ('<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.8"/>'
+          '<path d="M12 10.2V6M13.7 11.4l4-1.3M13.06 13.46l2.47 3.39M10.94 13.46l-2.47 3.39M10.3 11.4l-4-1.3"/>')
+I_CAL = ('<path d="M20.5 9.5V7a2 2 0 0 0-2-2h-13a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2H10"/><path d="M3.5 10H11M8 3v4M16 3v4"/>'
+         '<circle cx="16.5" cy="16.5" r="5"/><path d="M16.5 14.3v2.4l1.6 1"/>')
+I_CAR = ('<path d="M5 16.5h14M3.5 16.5v-3.2c0-.6.2-1.2.6-1.7L6.5 8.5A2 2 0 0 1 8 7.8h8a2 2 0 0 1 1.5.7l2.4 3.1c.4.5.6 1.1.6 1.7v3.2"/>'
+         '<circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/>')
+F_SOCIAL = ('<div class="soc">'
+  '<a href="#" aria-label="Gripwell on Instagram">' + ico('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/>', 20) + '</a>'
+  '<a href="#" aria-label="Gripwell on Facebook">' + ico('<path d="M14 21v-8h3l.5-3.5H14V7.8c0-1 .3-1.7 1.8-1.7h1.8V3.1A24 24 0 0 0 15 3c-2.6 0-4.4 1.6-4.4 4.5v2H7.7V13h2.9v8"/>', 20) + '</a>'
+  '<a href="#" aria-label="Gripwell on X">' + ico('<path d="M4 4l16 16M20 4 4 20"/>', 20) + '</a>'
+  '</div>')
+F_SERVICES = [  # name, price (only where the site prices it), line, photo id (assets/img/photo-<id>-*.jpg), alt
+  ('Fitting and balancing', 'From £25 per tyre', 'Balancing, new valves and disposal of the old tyres included.', 'wheel-balancer-console', 'A wheel balancer screen showing a tyre diagram, a technician holding a weight tool'),
+  ('Wheel alignment', 'Quoted by phone', 'Computerised four-wheel alignment for even wear and straight steering.', 'lifted-car-suspension', 'A technician adjusting the suspension of a car raised on a lift'),
+  ('Pre-MOT check', 'Free', 'Know what needs fixing before the MOT test.', 'mechanic-laptop-diagnostic', 'A technician checking a car with a diagnostic laptop'),
+  ('Manufacturer service', 'Quoted by phone', 'Manufacturer-schedule servicing that keeps your new-car warranty.', 'mechanic-engine-maintenance', 'A technician leaning into an open engine bay during a service'),
+]
+F_WHY = [  # heading, line, link text, target: each claim points at the thing that proves it
+  ('The price on the page is the price you pay', 'VAT is included, and every tyre on this page shows the fitted total for a set of four.', 'See fitted prices', '#deals'),
+  ('A time on this page is a free bay', 'Times come from each branch&rsquo;s hours minus the fittings already booked. They are not estimates.', 'See today&rsquo;s free bays', '#where'),
+  ('Warranty claims start online', 'Send the claim form with photos from the warranty page. No phone tree, no branch visit to file.', 'Start a warranty claim', '#'),
+]
+F_BADGE = {'2 free': '2 bays free', '1 free': '1 bay free', 'Last bay': 'Last slot', 'Full today': 'Full today'}  # short enough not to wrap at 390
+HERO_SRC = f'{IMG}photo-f201752795-500.jpg 500w, {IMG}photo-f201752795-960.jpg 960w'
+BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+SBAR_JS = """<script>
+(function(){var b=document.querySelector('.sbar'),g=document.querySelector('.go'),ends=document.querySelectorAll('.end,.ftr');if(!b)return;
+  if(!g||!('IntersectionObserver' in window)){b.classList.add('on');return}
+  var past=false,seen=new Set();
+  function set(){b.classList.toggle('on',past&&!seen.size)}
+  new IntersectionObserver(function(e){past=!e[0].isIntersecting&&e[0].boundingClientRect.top<0;set()}).observe(g);
+  var io=new IntersectionObserver(function(es){es.forEach(function(x){x.isIntersecting?seen.add(x.target):seen.delete(x.target)});set()});
+  ends.forEach(function(x){io.observe(x)});
+})();
+(function(){  /* inline errors instead of browser bubbles; the comp stops short of navigating */
+  var f=document.getElementById('find'),w=document.getElementById('fw'),e=document.getElementById('fwerr');
+  f.addEventListener('submit',function(ev){ev.preventDefault();if(!w.value){w.setAttribute('aria-invalid','true');e.textContent='Choose your tyre width to see prices.';w.focus();}});
+  w.addEventListener('change',function(){if(w.value){w.removeAttribute('aria-invalid');e.textContent='';}});
+  var n=document.querySelector('.fnl'),i=document.getElementById('nl'),m=document.getElementById('nlmsg');
+  n.addEventListener('submit',function(ev){ev.preventDefault();var ok=!!i.value&&i.checkValidity();
+    i.setAttribute('aria-invalid',ok?'false':'true');m.className='msg'+(ok?'':' bad');
+    m.textContent=ok?'Nearly done: we sent a link to '+i.value+'. Open it to confirm.':'Enter an email address, like you@email.com.';});
+})();
+</script>"""
+I_WHEEL = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6"/><path d="M3.3 10.5h6.2M14.5 10.5h6.2M12 14.6V21"/>'  # steering wheel
+
+def f_where():
+    """One list of all seven branches, soonest free bay first; the soonest bookable one leads."""
+    rows = [(B[bid], day, time, status) for bid, day, time, status, _ in BOARD]
+    open_rows = [r for r in rows if not r[3].startswith('Full')]
+    b, day, time, status = (open_rows or rows)[0]
+    if open_rows:
+        badge, when = f'<span class="badge b-lead">{F_BADGE[status]}</span>', f'Today at {b[1]}'
+    else:  # every branch full today: lead with the earliest bay tomorrow instead of an empty state
+        badge, when = '<span class="badge b-lead">Every branch is full today</span>', f'{day} at {b[1]}'
+    lead = (f'<a class="lead" href="#"><span class="ll">{badge}<span class="lt num">{time}</span><span class="lw">{when}</span></span>'
+            f'<span class="lr"><span class="la">{b[2]}, {b[4]}<br>Fitting <b class="num">£{b[8]}</b> per tyre</span>'
+            f'<span class="btn btn-primary">Show tyres at {b[1]}</span></span></a>')
+    slots = ''
+    for r in rows:
+        if r[0] is b:
+            continue
+        rb, rday, rtime, rstatus = r
+        kind = 'last' if rstatus == 'Last bay' else 'full' if rstatus.startswith('Full') else 'free'
+        t = f'{rtime}<small>{rday.lower()}</small>' if rday else rtime  # City: full today, so its first bay tomorrow shows instead
+        slots += (f'<li><a class="slot{" full" if kind == "full" else ""}" href="#"><span class="st num">{t}</span>'
+                  f'<span class="sb"><span class="sn"><b>{rb[1]}</b><span class="badge b-{kind}">{F_BADGE[rstatus]}</span></span>'
+                  f'<span class="meta">{rb[2]}, <span class="nw">{rb[4]}</span></span></span>'
+                  f'<span class="sf num">£{rb[8]}<small>per tyre</small></span></a></li>')
+    side = {'camden': 'left', 'shoreditch': 'right', 'citycentre': 'left'}  # central pins sit close together
+    pins = [[f'{rb[1]} {rtime}' if not rday else f'{rb[1]} {rday.lower()}', rb[6], rb[7], side.get(rb[0], 'top'), rb is b] for rb, rday, rtime, _ in rows]
+    return ('<section class="sec where" id="where" aria-labelledby="hwh"><div class="wrap">'
+      f'<div class="whead"><h2 class="h2" id="hwh">Free fitting bays today</h2><span class="meta">{F_AS_OF}</span></div>'
+      '<p class="wsub">Soonest first, then cheapest fitting. Each branch has two bays and fits a set of four in about an hour. Prices are per tyre and include VAT.</p>'
+      f'<div class="wgrid"><div>{lead}<ol class="slots" aria-label="Other branches by next free bay">{slots}</ol>'
+      '<p class="week">All branches: Mon&ndash;Fri 08:00&ndash;17:30, Sat 08:00&ndash;16:00, Sun closed</p></div>'
+      f'<div class="map" data-map data-labels data-still data-pins="{esc(json.dumps(pins), quote=True)}" role="img" aria-label="Map of the seven Gripwell branches, with {b[1]} marked as the soonest"></div>'
+      '</div></div></section>'), f'{b[1]}, ' + (f'today {time}' if open_rows else f'{day.lower()} {time}')
+
+def f_body():
+    where, nb = f_where()
+    opts = ''.join(f'<option>{w}</option>' for w in WIDTHS)
+    finder_html = ('<form class="finder" id="find" novalidate aria-label="Find tyres">'
+      '<div class="tabs" role="radiogroup" aria-label="Search by"><button type="button" class="tab" role="radio" aria-checked="true">Tyre size</button>'
+      '<button type="button" class="tab" role="radio" aria-checked="false">Car</button></div>'
+      f'<div class="fields"><div class="field w"><label for="fw">Width</label><select id="fw" required aria-describedby="fwerr"><option value="">Select</option>{opts}</select>'
+      '<p class="err" id="fwerr" role="alert"></p></div>'
+      '<div class="field"><label for="fp">Profile</label><select id="fp" disabled aria-describedby="dep"><option>Select</option></select></div>'
+      '<div class="field"><label for="fr">Rim</label><select id="fr" disabled aria-describedby="dep"><option>Select</option></select></div>'
+      '<p class="dep" id="dep">Choose a width first, then profile and rim.</p></div>'
+      '<a class="help" href="#"><span class="q" aria-hidden="true">?</span>How to find your size</a>'  # production: popover with a labelled sidewall diagram
+      '<p class="hint">Your size is on the tyre&rsquo;s sidewall, for example 205/55&nbsp;R16</p>'
+      '<button class="btn btn-primary go" type="submit">Show tyres and prices</button>'
+      f'<a class="nb" href="#where"><span class="dot" aria-hidden="true"></span><span>Next free bay: <b>{nb}</b></span></a></form>')
+    how = ''.join(f'<li>{"<span class=ln aria-hidden=true></span>" if i else ""}{ico(d, 22)}<span>{t}</span></li>'
+                  for i, (d, t) in enumerate(((I_TYRE, 'Pick your size'), (I_CAL, 'Choose a time'), (I_WHEEL, 'We fit, you drive'))))
+    deals = ''
+    for br, mo, sz, p, _ in TYRES:
+        wp, rim, speed = sz.split()  # '205/55', 'R16', 'V'
+        deals += (f'<li><a class="dc" href="#"><span class="spec" aria-label="Size {sz}"><span class="szb num">{wp}</span>'
+                  f'<span class="szr num">{rim} &middot; {speed} rated</span></span>'
+                  f'<span class="brn">{br}</span><h3>{mo}</h3>'
+                  f'<span class="pp"><span class="tot num">{SET4(p)}</span><span class="tl">Set of 4 fitted</span>'
+                  f'<span class="per num">{money(p)} a tyre<br>+ £25 fitting a tyre</span></span></a></li>')
+    why = ''.join(f'<li><h3>{h}</h3><p>{d}</p><a href="{href}">{a}</a></li>' for h, d, a, href in F_WHY)
+    svc = ''.join(f'<div class="sc">{pic(pid, alt, sizes="(min-width:768px) 300px, 50vw", cls="ph")}<h3>{n}</h3><p class="meta pr">{pr}</p><p class="meta">{d}</p></div>'
+                  for n, pr, d, pid, alt in F_SERVICES)
+    quick = ''.join(f'<li><a href="{h}">{x}</a></li>' for x, h in (('Tyres', '#'), ('Wheels', '#'), ('Branches', '#where'), ('Warranty claims', '#'), ('FAQ', '#'), ('About', '#')))
+    tel = f'<a href="tel:+442079460800">{SWITCHBOARD}</a>'
+    return ('<div class="demo"><p class="wrap">Demo shop, nothing is charged. Test card 4242&nbsp;4242&nbsp;4242&nbsp;4242. '
+      '<a href="#">How&nbsp;it&nbsp;works</a></p></div>'
+      '<header class="nav"><div class="wrap"><a class="home" href="#" aria-label="Gripwell home"><img class="logo" src="../assets/brand/logo-horizontal.svg" alt="Gripwell"></a>'
+      '<nav class="links" aria-label="Main"><a href="#">Tyres</a><a href="#">Wheels</a><a href="#">Fitting &amp; services</a><a href="#where">Branches</a><a href="#">Warranty</a></nav>'
+      '<span class="sp"></span><a class="acct" href="#">Account</a>'
+      '<a class="basket" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2.2l2.1 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 7H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/></svg>Basket 0</a>'
+      '<button class="menu" aria-label="Open menu" aria-expanded="false"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>'
+      '</div></header><main>'
+      # 1 hero
+      '<section class="hero" aria-labelledby="h1"><div class="wrap"><div class="grid"><div>'
+      '<h1 id="h1">Tyres fitted across London.</h1>'
+      '<p class="lede">Pick your size to see the fitted price for a set of four at each branch. Fitting from £25 per tyre. All prices include VAT.</p>'
+      + finder_html + '</div>'
+      # no <source> below 768px, so phones never download the photo
+      f'<picture><source media="(min-width:768px)" srcset="{HERO_SRC}" sizes="(min-width:1280px) 600px, 45vw">'
+      f'<img class="ph" src="{BLANK}" width="960" height="1200" fetchpriority="high" alt="A technician in overalls walking to a car raised on a lift, morning light through the workshop window"></picture>'
+      '</div></div></section>'
+      # 2 how it works
+      f'<section class="how" aria-label="How it works"><div class="wrap"><ol>{how}</ol></div></section>'
+      # 3 where and when (was: available today + branches)
+      + where +
+      # 4 deals
+      '<section class="sec" id="deals" aria-labelledby="hd"><div class="wrap"><h2 class="h2" id="hd">Popular tyres, priced fitted</h2>'
+      '<p class="dsub">Four tyres fitted at Camden, VAT included. Fitting is £25 to £35 a tyre, depending on the branch.</p>'
+      f'<ul class="dgrid">{deals}</ul></div></section>'
+      # 5 why
+      '<section class="sec why" aria-labelledby="hw"><div class="wrap"><h2 class="h2" id="hw">Checkable, not claimed</h2>'
+      f'<ul>{why}</ul></div></section>'
+      # 6 services
+      '<section class="sec" aria-labelledby="hs"><div class="wrap"><h2 class="h2" id="hs">In the workshop</h2>'
+      f'<p class="ssub">Fitting is booked online with your tyres. For everything else, call {tel}.</p>'
+      f'<div class="sgrid">{svc}</div>'
+      '<p class="also">Also at every branch: <b>puncture repair</b> while you wait, where it is safe to do so, and a free 15&#8209;minute <b>safety inspection</b> '
+      'of tread, pressures, brakes and lights.</p></div></section>'
+      # 8 close: try it end to end (what is real, in the order an evaluator meets it)
+      '<section class="sec end" aria-labelledby="hn"><div class="wrap"><div class="egrid"><div><h2 class="h2" id="hn">Try it end to end</h2>'
+      '<p class="elede">This is a working shop in test mode. Choose a tyre, pick a branch and a time, and pay with card 4242&nbsp;4242&nbsp;4242&nbsp;4242. Nothing is charged, and everything after the payment is real.</p>'
+      '<div class="acts"><a class="btn btn-primary" href="#find">Start with your tyre size</a><a class="btn btn-line" href="#">Open the admin demo</a></div></div>'
+      '<ol class="steps">'
+      '<li><span><b>The basket shows the fitted total</b><span class="sd">Tyres and fitting for your branch, VAT included, before you pay.</span></span></li>'
+      '<li><span><b>Stripe takes a test payment</b><span class="sd">The same Payment Intents flow a live shop uses, in test mode.</span></span></li>'
+      '<li><span><b>The order is written once</b><span class="sd">A verified, idempotent webhook records it, so a retry never makes a second order.</span></span></li>'
+      '<li><span><b>Staff see it in the admin</b><span class="sd">Orders, refunds, staff roles with MFA, and an audit log, on the same database.</span></span></li>'
+      '</ol></div></div></section>'
+      '</main>'
+      # 9 footer
+      '<footer class="ftr" aria-labelledby="hft"><h2 class="h2 sr" id="hft">Gripwell site links</h2><div class="wrap"><div class="cols">'
+      '<div><img class="logo" src="../assets/brand/logo-horizontal-reversed.svg" alt="Gripwell"><p>London&rsquo;s tyre fitting service</p>' + F_SOCIAL +
+      '<form class="fnl" novalidate><label for="nl">Fitting reminders and new stock, one email a fortnight</label>'
+      '<div class="row"><input id="nl" type="email" placeholder="you@email.com" autocomplete="email" required aria-describedby="nlmsg">'
+      '<button class="btn btn-ghost" type="submit">Subscribe</button></div><p class="msg" id="nlmsg" role="status"></p></form></div>'
+      f'<div><h3 class="fh">Shop and help</h3><ul>{quick}</ul></div>'
+      '<div><h3 class="fh">Contact</h3><address>'
+      f'{tel}<a href="mailto:hello@gripwell.demo">hello@gripwell.demo</a>'
+      '<span>Head office: 14 Kentish Town Rd, London <span class="nw">NW1 9NX</span></span><a href="#where">All 7 branches</a></address></div>'
+      '</div><div class="base"><span>&copy; 2026 Gripwell. Demo project, not a real business.</span>'
+      '<nav aria-label="Legal"><a href="../CREDITS.md" target="_top">Photo credits</a><a href="#">Privacy</a><a href="#">Terms</a></nav></div></div></footer>'
+      # 10 mobile sticky bar: same label as the hero button, shown once that button has scrolled away
+      '<div class="sbar"><a class="btn btn-primary" href="#find">Show tyres and prices</a></div>' + SBAR_JS)
+
+write('f', 'Execution pass on D', 'D’s structure, revised after the 26/40 critique: one soonest-first branch list with the map, fitted set-of-4 prices with no invented "was" prices, four strong service photos, demo strip, sticky search after the hero.',
+      F_CSS, f_body(), comps='abcdef', fonts=D_FONTS, base='', doc_title='Gripwell: tyres fitted across London')
 print('ok')

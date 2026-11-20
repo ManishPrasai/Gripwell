@@ -1,0 +1,572 @@
+<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comp F · Execution pass on D</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#D9D6CF;font:500 14px/1.4 Manrope,system-ui,sans-serif;color:#1E2128}
+  .bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;padding:12px 24px;background:#1E2128;color:#E6E8EC}
+  .bar b{font-size:15px;color:#fff} .bar .note{color:#A9B0BA;flex:1;min-width:260px}
+  .bar a{color:#E6E8EC;font-weight:800;text-decoration:none;padding:6px 10px;border-radius:7px} .bar a[aria-current]{background:#FF6A1A;color:#1E2128}
+  .bar button{font:800 13px Manrope,sans-serif;border:0;border-radius:7px;padding:7px 12px;background:#3A3F49;color:#fff;cursor:pointer}
+  .bar button[aria-pressed=true]{background:#fff;color:#1E2128}
+  .outer{padding:28px 24px 60px;overflow-x:auto}
+  .stage{display:flex;gap:56px;align-items:flex-start;transform-origin:0 0;width:max-content}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .lbl{font-weight:800;font-size:15px;color:#1E2128}
+  iframe{display:block;border:0;background:#fff;box-shadow:0 30px 60px -30px rgba(0,0,0,.45);border-radius:6px}
+  #d{width:1440px;height:2000px} #m{width:390px;height:2000px;border-radius:28px}
+</style></head><body>
+<div class="bar"><b>Comp F · Execution pass on D</b><span class="note">D’s structure, revised after the 26/40 critique: one soonest-first branch list with the map, fitted set-of-4 prices with no invented &quot;was&quot; prices, four strong service photos, demo strip, sticky search after the hero.</span>
+  <nav><a href="../a/index%20a.html">Comp A</a><a href="../b/index%20b.html">Comp B</a><a href="../c/index%20c.html">Comp C</a><a href="../d/index.html">Comp D</a><a href="../e/index.html">Comp E</a><a href="../f/index.html" aria-current=page>Comp F</a></nav>
+  <button type="button" id="fit" aria-pressed="true">Fit to window</button><button type="button" id="full" aria-pressed="false">Actual size</button></div>
+<div class="outer"><div class="stage" id="stage">
+  <div class="col"><span class="lbl">Desktop · 1440px</span><iframe id="d" name="d" title="Desktop 1440px" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en-GB&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;title&gt;Gripwell: tyres fitted across London&lt;/title&gt;&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;&lt;link href=&quot;https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;&lt;style&gt;
+:root{
+  --paper:#F5F0E8; --surface:#FFFFFF; --ink:#1E2128; --ink-2:#4A505B; --graphite:#2A2E36; --graphite-2:#1E2128;  /* brief&#x27;s #FAF8F4 was 1.06:1 against white (invisible); #F3EDE3 read muddy */
+  --orange:#FF6A1A; --orange-down:#E85A0E; --muted-fg:#6B6B6B; --line:#E5E5E5;
+  --orange-text:#C2410C; --green-text:#166534;  /* AA text versions of the brief&#x27;s orange and green; green darkened from #15803D (4.59:1) so badges clear AA on --paper too */
+  --f:&#x27;Manrope&#x27;,system-ui,sans-serif; --gut:clamp(16px,4vw,48px); --max:1280px;
+  --e1:0 1px 3px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.03);
+  --e2:0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--surface);color:var(--ink);font:400 1rem/1.6 var(--f);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+img:not(.logo):not(.icon){filter:contrast(1.04) saturate(.9)}
+a{color:inherit;text-decoration:none} button,input,select{font-family:inherit}
+h1,h2,h3,p{margin:0} h1,h2,h3{text-wrap:balance} p{max-width:70ch;text-wrap:pretty}
+::selection{background:#FFD8C2;color:var(--ink)} input{caret-color:var(--orange-text)} :root{accent-color:var(--orange)}
+ul,ol{list-style:none;margin:0;padding:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wrap{max-width:calc(var(--max) + 2*var(--gut));margin:0 auto;padding:0 var(--gut)}
+.sec{padding:clamp(56px,8vw,104px) 0 clamp(48px,7vw,96px)}
+.h2{font-size:clamp(1.625rem,1rem + 2.5vw,2.25rem);font-weight:700;letter-spacing:-.025em;line-height:1.15}  /* 26px floor: was 20px, barely above the 18px h3 */
+h3{font-size:1.125rem;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.meta{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:10px;border:0;font:600 1rem/1 var(--f);cursor:pointer;transition:background .2s}
+.btn-primary{background:var(--orange);color:var(--ink)}  /* dark text on orange (5.6:1); white was 2.9:1 */ .btn-primary:hover,.btn-primary:active{background:var(--orange-down)}
+.btn-line{background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)} .btn-line:hover{background:rgba(30,33,40,.06)}
+.icon{flex:none}
+
+/* demo strip: tells an evaluator what is real before they try it */
+.demo{background:var(--ink);color:rgba(255,255,255,.8);font-size:.875rem;line-height:1.4}
+.demo .wrap{max-width:none;padding-top:10px;padding-bottom:10px;text-align:center}
+.demo a{margin-left:8px;color:#fff;font-weight:600;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:3px}
+.demo a:hover{text-decoration-color:#fff} .demo :focus-visible{outline-color:#fff}
+
+/* nav */
+.nav{background:var(--surface);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:16px;min-height:64px}
+.nav .home{display:inline-flex;align-items:center;min-height:44px} .nav .logo{height:24px;width:auto}
+.nav .links{display:none;flex:1;justify-content:center;gap:clamp(12px,2vw,32px);font-size:.9375rem;font-weight:500;color:var(--ink-2)}
+.nav .links a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap} .nav .links a:hover{color:var(--ink)}
+.nav .sp{flex:1}
+.nav .acct{display:none;align-items:center;min-height:44px;font-size:.9375rem;font-weight:500}
+.basket{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--line);font-size:.9375rem;font-weight:600;white-space:nowrap}
+.basket:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.menu{width:44px;height:44px;display:grid;place-items:center;border-radius:10px;background:none;border:1px solid var(--line);color:var(--ink)}
+@media (min-width:768px){ .nav .wrap{min-height:72px} .nav .links,.nav .acct{display:inline-flex} .nav .sp,.menu{display:none} .nav .logo{height:26px} }
+
+/* 1 hero */
+.hero{padding:clamp(24px,4vw,64px) 0 clamp(32px,5vw,64px)}
+.hero .grid{display:grid;gap:40px}
+.hero .grid&gt;*{min-width:0}
+.hero h1{font-size:clamp(1.75rem,4vw,3rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.hero .lede{margin-top:16px;color:var(--muted-fg);max-width:52ch}
+.hero picture{display:none}
+.hero .ph{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 40%;border-radius:16px}
+@media (min-width:768px){ .hero .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,64px);align-items:center} .hero picture{display:block} .hero .ph{aspect-ratio:1} }
+.finder{margin-top:28px;padding:24px;background:var(--surface);border-radius:16px;box-shadow:var(--e2)}
+@media (max-width:767px){ .finder{padding:20px 16px} }
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{min-height:44px;padding:0 20px;border-radius:999px;border:1.5px solid var(--graphite);background:none;font:600 .9375rem/1 var(--f);color:var(--graphite);cursor:pointer}
+.tab[aria-checked=true]{background:var(--graphite);color:#fff}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:6px;min-width:0} .field.w{grid-column:1/-1}
+.field label{font-size:.875rem;color:var(--muted-fg)}
+.field select{appearance:none;width:100%;height:48px;padding:0 32px 0 14px;border:1px solid var(--muted-fg);border-radius:10px;
+  background:var(--surface) url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; width=&#x27;12&#x27; height=&#x27;8&#x27; viewBox=&#x27;0 0 12 8&#x27;%3E%3Cpath d=&#x27;M1 1.5 6 6.5l5-5&#x27; fill=&#x27;none&#x27; stroke=&#x27;%231E2128&#x27; stroke-width=&#x27;2&#x27; stroke-linecap=&#x27;round&#x27;/%3E%3C/svg%3E&quot;) no-repeat right 14px center;font:500 1rem/1 var(--f);color:var(--ink)}
+.field select:disabled{background-color:var(--paper);border-color:#B8B8B8;color:var(--muted-fg);cursor:not-allowed}
+.help{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:4px;font-size:.875rem;color:var(--muted-fg)}
+.help:hover{color:var(--ink)}
+.help .q{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:.8125rem;font-weight:700;line-height:1}
+.hint{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.go{margin-top:16px;width:100%}
+.dep{grid-column:1/-1;margin-top:-4px;font-size:.875rem;line-height:1.4;color:var(--muted-fg)}
+.err{margin-top:6px;font-size:.875rem;font-weight:600;line-height:1.4;color:#B91C1C} .err:empty{display:none}  /* 6.5:1 on white */
+.field select[aria-invalid=true]{border-color:#B91C1C;box-shadow:0 0 0 1px #B91C1C}
+.nb{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:8px;font-size:.9375rem;color:var(--ink-2)}
+.nb b{font-weight:600;color:var(--ink)} .nb:hover b{text-decoration:underline;text-underline-offset:3px}
+.nb .dot{flex:none;width:8px;height:8px;border-radius:50%;background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.16)}
+
+/* 2 how it works: a thin progress strip, not a section */
+.how{border-bottom:1px solid var(--line)}
+.how ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:14px 0 16px;font-size:.875rem;font-weight:500;line-height:1.35;color:var(--ink)}
+.how li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 6px;text-align:center}
+.how .ln{position:absolute;top:11px;left:calc(-50% + 20px);width:calc(100% - 40px);height:1px;background:var(--line)}
+.how svg{color:var(--muted-fg)}
+@media (min-width:768px){
+  .how ol{display:flex;justify-content:center;align-items:center;min-height:72px;padding:0}
+  .how li{position:static;flex-direction:row;gap:10px;padding:0;white-space:nowrap}
+  .how .ln{position:static;width:clamp(32px,6vw,96px);margin:0 6px}
+}
+
+/* 3 where and when: every branch once, soonest free bay first (replaces the rail + the branches section) */
+.where{background:var(--paper)}
+.whead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.wsub{margin:8px 0 24px;color:var(--muted-fg)}
+.wgrid{display:grid;gap:24px}
+.wgrid&gt;*{min-width:0}
+@media (min-width:768px){ .wgrid{grid-template-columns:7fr 5fr;gap:clamp(24px,3vw,40px);align-items:start} }
+.lead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px 32px;padding:clamp(20px,3vw,32px);border-radius:16px;background:var(--graphite);color:#fff;box-shadow:var(--e2)}
+.lead .ll{display:grid;justify-items:start}
+.lead .lt{margin-top:12px;font-size:clamp(3.5rem,7vw,5.5rem);font-weight:700;letter-spacing:-.04em;line-height:.9}
+.lead .lw{margin-top:10px;font-size:1.125rem;font-weight:600}
+.lead .lr{flex:1 1 220px;display:grid;gap:16px}
+.lead .la{font-size:.9375rem;line-height:1.5;color:rgba(255,255,255,.72)} .lead .la b{font-weight:600;color:#fff}
+.lead:hover .btn{background:var(--orange-down)} .lead:focus-visible{outline-offset:3px}
+.b-lead{background:rgba(74,222,128,.16);color:#BBF7D0}
+.slots{margin-top:8px}
+.slot{display:grid;grid-template-columns:4.5rem minmax(0,1fr) auto;gap:4px 16px;align-items:center;min-height:72px;padding:12px 4px;border-bottom:1px solid #E2DACC}
+.slot:hover .sn b{text-decoration:underline;text-underline-offset:3px}
+.st{font-size:1.375rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.st small,.sf small{display:block;font-size:.8125rem;font-weight:500;letter-spacing:0;color:var(--muted-fg)}
+.sb{display:grid;gap:2px;min-width:0}
+.sn{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px} .sn b{font-weight:600}
+.sf{text-align:right;font-weight:700;line-height:1.25}
+.slot.full .st{color:var(--muted-fg)}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:.8125rem;font-weight:600;line-height:1.3;white-space:nowrap}
+.b-free{background:rgba(34,197,94,.12);color:var(--green-text)}
+.b-last{background:rgba(255,106,26,.1);color:#9A3412;animation:pulse 2s ease infinite}  /* the tint pulses, the text stays solid */
+.b-full{background:rgba(0,0,0,.05);color:#5F5F5F}
+@keyframes pulse{50%{background-color:rgba(255,106,26,.22)}}
+@media (prefers-reduced-motion:reduce){ .b-last{animation:none} }
+.week{margin-top:16px;font-size:.875rem;color:var(--muted-fg)}
+.nw{white-space:nowrap}
+.map{height:220px;border-radius:12px;overflow:hidden;background:#E8E8E8;isolation:isolate}
+@media (min-width:768px){ .map{position:sticky;top:24px;height:clamp(440px,40vw,560px)} }
+.leaflet-container{font-family:var(--f)!important}
+.map .leaflet-bar a{width:44px!important;height:44px!important;line-height:44px!important;font-family:var(--f)}
+.pin svg{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.leaflet-tooltip.lbl{background:var(--graphite);color:#fff;border:0;border-radius:6px;font:600 12px/1 var(--f);padding:5px 7px;box-shadow:none}
+.leaflet-tooltip.lbl::before{display:none}
+.leaflet-tooltip.lbl.lead{background:var(--orange);color:var(--ink)}
+@media (max-width:767px){ .map{height:180px} }
+
+/* 4 deals: typographic cards led by the size (one tyre photo four times read as a placeholder); fitted total leads the price */
+.dsub{margin-top:8px;color:var(--muted-fg)}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+@media (min-width:768px){ .dgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px);margin-top:32px} }
+.dc{display:flex;flex-direction:column;height:100%;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .2s,box-shadow .2s}
+.dc:hover{border-color:#D4D4D4;box-shadow:var(--e1)}
+@media (min-width:768px){ .dc{padding:16px} }
+.dc .spec{display:grid;align-content:end;gap:4px;min-height:clamp(96px,10vw,128px);padding:14px;margin-bottom:14px;border-radius:8px;background:#F4F3F0}
+.dc .szb{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;letter-spacing:-.04em;line-height:1}
+.dc .szr{font-size:.9375rem;font-weight:600;color:var(--ink-2)}
+.dc .brn{font-size:.875rem;font-weight:600;color:var(--ink-2)}
+.dc .pp{margin-top:auto;padding-top:14px;display:grid;gap:2px}
+.dc .tot{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--orange-text)}
+.dc .tl{font-size:.875rem;font-weight:600;line-height:1.35}
+.dc .per{font-size:.8125rem;line-height:1.4;color:var(--muted-fg)}
+@media (max-width:767px){ .dc h3{font-size:1rem} .dc .tot{font-size:1.375rem} }
+
+/* 5 why */
+.why{background:var(--graphite-2);color:#fff}
+.why ul{display:grid;gap:32px;margin-top:32px}
+@media (min-width:768px){ .why ul{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(32px,4vw,56px);margin-top:40px} }
+.why li{padding-top:20px;border-top:1px solid rgba(255,255,255,.16)}
+.why h3{color:#fff}
+.why p{margin-top:8px;font-size:.9375rem;color:rgba(255,255,255,.7)}
+.why a{display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-weight:600;color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:4px}
+.why a:hover{text-decoration-color:#fff} .why :focus-visible{outline-color:#fff}
+
+/* 6 services: four photographed, the rest in one line with the phone number */
+.ssub{margin-top:8px;color:var(--muted-fg)} .ssub a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px;margin-top:24px}
+@media (min-width:768px){ .sgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:40px clamp(16px,2vw,24px);margin-top:32px} }
+.sc{min-width:0}
+.sc .ph{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:12px}
+.sc h3{margin-top:12px}
+.sc .pr{margin-top:2px}
+.sc p{display:none;margin-top:4px}
+.sc p.pr{display:block}
+@media (min-width:768px){ .sc .ph{aspect-ratio:4/3} .sc h3{margin-top:16px} .sc p{display:block} }
+@media (max-width:767px){ .sc h3{font-size:1rem} }
+.also{max-width:62ch;margin-top:32px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-2)}
+.also b{font-weight:600;color:var(--ink)}
+.also a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+
+/* 8 close: try it end to end (replaces the floating newsletter card) */
+.end{background:var(--paper)}
+.egrid{display:grid;gap:32px}
+@media (min-width:768px){ .egrid{grid-template-columns:5fr 6fr;gap:clamp(32px,5vw,72px);align-items:start} }
+.end .elede{margin-top:12px;color:var(--ink-2);max-width:46ch}
+.end .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.steps{counter-reset:s}
+.steps li{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:0 12px;padding:16px 0;border-top:1px solid #E2DACC}
+.steps li:last-child{border-bottom:1px solid #E2DACC}
+.steps li::before{counter-increment:s;content:counter(s);font-size:1.375rem;font-weight:700;line-height:1.25;color:var(--orange-text);font-variant-numeric:tabular-nums}  /* the order matters: it is the journey */
+.steps b{display:block;font-weight:600;color:var(--ink)}
+.steps .sd{display:block;font-size:.9375rem;color:var(--muted-fg)}
+
+/* 9 footer */
+.ftr{background:var(--graphite);color:rgba(255,255,255,.7);font-size:.9375rem}
+.ftr .cols{display:grid;gap:32px;padding:48px 0 32px}
+@media (min-width:768px){ .ftr .cols{grid-template-columns:1.5fr 1fr 1fr;gap:clamp(24px,4vw,64px);padding:64px 0 40px} }
+.ftr .logo{height:26px;width:auto;margin-bottom:12px}
+.ftr .fh{font-size:1rem;font-weight:600;letter-spacing:-.01em;color:#fff;margin-bottom:4px}
+.ftr a:hover{color:#fff} .ftr :focus-visible{outline-color:#fff}
+.ftr ul a,.ftr address a{display:flex;align-items:center;min-height:44px}
+@media (min-width:768px){ .ftr ul a,.ftr address a{min-height:36px} }
+.ftr address{font-style:normal;display:grid;justify-items:start}
+.soc{display:flex;gap:4px;margin:16px 0 0 -10px}
+.soc a{width:44px;height:44px;display:grid;place-items:center;background:none;color:rgba(255,255,255,.5);transition:color .2s}  /* .3 was 2.6:1; .5 is the lightest that clears 3:1 */
+.soc a:hover{color:#fff}
+.soc svg{width:20px;height:20px}
+.fnl{margin-top:24px;max-width:420px}
+.fnl label{display:block;margin-bottom:8px;font-size:.9375rem;font-weight:600;color:#fff}
+.fnl .row{display:flex;gap:8px}
+.fnl input{flex:1;min-width:0;min-height:48px;padding:0 14px;border:1px solid rgba(255,255,255,.5);border-radius:10px;background:transparent;color:#fff;font:400 1rem var(--f)}
+.fnl input::placeholder{color:rgba(255,255,255,.6)} .fnl input[aria-invalid=true]{border-color:#FCA5A5}
+.btn-ghost{background:none;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7)} .btn-ghost:hover{box-shadow:inset 0 0 0 1.5px #fff}
+.fnl .msg{min-height:1.5em;margin-top:6px;font-size:.875rem;color:rgba(255,255,255,.8)} .fnl .msg.bad{color:#FCA5A5}
+.ftr .base{border-top:1px solid rgba(255,255,255,.12);padding:8px 0 20px;display:flex;flex-wrap:wrap;gap:0 24px;align-items:center;justify-content:space-between;font-size:.875rem}
+.ftr .base nav{display:flex;flex-wrap:wrap;gap:0 20px} .ftr .base a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+
+/* 10 mobile sticky bar: slides up once the hero&#x27;s search button has scrolled away */
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:1100;height:64px;padding:8px 16px;background:var(--surface);box-shadow:0 -1px 4px rgba(0,0,0,.08);
+  transform:translateY(110%);visibility:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),visibility 0s .3s}
+.sbar.on{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){ .sbar,.sbar.on{transition:none} }
+.sbar .btn{width:100%}
+@media (max-width:767px){ body{padding-bottom:72px} }
+@media (min-width:768px){ .sbar{display:none} }
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;demo&quot;&gt;&lt;p class=&quot;wrap&quot;&gt;Demo shop, nothing is charged. Test card 4242&amp;nbsp;4242&amp;nbsp;4242&amp;nbsp;4242. &lt;a href=&quot;#&quot;&gt;How&amp;nbsp;it&amp;nbsp;works&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;&lt;header class=&quot;nav&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;a class=&quot;home&quot; href=&quot;#&quot; aria-label=&quot;Gripwell home&quot;&gt;&lt;img class=&quot;logo&quot; src=&quot;../assets/brand/logo-horizontal.svg&quot; alt=&quot;Gripwell&quot;&gt;&lt;/a&gt;&lt;nav class=&quot;links&quot; aria-label=&quot;Main&quot;&gt;&lt;a href=&quot;#&quot;&gt;Tyres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Wheels&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Fitting &amp;amp; services&lt;/a&gt;&lt;a href=&quot;#where&quot;&gt;Branches&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Warranty&lt;/a&gt;&lt;/nav&gt;&lt;span class=&quot;sp&quot;&gt;&lt;/span&gt;&lt;a class=&quot;acct&quot; href=&quot;#&quot;&gt;Account&lt;/a&gt;&lt;a class=&quot;basket&quot; href=&quot;#&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M3 3h2.2l2.1 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 7H6&quot;/&gt;&lt;circle cx=&quot;10&quot; cy=&quot;20&quot; r=&quot;1.4&quot;/&gt;&lt;circle cx=&quot;17.5&quot; cy=&quot;20&quot; r=&quot;1.4&quot;/&gt;&lt;/svg&gt;Basket 0&lt;/a&gt;&lt;button class=&quot;menu&quot; aria-label=&quot;Open menu&quot; aria-expanded=&quot;false&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M4 7h16M4 12h16M4 17h16&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;/div&gt;&lt;/header&gt;&lt;main&gt;&lt;section class=&quot;hero&quot; aria-labelledby=&quot;h1&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div&gt;&lt;h1 id=&quot;h1&quot;&gt;Tyres fitted across London.&lt;/h1&gt;&lt;p class=&quot;lede&quot;&gt;Pick your size to see the fitted price for a set of four at each branch. Fitting from £25 per tyre. All prices include VAT.&lt;/p&gt;&lt;form class=&quot;finder&quot; id=&quot;find&quot; novalidate aria-label=&quot;Find tyres&quot;&gt;&lt;div class=&quot;tabs&quot; role=&quot;radiogroup&quot; aria-label=&quot;Search by&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;tab&quot; role=&quot;radio&quot; aria-checked=&quot;true&quot;&gt;Tyre size&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;tab&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot;&gt;Car&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;fields&quot;&gt;&lt;div class=&quot;field w&quot;&gt;&lt;label for=&quot;fw&quot;&gt;Width&lt;/label&gt;&lt;select id=&quot;fw&quot; required aria-describedby=&quot;fwerr&quot;&gt;&lt;option value=&quot;&quot;&gt;Select&lt;/option&gt;&lt;option&gt;205&lt;/option&gt;&lt;option&gt;215&lt;/option&gt;&lt;option&gt;225&lt;/option&gt;&lt;option&gt;245&lt;/option&gt;&lt;option&gt;265&lt;/option&gt;&lt;option&gt;275&lt;/option&gt;&lt;/select&gt;&lt;p class=&quot;err&quot; id=&quot;fwerr&quot; role=&quot;alert&quot;&gt;&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;field&quot;&gt;&lt;label for=&quot;fp&quot;&gt;Profile&lt;/label&gt;&lt;select id=&quot;fp&quot; disabled aria-describedby=&quot;dep&quot;&gt;&lt;option&gt;Select&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div class=&quot;field&quot;&gt;&lt;label for=&quot;fr&quot;&gt;Rim&lt;/label&gt;&lt;select id=&quot;fr&quot; disabled aria-describedby=&quot;dep&quot;&gt;&lt;option&gt;Select&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;p class=&quot;dep&quot; id=&quot;dep&quot;&gt;Choose a width first, then profile and rim.&lt;/p&gt;&lt;/div&gt;&lt;a class=&quot;help&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;q&quot; aria-hidden=&quot;true&quot;&gt;?&lt;/span&gt;How to find your size&lt;/a&gt;&lt;p class=&quot;hint&quot;&gt;Your size is on the tyre&amp;rsquo;s sidewall, for example 205/55&amp;nbsp;R16&lt;/p&gt;&lt;button class=&quot;btn btn-primary go&quot; type=&quot;submit&quot;&gt;Show tyres and prices&lt;/button&gt;&lt;a class=&quot;nb&quot; href=&quot;#where&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;Next free bay: &lt;b&gt;Camden, today 09:30&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/form&gt;&lt;/div&gt;&lt;picture&gt;&lt;source media=&quot;(min-width:768px)&quot; srcset=&quot;../assets/img/photo-f201752795-500.jpg 500w, ../assets/img/photo-f201752795-960.jpg 960w&quot; sizes=&quot;(min-width:1280px) 600px, 45vw&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==&quot; width=&quot;960&quot; height=&quot;1200&quot; fetchpriority=&quot;high&quot; alt=&quot;A technician in overalls walking to a car raised on a lift, morning light through the workshop window&quot;&gt;&lt;/picture&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;how&quot; aria-label=&quot;How it works&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;ol&gt;&lt;li&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9.5&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;6&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.8&quot;/&gt;&lt;path d=&quot;M12 10.2V6M13.7 11.4l4-1.3M13.06 13.46l2.47 3.39M10.94 13.46l-2.47 3.39M10.3 11.4l-4-1.3&quot;/&gt;&lt;/svg&gt;&lt;span&gt;Pick your size&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span class=ln aria-hidden=true&gt;&lt;/span&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M20.5 9.5V7a2 2 0 0 0-2-2h-13a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2H10&quot;/&gt;&lt;path d=&quot;M3.5 10H11M8 3v4M16 3v4&quot;/&gt;&lt;circle cx=&quot;16.5&quot; cy=&quot;16.5&quot; r=&quot;5&quot;/&gt;&lt;path d=&quot;M16.5 14.3v2.4l1.6 1&quot;/&gt;&lt;/svg&gt;&lt;span&gt;Choose a time&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span class=ln aria-hidden=true&gt;&lt;/span&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2.6&quot;/&gt;&lt;path d=&quot;M3.3 10.5h6.2M14.5 10.5h6.2M12 14.6V21&quot;/&gt;&lt;/svg&gt;&lt;span&gt;We fit, you drive&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec where&quot; id=&quot;where&quot; aria-labelledby=&quot;hwh&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;whead&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hwh&quot;&gt;Free fitting bays today&lt;/h2&gt;&lt;span class=&quot;meta&quot;&gt;Fri 20 Nov, as of 08:10&lt;/span&gt;&lt;/div&gt;&lt;p class=&quot;wsub&quot;&gt;Soonest first, then cheapest fitting. Each branch has two bays and fits a set of four in about an hour. Prices are per tyre and include VAT.&lt;/p&gt;&lt;div class=&quot;wgrid&quot;&gt;&lt;div&gt;&lt;a class=&quot;lead&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;ll&quot;&gt;&lt;span class=&quot;badge b-lead&quot;&gt;2 bays free&lt;/span&gt;&lt;span class=&quot;lt num&quot;&gt;09:30&lt;/span&gt;&lt;span class=&quot;lw&quot;&gt;Today at Camden&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;lr&quot;&gt;&lt;span class=&quot;la&quot;&gt;14 Kentish Town Rd, NW1 9NX&lt;br&gt;Fitting &lt;b class=&quot;num&quot;&gt;£25&lt;/b&gt; per tyre&lt;/span&gt;&lt;span class=&quot;btn btn-primary&quot;&gt;Show tyres at Camden&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;ol class=&quot;slots&quot; aria-label=&quot;Other branches by next free bay&quot;&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;09:30&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Shoreditch&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;1 bay free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;82 Brick Lane, &lt;span class=&quot;nw&quot;&gt;E1 6RL&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£28&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;10:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Brixton&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;2 bays free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;31 Atlantic Rd, &lt;span class=&quot;nw&quot;&gt;SW9 8HX&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£27&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;11:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Hammersmith&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;1 bay free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;5 King St, &lt;span class=&quot;nw&quot;&gt;W6 9HR&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£32&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;12:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Islington&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;2 bays free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;118 Upper St, &lt;span class=&quot;nw&quot;&gt;N1 1QP&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£30&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;15:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Greenwich&lt;/b&gt;&lt;span class=&quot;badge b-last&quot;&gt;Last slot&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;47 Greenwich High Rd, &lt;span class=&quot;nw&quot;&gt;SE10 8JL&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£35&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot full&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;08:00&lt;small&gt;tomorrow&lt;/small&gt;&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;City&lt;/b&gt;&lt;span class=&quot;badge b-full&quot;&gt;Full today&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;9 Cheapside, &lt;span class=&quot;nw&quot;&gt;EC2V 6AA&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£33&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ol&gt;&lt;p class=&quot;week&quot;&gt;All branches: Mon&amp;ndash;Fri 08:00&amp;ndash;17:30, Sat 08:00&amp;ndash;16:00, Sun closed&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;map&quot; data-map data-labels data-still data-pins=&quot;[[&amp;quot;Camden 09:30&amp;quot;, 51.5417, -0.1428, &amp;quot;left&amp;quot;, true], [&amp;quot;Shoreditch 09:30&amp;quot;, 51.5226, -0.0718, &amp;quot;right&amp;quot;, false], [&amp;quot;Brixton 10:00&amp;quot;, 51.4613, -0.1156, &amp;quot;top&amp;quot;, false], [&amp;quot;Hammersmith 11:00&amp;quot;, 51.4927, -0.2239, &amp;quot;top&amp;quot;, false], [&amp;quot;Islington 12:00&amp;quot;, 51.5363, -0.1032, &amp;quot;top&amp;quot;, false], [&amp;quot;Greenwich 15:00&amp;quot;, 51.4769, -0.0004, &amp;quot;top&amp;quot;, false], [&amp;quot;City tomorrow&amp;quot;, 51.5138, -0.0934, &amp;quot;left&amp;quot;, false]]&quot; role=&quot;img&quot; aria-label=&quot;Map of the seven Gripwell branches, with Camden marked as the soonest&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec&quot; id=&quot;deals&quot; aria-labelledby=&quot;hd&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hd&quot;&gt;Popular tyres, priced fitted&lt;/h2&gt;&lt;p class=&quot;dsub&quot;&gt;Four tyres fitted at Camden, VAT included. Fitting is £25 to £35 a tyre, depending on the branch.&lt;/p&gt;&lt;ul class=&quot;dgrid&quot;&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 205/55 R16 V&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;205/55&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R16 &amp;middot; V rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Kova&lt;/span&gt;&lt;h3&gt;Ecoline 2&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£492&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£98 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 215/65 R16 H&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;215/65&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R16 &amp;middot; H rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Meridian&lt;/span&gt;&lt;h3&gt;Citadel UX7&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£500&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£100 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 225/40 R18 Y&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;225/40&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R18 &amp;middot; Y rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Terrain X&lt;/span&gt;&lt;h3&gt;Velo Sport 5&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£680&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£145 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 245/45 R18 Y&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;245/45&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R18 &amp;middot; Y rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Corsaro&lt;/span&gt;&lt;h3&gt;Strada Sport&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£840&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£185 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec why&quot; aria-labelledby=&quot;hw&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hw&quot;&gt;Checkable, not claimed&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;&lt;h3&gt;The price on the page is the price you pay&lt;/h3&gt;&lt;p&gt;VAT is included, and every tyre on this page shows the fitted total for a set of four.&lt;/p&gt;&lt;a href=&quot;#deals&quot;&gt;See fitted prices&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;h3&gt;A time on this page is a free bay&lt;/h3&gt;&lt;p&gt;Times come from each branch&amp;rsquo;s hours minus the fittings already booked. They are not estimates.&lt;/p&gt;&lt;a href=&quot;#where&quot;&gt;See today&amp;rsquo;s free bays&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;h3&gt;Warranty claims start online&lt;/h3&gt;&lt;p&gt;Send the claim form with photos from the warranty page. No phone tree, no branch visit to file.&lt;/p&gt;&lt;a href=&quot;#&quot;&gt;Start a warranty claim&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec&quot; aria-labelledby=&quot;hs&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hs&quot;&gt;In the workshop&lt;/h2&gt;&lt;p class=&quot;ssub&quot;&gt;Fitting is booked online with your tyres. For everything else, call &lt;a href=&quot;tel:+442079460800&quot;&gt;020 7946 0800&lt;/a&gt;.&lt;/p&gt;&lt;div class=&quot;sgrid&quot;&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-wheel-balancer-console-500.jpg&quot; srcset=&quot;../assets/img/photo-wheel-balancer-console-500.jpg 500w, ../assets/img/photo-wheel-balancer-console-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A wheel balancer screen showing a tyre diagram, a technician holding a weight tool&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Fitting and balancing&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;From £25 per tyre&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Balancing, new valves and disposal of the old tyres included.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-lifted-car-suspension-500.jpg&quot; srcset=&quot;../assets/img/photo-lifted-car-suspension-500.jpg 500w, ../assets/img/photo-lifted-car-suspension-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician adjusting the suspension of a car raised on a lift&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Wheel alignment&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Quoted by phone&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Computerised four-wheel alignment for even wear and straight steering.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-mechanic-laptop-diagnostic-500.jpg&quot; srcset=&quot;../assets/img/photo-mechanic-laptop-diagnostic-500.jpg 500w, ../assets/img/photo-mechanic-laptop-diagnostic-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician checking a car with a diagnostic laptop&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Pre-MOT check&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Free&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Know what needs fixing before the MOT test.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-mechanic-engine-maintenance-500.jpg&quot; srcset=&quot;../assets/img/photo-mechanic-engine-maintenance-500.jpg 500w, ../assets/img/photo-mechanic-engine-maintenance-855.jpg 855w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician leaning into an open engine bay during a service&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Manufacturer service&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Quoted by phone&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Manufacturer-schedule servicing that keeps your new-car warranty.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;also&quot;&gt;Also at every branch: &lt;b&gt;puncture repair&lt;/b&gt; while you wait, where it is safe to do so, and a free 15&amp;#8209;minute &lt;b&gt;safety inspection&lt;/b&gt; of tread, pressures, brakes and lights.&lt;/p&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec end&quot; aria-labelledby=&quot;hn&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;egrid&quot;&gt;&lt;div&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hn&quot;&gt;Try it end to end&lt;/h2&gt;&lt;p class=&quot;elede&quot;&gt;This is a working shop in test mode. Choose a tyre, pick a branch and a time, and pay with card 4242&amp;nbsp;4242&amp;nbsp;4242&amp;nbsp;4242. Nothing is charged, and everything after the payment is real.&lt;/p&gt;&lt;div class=&quot;acts&quot;&gt;&lt;a class=&quot;btn btn-primary&quot; href=&quot;#find&quot;&gt;Start with your tyre size&lt;/a&gt;&lt;a class=&quot;btn btn-line&quot; href=&quot;#&quot;&gt;Open the admin demo&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;ol class=&quot;steps&quot;&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;The basket shows the fitted total&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;Tyres and fitting for your branch, VAT included, before you pay.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;Stripe takes a test payment&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;The same Payment Intents flow a live shop uses, in test mode.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;The order is written once&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;A verified, idempotent webhook records it, so a retry never makes a second order.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;Staff see it in the admin&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;Orders, refunds, staff roles with MFA, and an audit log, on the same database.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;/main&gt;&lt;footer class=&quot;ftr&quot; aria-labelledby=&quot;hft&quot;&gt;&lt;h2 class=&quot;h2 sr&quot; id=&quot;hft&quot;&gt;Gripwell site links&lt;/h2&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;cols&quot;&gt;&lt;div&gt;&lt;img class=&quot;logo&quot; src=&quot;../assets/brand/logo-horizontal-reversed.svg&quot; alt=&quot;Gripwell&quot;&gt;&lt;p&gt;London&amp;rsquo;s tyre fitting service&lt;/p&gt;&lt;div class=&quot;soc&quot;&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on Instagram&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;3&quot; y=&quot;3&quot; width=&quot;18&quot; height=&quot;18&quot; rx=&quot;5&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;4&quot;/&gt;&lt;circle cx=&quot;17.5&quot; cy=&quot;6.5&quot; r=&quot;.6&quot; fill=&quot;currentColor&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on Facebook&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M14 21v-8h3l.5-3.5H14V7.8c0-1 .3-1.7 1.8-1.7h1.8V3.1A24 24 0 0 0 15 3c-2.6 0-4.4 1.6-4.4 4.5v2H7.7V13h2.9v8&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on X&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 4l16 16M20 4 4 20&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;form class=&quot;fnl&quot; novalidate&gt;&lt;label for=&quot;nl&quot;&gt;Fitting reminders and new stock, one email a fortnight&lt;/label&gt;&lt;div class=&quot;row&quot;&gt;&lt;input id=&quot;nl&quot; type=&quot;email&quot; placeholder=&quot;you@email.com&quot; autocomplete=&quot;email&quot; required aria-describedby=&quot;nlmsg&quot;&gt;&lt;button class=&quot;btn btn-ghost&quot; type=&quot;submit&quot;&gt;Subscribe&lt;/button&gt;&lt;/div&gt;&lt;p class=&quot;msg&quot; id=&quot;nlmsg&quot; role=&quot;status&quot;&gt;&lt;/p&gt;&lt;/form&gt;&lt;/div&gt;&lt;div&gt;&lt;h3 class=&quot;fh&quot;&gt;Shop and help&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Tyres&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Wheels&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#where&quot;&gt;Branches&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Warranty claims&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;FAQ&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;About&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div&gt;&lt;h3 class=&quot;fh&quot;&gt;Contact&lt;/h3&gt;&lt;address&gt;&lt;a href=&quot;tel:+442079460800&quot;&gt;020 7946 0800&lt;/a&gt;&lt;a href=&quot;mailto:hello@gripwell.demo&quot;&gt;hello@gripwell.demo&lt;/a&gt;&lt;span&gt;Head office: 14 Kentish Town Rd, London &lt;span class=&quot;nw&quot;&gt;NW1 9NX&lt;/span&gt;&lt;/span&gt;&lt;a href=&quot;#where&quot;&gt;All 7 branches&lt;/a&gt;&lt;/address&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;base&quot;&gt;&lt;span&gt;&amp;copy; 2026 Gripwell. Demo project, not a real business.&lt;/span&gt;&lt;nav aria-label=&quot;Legal&quot;&gt;&lt;a href=&quot;../CREDITS.md&quot; target=&quot;_top&quot;&gt;Photo credits&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Privacy&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Terms&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/div&gt;&lt;/footer&gt;&lt;div class=&quot;sbar&quot;&gt;&lt;a class=&quot;btn btn-primary&quot; href=&quot;#find&quot;&gt;Show tyres and prices&lt;/a&gt;&lt;/div&gt;&lt;script&gt;
+(function(){var b=document.querySelector(&#x27;.sbar&#x27;),g=document.querySelector(&#x27;.go&#x27;),ends=document.querySelectorAll(&#x27;.end,.ftr&#x27;);if(!b)return;
+  if(!g||!(&#x27;IntersectionObserver&#x27; in window)){b.classList.add(&#x27;on&#x27;);return}
+  var past=false,seen=new Set();
+  function set(){b.classList.toggle(&#x27;on&#x27;,past&amp;&amp;!seen.size)}
+  new IntersectionObserver(function(e){past=!e[0].isIntersecting&amp;&amp;e[0].boundingClientRect.top&lt;0;set()}).observe(g);
+  var io=new IntersectionObserver(function(es){es.forEach(function(x){x.isIntersecting?seen.add(x.target):seen.delete(x.target)});set()});
+  ends.forEach(function(x){io.observe(x)});
+})();
+(function(){  /* inline errors instead of browser bubbles; the comp stops short of navigating */
+  var f=document.getElementById(&#x27;find&#x27;),w=document.getElementById(&#x27;fw&#x27;),e=document.getElementById(&#x27;fwerr&#x27;);
+  f.addEventListener(&#x27;submit&#x27;,function(ev){ev.preventDefault();if(!w.value){w.setAttribute(&#x27;aria-invalid&#x27;,&#x27;true&#x27;);e.textContent=&#x27;Choose your tyre width to see prices.&#x27;;w.focus();}});
+  w.addEventListener(&#x27;change&#x27;,function(){if(w.value){w.removeAttribute(&#x27;aria-invalid&#x27;);e.textContent=&#x27;&#x27;;}});
+  var n=document.querySelector(&#x27;.fnl&#x27;),i=document.getElementById(&#x27;nl&#x27;),m=document.getElementById(&#x27;nlmsg&#x27;);
+  n.addEventListener(&#x27;submit&#x27;,function(ev){ev.preventDefault();var ok=!!i.value&amp;&amp;i.checkValidity();
+    i.setAttribute(&#x27;aria-invalid&#x27;,ok?&#x27;false&#x27;:&#x27;true&#x27;);m.className=&#x27;msg&#x27;+(ok?&#x27;&#x27;:&#x27; bad&#x27;);
+    m.textContent=ok?&#x27;Nearly done: we sent a link to &#x27;+i.value+&#x27;. Open it to confirm.&#x27;:&#x27;Enter an email address, like you@email.com.&#x27;;});
+})();
+&lt;/script&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.css&quot;&gt;
+&lt;script src=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(function(){
+  var PINS = [[&quot;Camden&quot;, 51.5417, -0.1428], [&quot;Shoreditch&quot;, 51.5226, -0.0718], [&quot;Brixton&quot;, 51.4613, -0.1156], [&quot;Hammersmith&quot;, 51.4927, -0.2239], [&quot;Islington&quot;, 51.5363, -0.1032], [&quot;Greenwich&quot;, 51.4769, -0.0004], [&quot;City&quot;, 51.5138, -0.0934]];
+  document.querySelectorAll(&#x27;[data-map]&#x27;).forEach(function(el){
+    var pins = el.dataset.pins ? JSON.parse(el.dataset.pins) : PINS;  /* data-pins: [[label,lat,lng],...] */
+    var still = el.hasAttribute(&#x27;data-still&#x27;) &amp;&amp; window.innerWidth &lt; 768;  /* phones: the map never catches a scroll */
+    var m = L.map(el,{scrollWheelZoom:false,attributionControl:true,zoomSnap:0.25,dragging:!still,touchZoom:!still,doubleClickZoom:!still,zoomControl:!still,keyboard:!still});
+    L.tileLayer(&#x27;https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}&#x27;,
+      {maxZoom:16,attribution:&#x27;Tiles &amp;copy; Esri &amp;mdash; Esri, HERE, Garmin, &amp;copy; OpenStreetMap contributors&#x27;}).addTo(m);
+    var icon = L.divIcon({className:&#x27;pin&#x27;,iconSize:[28,38],iconAnchor:[14,37],tooltipAnchor:[0,-30],
+      html:&#x27;&lt;svg width=&quot;28&quot; height=&quot;38&quot; viewBox=&quot;0 0 28 38&quot;&gt;&lt;path d=&quot;M14 1C7 1 1.5 6.5 1.5 13.4 1.5 22.6 14 37 14 37s12.5-14.4 12.5-23.6C26.5 6.5 21 1 14 1Z&quot; fill=&quot;#FF6A1A&quot; stroke=&quot;#fff&quot; stroke-width=&quot;2&quot;/&gt;&lt;circle cx=&quot;14&quot; cy=&quot;13.5&quot; r=&quot;4.6&quot; fill=&quot;#2A2E36&quot;/&gt;&lt;/svg&gt;&#x27;});
+    var labels = el.hasAttribute(&#x27;data-labels&#x27;) &amp;&amp; window.innerWidth &gt;= 700;
+    pins.forEach(function(p){
+      /* still maps are a picture: pins are not tap targets. p[3]: optional label side; p[4]: always labelled (the answer) */
+      var mk = L.marker([p[1],p[2]],{icon:icon,title:p[0],interactive:!still,keyboard:!still}).addTo(m);
+      if (labels || p[4]) mk.bindTooltip(p[0],{permanent:true,direction:p[3]||&#x27;top&#x27;,className:&#x27;lbl&#x27;+(p[4]?&#x27; lead&#x27;:&#x27;&#x27;)});
+      else if (!still) mk.bindPopup(&#x27;&lt;b&gt;&#x27;+p[0]+&#x27;&lt;/b&gt;&#x27;);
+    });
+    m.fitBounds(pins.map(function(p){return [p[1],p[2]]}),{padding:[36,36]});
+  });
+})();
+&lt;/script&gt;
+&lt;script&gt;
+(function(){var post=function(){parent.postMessage({gwFrame:window.name,h:document.documentElement.scrollHeight},&#x27;*&#x27;)};
+addEventListener(&#x27;load&#x27;,post);new ResizeObserver(post).observe(document.body);setTimeout(post,1500);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></div>
+  <div class="col"><span class="lbl">Mobile · 390px (primary)</span><iframe id="m" name="m" title="Mobile 390px" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en-GB&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;&lt;title&gt;Gripwell: tyres fitted across London&lt;/title&gt;&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;&lt;link href=&quot;https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;&lt;style&gt;
+:root{
+  --paper:#F5F0E8; --surface:#FFFFFF; --ink:#1E2128; --ink-2:#4A505B; --graphite:#2A2E36; --graphite-2:#1E2128;  /* brief&#x27;s #FAF8F4 was 1.06:1 against white (invisible); #F3EDE3 read muddy */
+  --orange:#FF6A1A; --orange-down:#E85A0E; --muted-fg:#6B6B6B; --line:#E5E5E5;
+  --orange-text:#C2410C; --green-text:#166534;  /* AA text versions of the brief&#x27;s orange and green; green darkened from #15803D (4.59:1) so badges clear AA on --paper too */
+  --f:&#x27;Manrope&#x27;,system-ui,sans-serif; --gut:clamp(16px,4vw,48px); --max:1280px;
+  --e1:0 1px 3px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.03);
+  --e2:0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--surface);color:var(--ink);font:400 1rem/1.6 var(--f);-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+img:not(.logo):not(.icon){filter:contrast(1.04) saturate(.9)}
+a{color:inherit;text-decoration:none} button,input,select{font-family:inherit}
+h1,h2,h3,p{margin:0} h1,h2,h3{text-wrap:balance} p{max-width:70ch;text-wrap:pretty}
+::selection{background:#FFD8C2;color:var(--ink)} input{caret-color:var(--orange-text)} :root{accent-color:var(--orange)}
+ul,ol{list-style:none;margin:0;padding:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wrap{max-width:calc(var(--max) + 2*var(--gut));margin:0 auto;padding:0 var(--gut)}
+.sec{padding:clamp(56px,8vw,104px) 0 clamp(48px,7vw,96px)}
+.h2{font-size:clamp(1.625rem,1rem + 2.5vw,2.25rem);font-weight:700;letter-spacing:-.025em;line-height:1.15}  /* 26px floor: was 20px, barely above the 18px h3 */
+h3{font-size:1.125rem;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.meta{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;border-radius:10px;border:0;font:600 1rem/1 var(--f);cursor:pointer;transition:background .2s}
+.btn-primary{background:var(--orange);color:var(--ink)}  /* dark text on orange (5.6:1); white was 2.9:1 */ .btn-primary:hover,.btn-primary:active{background:var(--orange-down)}
+.btn-line{background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)} .btn-line:hover{background:rgba(30,33,40,.06)}
+.icon{flex:none}
+
+/* demo strip: tells an evaluator what is real before they try it */
+.demo{background:var(--ink);color:rgba(255,255,255,.8);font-size:.875rem;line-height:1.4}
+.demo .wrap{max-width:none;padding-top:10px;padding-bottom:10px;text-align:center}
+.demo a{margin-left:8px;color:#fff;font-weight:600;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:3px}
+.demo a:hover{text-decoration-color:#fff} .demo :focus-visible{outline-color:#fff}
+
+/* nav */
+.nav{background:var(--surface);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:16px;min-height:64px}
+.nav .home{display:inline-flex;align-items:center;min-height:44px} .nav .logo{height:24px;width:auto}
+.nav .links{display:none;flex:1;justify-content:center;gap:clamp(12px,2vw,32px);font-size:.9375rem;font-weight:500;color:var(--ink-2)}
+.nav .links a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap} .nav .links a:hover{color:var(--ink)}
+.nav .sp{flex:1}
+.nav .acct{display:none;align-items:center;min-height:44px;font-size:.9375rem;font-weight:500}
+.basket{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--line);font-size:.9375rem;font-weight:600;white-space:nowrap}
+.basket:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.menu{width:44px;height:44px;display:grid;place-items:center;border-radius:10px;background:none;border:1px solid var(--line);color:var(--ink)}
+@media (min-width:768px){ .nav .wrap{min-height:72px} .nav .links,.nav .acct{display:inline-flex} .nav .sp,.menu{display:none} .nav .logo{height:26px} }
+
+/* 1 hero */
+.hero{padding:clamp(24px,4vw,64px) 0 clamp(32px,5vw,64px)}
+.hero .grid{display:grid;gap:40px}
+.hero .grid&gt;*{min-width:0}
+.hero h1{font-size:clamp(1.75rem,4vw,3rem);font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.hero .lede{margin-top:16px;color:var(--muted-fg);max-width:52ch}
+.hero picture{display:none}
+.hero .ph{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 40%;border-radius:16px}
+@media (min-width:768px){ .hero .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5vw,64px);align-items:center} .hero picture{display:block} .hero .ph{aspect-ratio:1} }
+.finder{margin-top:28px;padding:24px;background:var(--surface);border-radius:16px;box-shadow:var(--e2)}
+@media (max-width:767px){ .finder{padding:20px 16px} }
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{min-height:44px;padding:0 20px;border-radius:999px;border:1.5px solid var(--graphite);background:none;font:600 .9375rem/1 var(--f);color:var(--graphite);cursor:pointer}
+.tab[aria-checked=true]{background:var(--graphite);color:#fff}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:6px;min-width:0} .field.w{grid-column:1/-1}
+.field label{font-size:.875rem;color:var(--muted-fg)}
+.field select{appearance:none;width:100%;height:48px;padding:0 32px 0 14px;border:1px solid var(--muted-fg);border-radius:10px;
+  background:var(--surface) url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; width=&#x27;12&#x27; height=&#x27;8&#x27; viewBox=&#x27;0 0 12 8&#x27;%3E%3Cpath d=&#x27;M1 1.5 6 6.5l5-5&#x27; fill=&#x27;none&#x27; stroke=&#x27;%231E2128&#x27; stroke-width=&#x27;2&#x27; stroke-linecap=&#x27;round&#x27;/%3E%3C/svg%3E&quot;) no-repeat right 14px center;font:500 1rem/1 var(--f);color:var(--ink)}
+.field select:disabled{background-color:var(--paper);border-color:#B8B8B8;color:var(--muted-fg);cursor:not-allowed}
+.help{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:4px;font-size:.875rem;color:var(--muted-fg)}
+.help:hover{color:var(--ink)}
+.help .q{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:.8125rem;font-weight:700;line-height:1}
+.hint{font-size:.875rem;line-height:1.5;color:var(--muted-fg)}
+.go{margin-top:16px;width:100%}
+.dep{grid-column:1/-1;margin-top:-4px;font-size:.875rem;line-height:1.4;color:var(--muted-fg)}
+.err{margin-top:6px;font-size:.875rem;font-weight:600;line-height:1.4;color:#B91C1C} .err:empty{display:none}  /* 6.5:1 on white */
+.field select[aria-invalid=true]{border-color:#B91C1C;box-shadow:0 0 0 1px #B91C1C}
+.nb{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:8px;font-size:.9375rem;color:var(--ink-2)}
+.nb b{font-weight:600;color:var(--ink)} .nb:hover b{text-decoration:underline;text-underline-offset:3px}
+.nb .dot{flex:none;width:8px;height:8px;border-radius:50%;background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.16)}
+
+/* 2 how it works: a thin progress strip, not a section */
+.how{border-bottom:1px solid var(--line)}
+.how ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:14px 0 16px;font-size:.875rem;font-weight:500;line-height:1.35;color:var(--ink)}
+.how li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 6px;text-align:center}
+.how .ln{position:absolute;top:11px;left:calc(-50% + 20px);width:calc(100% - 40px);height:1px;background:var(--line)}
+.how svg{color:var(--muted-fg)}
+@media (min-width:768px){
+  .how ol{display:flex;justify-content:center;align-items:center;min-height:72px;padding:0}
+  .how li{position:static;flex-direction:row;gap:10px;padding:0;white-space:nowrap}
+  .how .ln{position:static;width:clamp(32px,6vw,96px);margin:0 6px}
+}
+
+/* 3 where and when: every branch once, soonest free bay first (replaces the rail + the branches section) */
+.where{background:var(--paper)}
+.whead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.wsub{margin:8px 0 24px;color:var(--muted-fg)}
+.wgrid{display:grid;gap:24px}
+.wgrid&gt;*{min-width:0}
+@media (min-width:768px){ .wgrid{grid-template-columns:7fr 5fr;gap:clamp(24px,3vw,40px);align-items:start} }
+.lead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px 32px;padding:clamp(20px,3vw,32px);border-radius:16px;background:var(--graphite);color:#fff;box-shadow:var(--e2)}
+.lead .ll{display:grid;justify-items:start}
+.lead .lt{margin-top:12px;font-size:clamp(3.5rem,7vw,5.5rem);font-weight:700;letter-spacing:-.04em;line-height:.9}
+.lead .lw{margin-top:10px;font-size:1.125rem;font-weight:600}
+.lead .lr{flex:1 1 220px;display:grid;gap:16px}
+.lead .la{font-size:.9375rem;line-height:1.5;color:rgba(255,255,255,.72)} .lead .la b{font-weight:600;color:#fff}
+.lead:hover .btn{background:var(--orange-down)} .lead:focus-visible{outline-offset:3px}
+.b-lead{background:rgba(74,222,128,.16);color:#BBF7D0}
+.slots{margin-top:8px}
+.slot{display:grid;grid-template-columns:4.5rem minmax(0,1fr) auto;gap:4px 16px;align-items:center;min-height:72px;padding:12px 4px;border-bottom:1px solid #E2DACC}
+.slot:hover .sn b{text-decoration:underline;text-underline-offset:3px}
+.st{font-size:1.375rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.st small,.sf small{display:block;font-size:.8125rem;font-weight:500;letter-spacing:0;color:var(--muted-fg)}
+.sb{display:grid;gap:2px;min-width:0}
+.sn{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px} .sn b{font-weight:600}
+.sf{text-align:right;font-weight:700;line-height:1.25}
+.slot.full .st{color:var(--muted-fg)}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:.8125rem;font-weight:600;line-height:1.3;white-space:nowrap}
+.b-free{background:rgba(34,197,94,.12);color:var(--green-text)}
+.b-last{background:rgba(255,106,26,.1);color:#9A3412;animation:pulse 2s ease infinite}  /* the tint pulses, the text stays solid */
+.b-full{background:rgba(0,0,0,.05);color:#5F5F5F}
+@keyframes pulse{50%{background-color:rgba(255,106,26,.22)}}
+@media (prefers-reduced-motion:reduce){ .b-last{animation:none} }
+.week{margin-top:16px;font-size:.875rem;color:var(--muted-fg)}
+.nw{white-space:nowrap}
+.map{height:220px;border-radius:12px;overflow:hidden;background:#E8E8E8;isolation:isolate}
+@media (min-width:768px){ .map{position:sticky;top:24px;height:clamp(440px,40vw,560px)} }
+.leaflet-container{font-family:var(--f)!important}
+.map .leaflet-bar a{width:44px!important;height:44px!important;line-height:44px!important;font-family:var(--f)}
+.pin svg{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+.leaflet-tooltip.lbl{background:var(--graphite);color:#fff;border:0;border-radius:6px;font:600 12px/1 var(--f);padding:5px 7px;box-shadow:none}
+.leaflet-tooltip.lbl::before{display:none}
+.leaflet-tooltip.lbl.lead{background:var(--orange);color:var(--ink)}
+@media (max-width:767px){ .map{height:180px} }
+
+/* 4 deals: typographic cards led by the size (one tyre photo four times read as a placeholder); fitted total leads the price */
+.dsub{margin-top:8px;color:var(--muted-fg)}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+@media (min-width:768px){ .dgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,24px);margin-top:32px} }
+.dc{display:flex;flex-direction:column;height:100%;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .2s,box-shadow .2s}
+.dc:hover{border-color:#D4D4D4;box-shadow:var(--e1)}
+@media (min-width:768px){ .dc{padding:16px} }
+.dc .spec{display:grid;align-content:end;gap:4px;min-height:clamp(96px,10vw,128px);padding:14px;margin-bottom:14px;border-radius:8px;background:#F4F3F0}
+.dc .szb{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:700;letter-spacing:-.04em;line-height:1}
+.dc .szr{font-size:.9375rem;font-weight:600;color:var(--ink-2)}
+.dc .brn{font-size:.875rem;font-weight:600;color:var(--ink-2)}
+.dc .pp{margin-top:auto;padding-top:14px;display:grid;gap:2px}
+.dc .tot{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--orange-text)}
+.dc .tl{font-size:.875rem;font-weight:600;line-height:1.35}
+.dc .per{font-size:.8125rem;line-height:1.4;color:var(--muted-fg)}
+@media (max-width:767px){ .dc h3{font-size:1rem} .dc .tot{font-size:1.375rem} }
+
+/* 5 why */
+.why{background:var(--graphite-2);color:#fff}
+.why ul{display:grid;gap:32px;margin-top:32px}
+@media (min-width:768px){ .why ul{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(32px,4vw,56px);margin-top:40px} }
+.why li{padding-top:20px;border-top:1px solid rgba(255,255,255,.16)}
+.why h3{color:#fff}
+.why p{margin-top:8px;font-size:.9375rem;color:rgba(255,255,255,.7)}
+.why a{display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-weight:600;color:#fff;text-decoration:underline;text-decoration-color:rgba(255,255,255,.4);text-underline-offset:4px}
+.why a:hover{text-decoration-color:#fff} .why :focus-visible{outline-color:#fff}
+
+/* 6 services: four photographed, the rest in one line with the phone number */
+.ssub{margin-top:8px;color:var(--muted-fg)} .ssub a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 12px;margin-top:24px}
+@media (min-width:768px){ .sgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:40px clamp(16px,2vw,24px);margin-top:32px} }
+.sc{min-width:0}
+.sc .ph{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:12px}
+.sc h3{margin-top:12px}
+.sc .pr{margin-top:2px}
+.sc p{display:none;margin-top:4px}
+.sc p.pr{display:block}
+@media (min-width:768px){ .sc .ph{aspect-ratio:4/3} .sc h3{margin-top:16px} .sc p{display:block} }
+@media (max-width:767px){ .sc h3{font-size:1rem} }
+.also{max-width:62ch;margin-top:32px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-2)}
+.also b{font-weight:600;color:var(--ink)}
+.also a{font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+
+/* 8 close: try it end to end (replaces the floating newsletter card) */
+.end{background:var(--paper)}
+.egrid{display:grid;gap:32px}
+@media (min-width:768px){ .egrid{grid-template-columns:5fr 6fr;gap:clamp(32px,5vw,72px);align-items:start} }
+.end .elede{margin-top:12px;color:var(--ink-2);max-width:46ch}
+.end .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.steps{counter-reset:s}
+.steps li{display:grid;grid-template-columns:2.25rem minmax(0,1fr);gap:0 12px;padding:16px 0;border-top:1px solid #E2DACC}
+.steps li:last-child{border-bottom:1px solid #E2DACC}
+.steps li::before{counter-increment:s;content:counter(s);font-size:1.375rem;font-weight:700;line-height:1.25;color:var(--orange-text);font-variant-numeric:tabular-nums}  /* the order matters: it is the journey */
+.steps b{display:block;font-weight:600;color:var(--ink)}
+.steps .sd{display:block;font-size:.9375rem;color:var(--muted-fg)}
+
+/* 9 footer */
+.ftr{background:var(--graphite);color:rgba(255,255,255,.7);font-size:.9375rem}
+.ftr .cols{display:grid;gap:32px;padding:48px 0 32px}
+@media (min-width:768px){ .ftr .cols{grid-template-columns:1.5fr 1fr 1fr;gap:clamp(24px,4vw,64px);padding:64px 0 40px} }
+.ftr .logo{height:26px;width:auto;margin-bottom:12px}
+.ftr .fh{font-size:1rem;font-weight:600;letter-spacing:-.01em;color:#fff;margin-bottom:4px}
+.ftr a:hover{color:#fff} .ftr :focus-visible{outline-color:#fff}
+.ftr ul a,.ftr address a{display:flex;align-items:center;min-height:44px}
+@media (min-width:768px){ .ftr ul a,.ftr address a{min-height:36px} }
+.ftr address{font-style:normal;display:grid;justify-items:start}
+.soc{display:flex;gap:4px;margin:16px 0 0 -10px}
+.soc a{width:44px;height:44px;display:grid;place-items:center;background:none;color:rgba(255,255,255,.5);transition:color .2s}  /* .3 was 2.6:1; .5 is the lightest that clears 3:1 */
+.soc a:hover{color:#fff}
+.soc svg{width:20px;height:20px}
+.fnl{margin-top:24px;max-width:420px}
+.fnl label{display:block;margin-bottom:8px;font-size:.9375rem;font-weight:600;color:#fff}
+.fnl .row{display:flex;gap:8px}
+.fnl input{flex:1;min-width:0;min-height:48px;padding:0 14px;border:1px solid rgba(255,255,255,.5);border-radius:10px;background:transparent;color:#fff;font:400 1rem var(--f)}
+.fnl input::placeholder{color:rgba(255,255,255,.6)} .fnl input[aria-invalid=true]{border-color:#FCA5A5}
+.btn-ghost{background:none;color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7)} .btn-ghost:hover{box-shadow:inset 0 0 0 1.5px #fff}
+.fnl .msg{min-height:1.5em;margin-top:6px;font-size:.875rem;color:rgba(255,255,255,.8)} .fnl .msg.bad{color:#FCA5A5}
+.ftr .base{border-top:1px solid rgba(255,255,255,.12);padding:8px 0 20px;display:flex;flex-wrap:wrap;gap:0 24px;align-items:center;justify-content:space-between;font-size:.875rem}
+.ftr .base nav{display:flex;flex-wrap:wrap;gap:0 20px} .ftr .base a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+
+/* 10 mobile sticky bar: slides up once the hero&#x27;s search button has scrolled away */
+.sbar{position:fixed;left:0;right:0;bottom:0;z-index:1100;height:64px;padding:8px 16px;background:var(--surface);box-shadow:0 -1px 4px rgba(0,0,0,.08);
+  transform:translateY(110%);visibility:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),visibility 0s .3s}
+.sbar.on{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion:reduce){ .sbar,.sbar.on{transition:none} }
+.sbar .btn{width:100%}
+@media (max-width:767px){ body{padding-bottom:72px} }
+@media (min-width:768px){ .sbar{display:none} }
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;demo&quot;&gt;&lt;p class=&quot;wrap&quot;&gt;Demo shop, nothing is charged. Test card 4242&amp;nbsp;4242&amp;nbsp;4242&amp;nbsp;4242. &lt;a href=&quot;#&quot;&gt;How&amp;nbsp;it&amp;nbsp;works&lt;/a&gt;&lt;/p&gt;&lt;/div&gt;&lt;header class=&quot;nav&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;a class=&quot;home&quot; href=&quot;#&quot; aria-label=&quot;Gripwell home&quot;&gt;&lt;img class=&quot;logo&quot; src=&quot;../assets/brand/logo-horizontal.svg&quot; alt=&quot;Gripwell&quot;&gt;&lt;/a&gt;&lt;nav class=&quot;links&quot; aria-label=&quot;Main&quot;&gt;&lt;a href=&quot;#&quot;&gt;Tyres&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Wheels&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Fitting &amp;amp; services&lt;/a&gt;&lt;a href=&quot;#where&quot;&gt;Branches&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Warranty&lt;/a&gt;&lt;/nav&gt;&lt;span class=&quot;sp&quot;&gt;&lt;/span&gt;&lt;a class=&quot;acct&quot; href=&quot;#&quot;&gt;Account&lt;/a&gt;&lt;a class=&quot;basket&quot; href=&quot;#&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M3 3h2.2l2.1 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L20.5 7H6&quot;/&gt;&lt;circle cx=&quot;10&quot; cy=&quot;20&quot; r=&quot;1.4&quot;/&gt;&lt;circle cx=&quot;17.5&quot; cy=&quot;20&quot; r=&quot;1.4&quot;/&gt;&lt;/svg&gt;Basket 0&lt;/a&gt;&lt;button class=&quot;menu&quot; aria-label=&quot;Open menu&quot; aria-expanded=&quot;false&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M4 7h16M4 12h16M4 17h16&quot;/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;/div&gt;&lt;/header&gt;&lt;main&gt;&lt;section class=&quot;hero&quot; aria-labelledby=&quot;h1&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;grid&quot;&gt;&lt;div&gt;&lt;h1 id=&quot;h1&quot;&gt;Tyres fitted across London.&lt;/h1&gt;&lt;p class=&quot;lede&quot;&gt;Pick your size to see the fitted price for a set of four at each branch. Fitting from £25 per tyre. All prices include VAT.&lt;/p&gt;&lt;form class=&quot;finder&quot; id=&quot;find&quot; novalidate aria-label=&quot;Find tyres&quot;&gt;&lt;div class=&quot;tabs&quot; role=&quot;radiogroup&quot; aria-label=&quot;Search by&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;tab&quot; role=&quot;radio&quot; aria-checked=&quot;true&quot;&gt;Tyre size&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;tab&quot; role=&quot;radio&quot; aria-checked=&quot;false&quot;&gt;Car&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;fields&quot;&gt;&lt;div class=&quot;field w&quot;&gt;&lt;label for=&quot;fw&quot;&gt;Width&lt;/label&gt;&lt;select id=&quot;fw&quot; required aria-describedby=&quot;fwerr&quot;&gt;&lt;option value=&quot;&quot;&gt;Select&lt;/option&gt;&lt;option&gt;205&lt;/option&gt;&lt;option&gt;215&lt;/option&gt;&lt;option&gt;225&lt;/option&gt;&lt;option&gt;245&lt;/option&gt;&lt;option&gt;265&lt;/option&gt;&lt;option&gt;275&lt;/option&gt;&lt;/select&gt;&lt;p class=&quot;err&quot; id=&quot;fwerr&quot; role=&quot;alert&quot;&gt;&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;field&quot;&gt;&lt;label for=&quot;fp&quot;&gt;Profile&lt;/label&gt;&lt;select id=&quot;fp&quot; disabled aria-describedby=&quot;dep&quot;&gt;&lt;option&gt;Select&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div class=&quot;field&quot;&gt;&lt;label for=&quot;fr&quot;&gt;Rim&lt;/label&gt;&lt;select id=&quot;fr&quot; disabled aria-describedby=&quot;dep&quot;&gt;&lt;option&gt;Select&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;p class=&quot;dep&quot; id=&quot;dep&quot;&gt;Choose a width first, then profile and rim.&lt;/p&gt;&lt;/div&gt;&lt;a class=&quot;help&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;q&quot; aria-hidden=&quot;true&quot;&gt;?&lt;/span&gt;How to find your size&lt;/a&gt;&lt;p class=&quot;hint&quot;&gt;Your size is on the tyre&amp;rsquo;s sidewall, for example 205/55&amp;nbsp;R16&lt;/p&gt;&lt;button class=&quot;btn btn-primary go&quot; type=&quot;submit&quot;&gt;Show tyres and prices&lt;/button&gt;&lt;a class=&quot;nb&quot; href=&quot;#where&quot;&gt;&lt;span class=&quot;dot&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;Next free bay: &lt;b&gt;Camden, today 09:30&lt;/b&gt;&lt;/span&gt;&lt;/a&gt;&lt;/form&gt;&lt;/div&gt;&lt;picture&gt;&lt;source media=&quot;(min-width:768px)&quot; srcset=&quot;../assets/img/photo-f201752795-500.jpg 500w, ../assets/img/photo-f201752795-960.jpg 960w&quot; sizes=&quot;(min-width:1280px) 600px, 45vw&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==&quot; width=&quot;960&quot; height=&quot;1200&quot; fetchpriority=&quot;high&quot; alt=&quot;A technician in overalls walking to a car raised on a lift, morning light through the workshop window&quot;&gt;&lt;/picture&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;how&quot; aria-label=&quot;How it works&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;ol&gt;&lt;li&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9.5&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;6&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;1.8&quot;/&gt;&lt;path d=&quot;M12 10.2V6M13.7 11.4l4-1.3M13.06 13.46l2.47 3.39M10.94 13.46l-2.47 3.39M10.3 11.4l-4-1.3&quot;/&gt;&lt;/svg&gt;&lt;span&gt;Pick your size&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span class=ln aria-hidden=true&gt;&lt;/span&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M20.5 9.5V7a2 2 0 0 0-2-2h-13a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2H10&quot;/&gt;&lt;path d=&quot;M3.5 10H11M8 3v4M16 3v4&quot;/&gt;&lt;circle cx=&quot;16.5&quot; cy=&quot;16.5&quot; r=&quot;5&quot;/&gt;&lt;path d=&quot;M16.5 14.3v2.4l1.6 1&quot;/&gt;&lt;/svg&gt;&lt;span&gt;Choose a time&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span class=ln aria-hidden=true&gt;&lt;/span&gt;&lt;svg class=&quot;icon&quot; width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;9&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;2.6&quot;/&gt;&lt;path d=&quot;M3.3 10.5h6.2M14.5 10.5h6.2M12 14.6V21&quot;/&gt;&lt;/svg&gt;&lt;span&gt;We fit, you drive&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec where&quot; id=&quot;where&quot; aria-labelledby=&quot;hwh&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;whead&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hwh&quot;&gt;Free fitting bays today&lt;/h2&gt;&lt;span class=&quot;meta&quot;&gt;Fri 20 Nov, as of 08:10&lt;/span&gt;&lt;/div&gt;&lt;p class=&quot;wsub&quot;&gt;Soonest first, then cheapest fitting. Each branch has two bays and fits a set of four in about an hour. Prices are per tyre and include VAT.&lt;/p&gt;&lt;div class=&quot;wgrid&quot;&gt;&lt;div&gt;&lt;a class=&quot;lead&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;ll&quot;&gt;&lt;span class=&quot;badge b-lead&quot;&gt;2 bays free&lt;/span&gt;&lt;span class=&quot;lt num&quot;&gt;09:30&lt;/span&gt;&lt;span class=&quot;lw&quot;&gt;Today at Camden&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;lr&quot;&gt;&lt;span class=&quot;la&quot;&gt;14 Kentish Town Rd, NW1 9NX&lt;br&gt;Fitting &lt;b class=&quot;num&quot;&gt;£25&lt;/b&gt; per tyre&lt;/span&gt;&lt;span class=&quot;btn btn-primary&quot;&gt;Show tyres at Camden&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;ol class=&quot;slots&quot; aria-label=&quot;Other branches by next free bay&quot;&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;09:30&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Shoreditch&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;1 bay free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;82 Brick Lane, &lt;span class=&quot;nw&quot;&gt;E1 6RL&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£28&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;10:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Brixton&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;2 bays free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;31 Atlantic Rd, &lt;span class=&quot;nw&quot;&gt;SW9 8HX&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£27&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;11:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Hammersmith&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;1 bay free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;5 King St, &lt;span class=&quot;nw&quot;&gt;W6 9HR&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£32&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;12:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Islington&lt;/b&gt;&lt;span class=&quot;badge b-free&quot;&gt;2 bays free&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;118 Upper St, &lt;span class=&quot;nw&quot;&gt;N1 1QP&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£30&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;15:00&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;Greenwich&lt;/b&gt;&lt;span class=&quot;badge b-last&quot;&gt;Last slot&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;47 Greenwich High Rd, &lt;span class=&quot;nw&quot;&gt;SE10 8JL&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£35&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;slot full&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;st num&quot;&gt;08:00&lt;small&gt;tomorrow&lt;/small&gt;&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;&lt;span class=&quot;sn&quot;&gt;&lt;b&gt;City&lt;/b&gt;&lt;span class=&quot;badge b-full&quot;&gt;Full today&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;meta&quot;&gt;9 Cheapside, &lt;span class=&quot;nw&quot;&gt;EC2V 6AA&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sf num&quot;&gt;£33&lt;small&gt;per tyre&lt;/small&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ol&gt;&lt;p class=&quot;week&quot;&gt;All branches: Mon&amp;ndash;Fri 08:00&amp;ndash;17:30, Sat 08:00&amp;ndash;16:00, Sun closed&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;map&quot; data-map data-labels data-still data-pins=&quot;[[&amp;quot;Camden 09:30&amp;quot;, 51.5417, -0.1428, &amp;quot;left&amp;quot;, true], [&amp;quot;Shoreditch 09:30&amp;quot;, 51.5226, -0.0718, &amp;quot;right&amp;quot;, false], [&amp;quot;Brixton 10:00&amp;quot;, 51.4613, -0.1156, &amp;quot;top&amp;quot;, false], [&amp;quot;Hammersmith 11:00&amp;quot;, 51.4927, -0.2239, &amp;quot;top&amp;quot;, false], [&amp;quot;Islington 12:00&amp;quot;, 51.5363, -0.1032, &amp;quot;top&amp;quot;, false], [&amp;quot;Greenwich 15:00&amp;quot;, 51.4769, -0.0004, &amp;quot;top&amp;quot;, false], [&amp;quot;City tomorrow&amp;quot;, 51.5138, -0.0934, &amp;quot;left&amp;quot;, false]]&quot; role=&quot;img&quot; aria-label=&quot;Map of the seven Gripwell branches, with Camden marked as the soonest&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec&quot; id=&quot;deals&quot; aria-labelledby=&quot;hd&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hd&quot;&gt;Popular tyres, priced fitted&lt;/h2&gt;&lt;p class=&quot;dsub&quot;&gt;Four tyres fitted at Camden, VAT included. Fitting is £25 to £35 a tyre, depending on the branch.&lt;/p&gt;&lt;ul class=&quot;dgrid&quot;&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 205/55 R16 V&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;205/55&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R16 &amp;middot; V rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Kova&lt;/span&gt;&lt;h3&gt;Ecoline 2&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£492&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£98 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 215/65 R16 H&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;215/65&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R16 &amp;middot; H rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Meridian&lt;/span&gt;&lt;h3&gt;Citadel UX7&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£500&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£100 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 225/40 R18 Y&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;225/40&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R18 &amp;middot; Y rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Terrain X&lt;/span&gt;&lt;h3&gt;Velo Sport 5&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£680&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£145 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a class=&quot;dc&quot; href=&quot;#&quot;&gt;&lt;span class=&quot;spec&quot; aria-label=&quot;Size 245/45 R18 Y&quot;&gt;&lt;span class=&quot;szb num&quot;&gt;245/45&lt;/span&gt;&lt;span class=&quot;szr num&quot;&gt;R18 &amp;middot; Y rated&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;brn&quot;&gt;Corsaro&lt;/span&gt;&lt;h3&gt;Strada Sport&lt;/h3&gt;&lt;span class=&quot;pp&quot;&gt;&lt;span class=&quot;tot num&quot;&gt;£840&lt;/span&gt;&lt;span class=&quot;tl&quot;&gt;Set of 4 fitted&lt;/span&gt;&lt;span class=&quot;per num&quot;&gt;£185 a tyre&lt;br&gt;+ £25 fitting a tyre&lt;/span&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec why&quot; aria-labelledby=&quot;hw&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hw&quot;&gt;Checkable, not claimed&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;&lt;h3&gt;The price on the page is the price you pay&lt;/h3&gt;&lt;p&gt;VAT is included, and every tyre on this page shows the fitted total for a set of four.&lt;/p&gt;&lt;a href=&quot;#deals&quot;&gt;See fitted prices&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;h3&gt;A time on this page is a free bay&lt;/h3&gt;&lt;p&gt;Times come from each branch&amp;rsquo;s hours minus the fittings already booked. They are not estimates.&lt;/p&gt;&lt;a href=&quot;#where&quot;&gt;See today&amp;rsquo;s free bays&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;h3&gt;Warranty claims start online&lt;/h3&gt;&lt;p&gt;Send the claim form with photos from the warranty page. No phone tree, no branch visit to file.&lt;/p&gt;&lt;a href=&quot;#&quot;&gt;Start a warranty claim&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec&quot; aria-labelledby=&quot;hs&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hs&quot;&gt;In the workshop&lt;/h2&gt;&lt;p class=&quot;ssub&quot;&gt;Fitting is booked online with your tyres. For everything else, call &lt;a href=&quot;tel:+442079460800&quot;&gt;020 7946 0800&lt;/a&gt;.&lt;/p&gt;&lt;div class=&quot;sgrid&quot;&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-wheel-balancer-console-500.jpg&quot; srcset=&quot;../assets/img/photo-wheel-balancer-console-500.jpg 500w, ../assets/img/photo-wheel-balancer-console-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A wheel balancer screen showing a tyre diagram, a technician holding a weight tool&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Fitting and balancing&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;From £25 per tyre&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Balancing, new valves and disposal of the old tyres included.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-lifted-car-suspension-500.jpg&quot; srcset=&quot;../assets/img/photo-lifted-car-suspension-500.jpg 500w, ../assets/img/photo-lifted-car-suspension-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician adjusting the suspension of a car raised on a lift&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Wheel alignment&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Quoted by phone&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Computerised four-wheel alignment for even wear and straight steering.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-mechanic-laptop-diagnostic-500.jpg&quot; srcset=&quot;../assets/img/photo-mechanic-laptop-diagnostic-500.jpg 500w, ../assets/img/photo-mechanic-laptop-diagnostic-960.jpg 960w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician checking a car with a diagnostic laptop&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Pre-MOT check&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Free&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Know what needs fixing before the MOT test.&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;sc&quot;&gt;&lt;img class=&quot;ph&quot; src=&quot;../assets/img/photo-mechanic-engine-maintenance-500.jpg&quot; srcset=&quot;../assets/img/photo-mechanic-engine-maintenance-500.jpg 500w, ../assets/img/photo-mechanic-engine-maintenance-855.jpg 855w&quot; sizes=&quot;(min-width:768px) 300px, 50vw&quot; alt=&quot;A technician leaning into an open engine bay during a service&quot; loading=&quot;lazy&quot; data-source=&quot;stand-in&quot;&gt;&lt;h3&gt;Manufacturer service&lt;/h3&gt;&lt;p class=&quot;meta pr&quot;&gt;Quoted by phone&lt;/p&gt;&lt;p class=&quot;meta&quot;&gt;Manufacturer-schedule servicing that keeps your new-car warranty.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;p class=&quot;also&quot;&gt;Also at every branch: &lt;b&gt;puncture repair&lt;/b&gt; while you wait, where it is safe to do so, and a free 15&amp;#8209;minute &lt;b&gt;safety inspection&lt;/b&gt; of tread, pressures, brakes and lights.&lt;/p&gt;&lt;/div&gt;&lt;/section&gt;&lt;section class=&quot;sec end&quot; aria-labelledby=&quot;hn&quot;&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;egrid&quot;&gt;&lt;div&gt;&lt;h2 class=&quot;h2&quot; id=&quot;hn&quot;&gt;Try it end to end&lt;/h2&gt;&lt;p class=&quot;elede&quot;&gt;This is a working shop in test mode. Choose a tyre, pick a branch and a time, and pay with card 4242&amp;nbsp;4242&amp;nbsp;4242&amp;nbsp;4242. Nothing is charged, and everything after the payment is real.&lt;/p&gt;&lt;div class=&quot;acts&quot;&gt;&lt;a class=&quot;btn btn-primary&quot; href=&quot;#find&quot;&gt;Start with your tyre size&lt;/a&gt;&lt;a class=&quot;btn btn-line&quot; href=&quot;#&quot;&gt;Open the admin demo&lt;/a&gt;&lt;/div&gt;&lt;/div&gt;&lt;ol class=&quot;steps&quot;&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;The basket shows the fitted total&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;Tyres and fitting for your branch, VAT included, before you pay.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;Stripe takes a test payment&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;The same Payment Intents flow a live shop uses, in test mode.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;The order is written once&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;A verified, idempotent webhook records it, so a retry never makes a second order.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;&lt;b&gt;Staff see it in the admin&lt;/b&gt;&lt;span class=&quot;sd&quot;&gt;Orders, refunds, staff roles with MFA, and an audit log, on the same database.&lt;/span&gt;&lt;/span&gt;&lt;/li&gt;&lt;/ol&gt;&lt;/div&gt;&lt;/div&gt;&lt;/section&gt;&lt;/main&gt;&lt;footer class=&quot;ftr&quot; aria-labelledby=&quot;hft&quot;&gt;&lt;h2 class=&quot;h2 sr&quot; id=&quot;hft&quot;&gt;Gripwell site links&lt;/h2&gt;&lt;div class=&quot;wrap&quot;&gt;&lt;div class=&quot;cols&quot;&gt;&lt;div&gt;&lt;img class=&quot;logo&quot; src=&quot;../assets/brand/logo-horizontal-reversed.svg&quot; alt=&quot;Gripwell&quot;&gt;&lt;p&gt;London&amp;rsquo;s tyre fitting service&lt;/p&gt;&lt;div class=&quot;soc&quot;&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on Instagram&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;rect x=&quot;3&quot; y=&quot;3&quot; width=&quot;18&quot; height=&quot;18&quot; rx=&quot;5&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;4&quot;/&gt;&lt;circle cx=&quot;17.5&quot; cy=&quot;6.5&quot; r=&quot;.6&quot; fill=&quot;currentColor&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on Facebook&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M14 21v-8h3l.5-3.5H14V7.8c0-1 .3-1.7 1.8-1.7h1.8V3.1A24 24 0 0 0 15 3c-2.6 0-4.4 1.6-4.4 4.5v2H7.7V13h2.9v8&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;a href=&quot;#&quot; aria-label=&quot;Gripwell on X&quot;&gt;&lt;svg class=&quot;icon&quot; width=&quot;20&quot; height=&quot;20&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;&lt;path d=&quot;M4 4l16 16M20 4 4 20&quot;/&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;form class=&quot;fnl&quot; novalidate&gt;&lt;label for=&quot;nl&quot;&gt;Fitting reminders and new stock, one email a fortnight&lt;/label&gt;&lt;div class=&quot;row&quot;&gt;&lt;input id=&quot;nl&quot; type=&quot;email&quot; placeholder=&quot;you@email.com&quot; autocomplete=&quot;email&quot; required aria-describedby=&quot;nlmsg&quot;&gt;&lt;button class=&quot;btn btn-ghost&quot; type=&quot;submit&quot;&gt;Subscribe&lt;/button&gt;&lt;/div&gt;&lt;p class=&quot;msg&quot; id=&quot;nlmsg&quot; role=&quot;status&quot;&gt;&lt;/p&gt;&lt;/form&gt;&lt;/div&gt;&lt;div&gt;&lt;h3 class=&quot;fh&quot;&gt;Shop and help&lt;/h3&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Tyres&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Wheels&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#where&quot;&gt;Branches&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;Warranty claims&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;FAQ&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&quot;#&quot;&gt;About&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div&gt;&lt;h3 class=&quot;fh&quot;&gt;Contact&lt;/h3&gt;&lt;address&gt;&lt;a href=&quot;tel:+442079460800&quot;&gt;020 7946 0800&lt;/a&gt;&lt;a href=&quot;mailto:hello@gripwell.demo&quot;&gt;hello@gripwell.demo&lt;/a&gt;&lt;span&gt;Head office: 14 Kentish Town Rd, London &lt;span class=&quot;nw&quot;&gt;NW1 9NX&lt;/span&gt;&lt;/span&gt;&lt;a href=&quot;#where&quot;&gt;All 7 branches&lt;/a&gt;&lt;/address&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;base&quot;&gt;&lt;span&gt;&amp;copy; 2026 Gripwell. Demo project, not a real business.&lt;/span&gt;&lt;nav aria-label=&quot;Legal&quot;&gt;&lt;a href=&quot;../CREDITS.md&quot; target=&quot;_top&quot;&gt;Photo credits&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Privacy&lt;/a&gt;&lt;a href=&quot;#&quot;&gt;Terms&lt;/a&gt;&lt;/nav&gt;&lt;/div&gt;&lt;/div&gt;&lt;/footer&gt;&lt;div class=&quot;sbar&quot;&gt;&lt;a class=&quot;btn btn-primary&quot; href=&quot;#find&quot;&gt;Show tyres and prices&lt;/a&gt;&lt;/div&gt;&lt;script&gt;
+(function(){var b=document.querySelector(&#x27;.sbar&#x27;),g=document.querySelector(&#x27;.go&#x27;),ends=document.querySelectorAll(&#x27;.end,.ftr&#x27;);if(!b)return;
+  if(!g||!(&#x27;IntersectionObserver&#x27; in window)){b.classList.add(&#x27;on&#x27;);return}
+  var past=false,seen=new Set();
+  function set(){b.classList.toggle(&#x27;on&#x27;,past&amp;&amp;!seen.size)}
+  new IntersectionObserver(function(e){past=!e[0].isIntersecting&amp;&amp;e[0].boundingClientRect.top&lt;0;set()}).observe(g);
+  var io=new IntersectionObserver(function(es){es.forEach(function(x){x.isIntersecting?seen.add(x.target):seen.delete(x.target)});set()});
+  ends.forEach(function(x){io.observe(x)});
+})();
+(function(){  /* inline errors instead of browser bubbles; the comp stops short of navigating */
+  var f=document.getElementById(&#x27;find&#x27;),w=document.getElementById(&#x27;fw&#x27;),e=document.getElementById(&#x27;fwerr&#x27;);
+  f.addEventListener(&#x27;submit&#x27;,function(ev){ev.preventDefault();if(!w.value){w.setAttribute(&#x27;aria-invalid&#x27;,&#x27;true&#x27;);e.textContent=&#x27;Choose your tyre width to see prices.&#x27;;w.focus();}});
+  w.addEventListener(&#x27;change&#x27;,function(){if(w.value){w.removeAttribute(&#x27;aria-invalid&#x27;);e.textContent=&#x27;&#x27;;}});
+  var n=document.querySelector(&#x27;.fnl&#x27;),i=document.getElementById(&#x27;nl&#x27;),m=document.getElementById(&#x27;nlmsg&#x27;);
+  n.addEventListener(&#x27;submit&#x27;,function(ev){ev.preventDefault();var ok=!!i.value&amp;&amp;i.checkValidity();
+    i.setAttribute(&#x27;aria-invalid&#x27;,ok?&#x27;false&#x27;:&#x27;true&#x27;);m.className=&#x27;msg&#x27;+(ok?&#x27;&#x27;:&#x27; bad&#x27;);
+    m.textContent=ok?&#x27;Nearly done: we sent a link to &#x27;+i.value+&#x27;. Open it to confirm.&#x27;:&#x27;Enter an email address, like you@email.com.&#x27;;});
+})();
+&lt;/script&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.css&quot;&gt;
+&lt;script src=&quot;https://unpkg.com/leaflet@1.9.4/dist/leaflet.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(function(){
+  var PINS = [[&quot;Camden&quot;, 51.5417, -0.1428], [&quot;Shoreditch&quot;, 51.5226, -0.0718], [&quot;Brixton&quot;, 51.4613, -0.1156], [&quot;Hammersmith&quot;, 51.4927, -0.2239], [&quot;Islington&quot;, 51.5363, -0.1032], [&quot;Greenwich&quot;, 51.4769, -0.0004], [&quot;City&quot;, 51.5138, -0.0934]];
+  document.querySelectorAll(&#x27;[data-map]&#x27;).forEach(function(el){
+    var pins = el.dataset.pins ? JSON.parse(el.dataset.pins) : PINS;  /* data-pins: [[label,lat,lng],...] */
+    var still = el.hasAttribute(&#x27;data-still&#x27;) &amp;&amp; window.innerWidth &lt; 768;  /* phones: the map never catches a scroll */
+    var m = L.map(el,{scrollWheelZoom:false,attributionControl:true,zoomSnap:0.25,dragging:!still,touchZoom:!still,doubleClickZoom:!still,zoomControl:!still,keyboard:!still});
+    L.tileLayer(&#x27;https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}&#x27;,
+      {maxZoom:16,attribution:&#x27;Tiles &amp;copy; Esri &amp;mdash; Esri, HERE, Garmin, &amp;copy; OpenStreetMap contributors&#x27;}).addTo(m);
+    var icon = L.divIcon({className:&#x27;pin&#x27;,iconSize:[28,38],iconAnchor:[14,37],tooltipAnchor:[0,-30],
+      html:&#x27;&lt;svg width=&quot;28&quot; height=&quot;38&quot; viewBox=&quot;0 0 28 38&quot;&gt;&lt;path d=&quot;M14 1C7 1 1.5 6.5 1.5 13.4 1.5 22.6 14 37 14 37s12.5-14.4 12.5-23.6C26.5 6.5 21 1 14 1Z&quot; fill=&quot;#FF6A1A&quot; stroke=&quot;#fff&quot; stroke-width=&quot;2&quot;/&gt;&lt;circle cx=&quot;14&quot; cy=&quot;13.5&quot; r=&quot;4.6&quot; fill=&quot;#2A2E36&quot;/&gt;&lt;/svg&gt;&#x27;});
+    var labels = el.hasAttribute(&#x27;data-labels&#x27;) &amp;&amp; window.innerWidth &gt;= 700;
+    pins.forEach(function(p){
+      /* still maps are a picture: pins are not tap targets. p[3]: optional label side; p[4]: always labelled (the answer) */
+      var mk = L.marker([p[1],p[2]],{icon:icon,title:p[0],interactive:!still,keyboard:!still}).addTo(m);
+      if (labels || p[4]) mk.bindTooltip(p[0],{permanent:true,direction:p[3]||&#x27;top&#x27;,className:&#x27;lbl&#x27;+(p[4]?&#x27; lead&#x27;:&#x27;&#x27;)});
+      else if (!still) mk.bindPopup(&#x27;&lt;b&gt;&#x27;+p[0]+&#x27;&lt;/b&gt;&#x27;);
+    });
+    m.fitBounds(pins.map(function(p){return [p[1],p[2]]}),{padding:[36,36]});
+  });
+})();
+&lt;/script&gt;
+&lt;script&gt;
+(function(){var post=function(){parent.postMessage({gwFrame:window.name,h:document.documentElement.scrollHeight},&#x27;*&#x27;)};
+addEventListener(&#x27;load&#x27;,post);new ResizeObserver(post).observe(document.body);setTimeout(post,1500);})();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></div>
+</div></div>
+<script>
+  var stage=document.getElementById('stage'),outer=document.querySelector('.outer'),fit=true;
+  function scale(){var s=fit?Math.min(1,(outer.clientWidth-48)/stage.scrollWidth):1;
+    stage.style.transform='scale('+s+')';stage.style.height='';outer.style.height=fit?(stage.scrollHeight*s+88)+'px':'';}
+  addEventListener('message',function(e){var d=e.data;if(!d||!d.gwFrame)return;var f=document.getElementById(d.gwFrame);if(f){f.style.height=d.h+'px';scale();}});
+  addEventListener('resize',scale);
+  document.getElementById('fit').onclick=function(){fit=true;this.setAttribute('aria-pressed','true');document.getElementById('full').setAttribute('aria-pressed','false');scale()};
+  document.getElementById('full').onclick=function(){fit=false;this.setAttribute('aria-pressed','true');document.getElementById('fit').setAttribute('aria-pressed','false');scale()};
+  scale();
+</script></body></html>
